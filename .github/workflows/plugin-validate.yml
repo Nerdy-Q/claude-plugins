@@ -163,6 +163,11 @@ jobs:
           bash plugins/pp-sync/tests/test_subcommand_safety.sh
           echo "OK    pp subcommand safety tests pass"
 
+      - name: Run pp command-flow tests
+        run: |
+          bash plugins/pp-sync/tests/test_command_flows.sh
+          echo "OK    pp command-flow tests pass"
+
       - name: Bash syntax check
         run: |
           fail=0
