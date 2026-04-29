@@ -57,7 +57,7 @@ git commit -m "$msg"
 
 # 6. Optional push
 read -r -p "Push to remote? [y/N] " push
-if [ "${push,,}" = "y" ]; then
+if [ "$(printf '%s' "$push" | tr '[:upper:]' '[:lower:]')" = "y" ]; then
   BRANCH=$(git branch --show-current)
   git push -u origin "$BRANCH"
 fi

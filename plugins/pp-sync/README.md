@@ -23,11 +23,16 @@ A **rigid action skill** — has a checklist of steps that must run in order. De
 |---|---|
 | **down** | Download portal from Dataverse to local |
 | **up** | Upload local changes to Dataverse |
+| **diff** | Preview what `up` would push (no upload) |
 | **doctor** | Health check (auth, tooling, structure, noise) |
-| **commit** | Interactive selective commit |
+| **generate-page** | Scaffold a new hybrid-pattern page (base + en-US) |
+| **sync-pages** | Bulk-copy between base and localized webpage variants |
+| **journal** | Automated work tracking & Project Board integration |
 | **solution-down** | Export Dataverse solution + unpack |
 | **solution-up** | Pack + import Dataverse solution |
-| **portal-restart** | Recover from hung portal cache |
+| **audit** | Run permissions audit (delegates to `pp-permissions-audit`) |
+
+For interactive commits, use `git` directly or copy `templates/commit.sh` into your project. Portal cache recovery is an Admin Center action — see `references/safety-checks.md`.
 
 ## Reference files
 

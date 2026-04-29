@@ -37,10 +37,10 @@ PP_ACTIVE_FILE="$PP_CONFIG_DIR/active"
 # ===========================================================================
 
 if [ -t 1 ]; then
-    BOLD=$'\033[1m'; DIM=$'\033[2m'; RED=$'\033[31m'; GRN=$'\033[32m'
+    BOLD=$'\033[1m'; RED=$'\033[31m'; GRN=$'\033[32m'
     YLW=$'\033[33m'; BLU=$'\033[34m'; RST=$'\033[0m'
 else
-    BOLD=""; DIM=""; RED=""; GRN=""; YLW=""; BLU=""; RST=""
+    BOLD=""; RED=""; GRN=""; YLW=""; BLU=""; RST=""
 fi
 
 info()  { printf '%s→%s %s\n' "$BLU" "$RST" "$*"; }
@@ -48,6 +48,18 @@ ok()    { printf '%s✓%s %s\n' "$GRN" "$RST" "$*"; }
 warn()  { printf '%s⚠%s %s\n' "$YLW" "$RST" "$*" >&2; }
 err()   { printf '%s✗%s %s\n' "$RED" "$RST" "$*" >&2; }
 die()   { err "$@"; exit 1; }
+
+# Reject identifiers that contain shell metacharacters, whitespace, or
+# anything else that would be unsafe to interpolate into bash heredocs,
+# regex patterns, or filename components. Used at every registration site
+# so that values written into ~/.config/nq-pp-sync/projects/*.conf cannot
+# be crafted to inject commands when the conf is later sourced.
+validate_identifier() {
+    local field="$1" value="$2" pattern="${3:-^[A-Za-z0-9_.-]+\$}"
+    if [[ ! "$value" =~ $pattern ]]; then
+        die "$field must match $pattern: got '$value'"
+    fi
+}
 
 # ===========================================================================
 # Project registry helpers
@@ -168,7 +180,7 @@ cd_repo_root() {
     # If this is a git repo, snap to its top
     local top
     top=$(git rev-parse --show-toplevel 2>/dev/null || true)
-    [ -n "$top" ] && cd "$top"
+    [ -n "$top" ] && cd "$top" || return
 }
 
 confirm_pac_profile() {
@@ -255,6 +267,7 @@ cmd_setup() {
         local name
         read -r -p "Project name [$default_name]: " name
         name="${name:-$default_name}"
+        validate_identifier "Project name" "$name" '^[A-Za-z0-9_-]+$'
         if [ -f "$PP_PROJECTS_DIR/$name.conf" ]; then
             warn "$name already registered — skipping"
             continue
@@ -265,6 +278,9 @@ cmd_setup() {
         local alias_input
         read -r -p "Shorthand alias [$suggested_alias, or 'none']: " alias_input
         alias_input="${alias_input:-$suggested_alias}"
+        if [ "$alias_input" != "none" ]; then
+            validate_identifier "Alias" "$alias_input" '^[A-Za-z0-9_-]+$'
+        fi
 
         # Auto-fill what we can
         local repo site_rel pac_profile env_url
@@ -287,6 +303,7 @@ cmd_setup() {
         echo
         read -r -p "PAC profile name (exact, from list): " pac_profile
         [ -z "$pac_profile" ] && { warn "Skipping (no profile given)"; continue; }
+        validate_identifier "PAC profile" "$pac_profile" '^[A-Za-z0-9_.-]+$'
 
         # Get env URL for that profile
         if pac auth select --name "$pac_profile" >/dev/null 2>&1; then
@@ -553,7 +570,7 @@ cmd_up() {
     actual_env=$(confirm_pac_profile "$PROFILE")
 
     case "$actual_env" in
-        *prod*|*production*)
+        *prod*)
             warn "${BOLD}PRODUCTION ENVIRONMENT${RST}"
             local ans
             read -r -p "Type the project name '$name' to confirm prod upload: " ans
@@ -868,8 +885,14 @@ cmd_solution_down() {
         rm -rf "$unpack_dir.bak"
         mv "$unpack_dir" "$unpack_dir.bak"
     fi
-    mv "$unpack_dir.new" "$unpack_dir"
-    rm -rf "$unpack_dir.bak"
+    # Chain rather than separate statements: if the second mv fails, keep
+    # the .bak copy so the user has not lost their previous unpacked schema.
+    if mv "$unpack_dir.new" "$unpack_dir"; then
+        rm -rf "$unpack_dir.bak"
+    else
+        warn "mv to $unpack_dir failed; previous copy preserved at $unpack_dir.bak"
+        die "Solution unpack swap failed"
+    fi
     rm -f "$zipfile"
 
     local entity_count
@@ -919,7 +942,7 @@ cmd_solution_up() {
     confirm_action "Confirm import '$solution' to $actual_env ?"
 
     case "$actual_env" in
-        *prod*|*production*)
+        *prod*)
             warn "${BOLD}PRODUCTION ENVIRONMENT${RST}"
             local ans
             read -r -p "Type the solution name '$solution' to confirm: " ans
@@ -1269,12 +1292,14 @@ cmd_project_add() {
     local name="${1:-}"
     [ -z "$name" ] && { read -r -p "Project name: " name; }
     [ -z "$name" ] && die "Project name required"
+    validate_identifier "Project name" "$name" '^[A-Za-z0-9_-]+$'
     [ -f "$PP_PROJECTS_DIR/$name.conf" ] && die "$name already exists. Use 'pp project edit' or remove first."
 
     local repo site_dir profile website_id env_url solutions branch board_url board_system ai_attr
     read -r -p "Repo path:       " repo
     read -r -p "Site folder (relative): " site_dir
     read -r -p "PAC profile:     " profile
+    [ -n "$profile" ] && validate_identifier "PAC profile" "$profile" '^[A-Za-z0-9_.-]+$'
     read -r -p "Website ID:      " website_id
     read -r -p "Env URL:         " env_url
     read -r -p "Solutions (comma-separated): " solutions
@@ -1312,6 +1337,7 @@ EOF
     local alias_input
     read -r -p "Add an alias? (blank = none): " alias_input
     if [ -n "$alias_input" ]; then
+        validate_identifier "Alias" "$alias_input" '^[A-Za-z0-9_-]+$'
         echo "${alias_input}=${name}" >> "$PP_ALIASES_FILE"
         ok "Alias: pp <op> $alias_input"
     fi
@@ -1344,7 +1370,10 @@ cmd_alias_add() {
     ensure_config_dirs
     local alias_name="${1:-}"
     local target="${2:-}"
-    [ -z "$alias_name" ] || [ -z "$target" ] && die "Usage: pp alias add <alias> <project>"
+    if [ -z "$alias_name" ] || [ -z "$target" ]; then
+        die "Usage: pp alias add <alias> <project>"
+    fi
+    validate_identifier "Alias" "$alias_name" '^[A-Za-z0-9_-]+$'
     local resolved
     resolved=$(resolve_project "$target") || die "Unknown target: $target"
     if grep -qE "^${alias_name}=" "$PP_ALIASES_FILE" 2>/dev/null; then

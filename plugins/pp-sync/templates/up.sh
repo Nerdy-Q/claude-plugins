@@ -48,7 +48,7 @@ echo "→ Active env: $ENV_URL"
 
 # Extra warning for prod env URLs
 case "$ENV_URL" in
-  *prod*|*production*)
+  *prod*)
     echo "⚠⚠⚠  PRODUCTION ENVIRONMENT  ⚠⚠⚠"
     read -r -p "Are you SURE you want to upload to prod? Type 'yes' to continue: " ans
     [ "$ans" = "yes" ] || { echo "Aborted."; exit 0; }
@@ -77,7 +77,7 @@ Options:
 
 EOF
   read -r -p "Continue with bulk upload? [y/N] " ans
-  [ "${ans,,}" = "y" ] || { echo "Aborted."; exit 0; }
+  [ "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" = "y" ] || { echo "Aborted."; exit 0; }
 fi
 
 # 4. Upload (or validate)

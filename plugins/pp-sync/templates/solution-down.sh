@@ -29,7 +29,7 @@ echo "→ Active env: $ENV_URL"
 
 # 2. Confirm before exporting (export takes 60-120s; user should know)
 read -r -p "Export solution '$SOLUTION' from $ENV_URL ? [y/N] " ans
-[ "${ans,,}" = "y" ] || { echo "Aborted."; exit 0; }
+[ "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" = "y" ] || { echo "Aborted."; exit 0; }
 
 # 3. Export — use a long timeout via curl-style; pac handles internally
 echo "→ Exporting solution… (may take 60-120s)"
@@ -57,8 +57,12 @@ if [ -d "$UNPACK_DIR" ]; then
   rm -rf "$UNPACK_DIR.bak"
   mv "$UNPACK_DIR" "$UNPACK_DIR.bak"
 fi
-mv "$UNPACK_DIR.new" "$UNPACK_DIR"
-rm -rf "$UNPACK_DIR.bak"
+if mv "$UNPACK_DIR.new" "$UNPACK_DIR"; then
+  rm -rf "$UNPACK_DIR.bak"
+else
+  echo "ERROR: mv to $UNPACK_DIR failed; previous copy preserved at $UNPACK_DIR.bak" >&2
+  exit 1
+fi
 
 # 6. Optional: remove the .zip (it's reproducible from unpacked)
 rm -f "$ZIPFILE"

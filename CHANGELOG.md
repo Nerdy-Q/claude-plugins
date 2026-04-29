@@ -198,7 +198,7 @@ Six reference-layer gaps surfaced by the v2.2.0 recipes pass, now closed:
 
 ### Initial public release
 
-Three plugins in the `nq-claude-power-pages-plugins` marketplace at v1.0.0 each, sanitized and verified leak-free.
+Three plugins in the `nq-claude-plugins` marketplace at v1.0.0 each, sanitized and verified leak-free. (The marketplace was later renamed to `nq-claude-power-pages-plugins` at v2.5.0.)
 
 #### pp-liquid (v1.0.0)
 Knowledge skill for Power Pages classic Liquid templating. 8 reference files covering FetchXML count+paginate+filter, Web API in custom JS with the safeAjax / `__RequestVerificationToken` pattern, entity tags (entitylist, entityform, webform), DotLiquid quirks vs Shopify Liquid, hybrid render-then-mutate pages, and a troubleshooting matrix mapping common errors to causes and fixes.
@@ -219,8 +219,8 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 [2.6.1]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.6.1
 [2.6.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.6.0
 [2.5.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.5.0
-[2.3.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.3.0
 [2.4.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.4.0
+[2.3.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.3.0
 [2.2.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.2.0
 [2.1.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.1.0
 [2.0.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.0.0

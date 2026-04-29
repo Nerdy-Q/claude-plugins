@@ -14,7 +14,7 @@ PROFILE="${PROFILE:-PUT_PAC_PROFILE_HERE}"
 # =====================================
 
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
-cd "$ROOT"
+cd "$ROOT" || exit 1
 
 OK="✓"
 WARN="⚠"

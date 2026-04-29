@@ -33,10 +33,10 @@ ENV_URL=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}')
 echo "→ Active env: $ENV_URL"
 echo "⚠ Solution import is DESTRUCTIVE — it overwrites schema in the target env."
 read -r -p "Confirm import '$SOLUTION' to $ENV_URL ? [y/N] " ans
-[ "${ans,,}" = "y" ] || { echo "Aborted."; exit 0; }
+[ "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" = "y" ] || { echo "Aborted."; exit 0; }
 
 case "$ENV_URL" in
-  *prod*|*production*)
+  *prod*)
     echo "⚠⚠⚠  PRODUCTION ENVIRONMENT  ⚠⚠⚠"
     read -r -p "Type the solution name '$SOLUTION' to confirm prod import: " confirm
     [ "$confirm" = "$SOLUTION" ] || { echo "Aborted."; exit 0; }

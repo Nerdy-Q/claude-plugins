@@ -44,13 +44,13 @@ if [ -z "$ENV_URL" ]; then
 fi
 echo "→ Active env: $ENV_URL"
 read -r -p "Continue download into $SITE_DIR ? [y/N] " ans
-[ "${ans,,}" = "y" ] || { echo "Aborted."; exit 0; }
+[ "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" = "y" ] || { echo "Aborted."; exit 0; }
 
 # 3. Working tree check — warn if uncommitted changes exist
 if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
   echo "⚠ Uncommitted changes in working tree. Download may overwrite local edits."
   read -r -p "Continue anyway? [y/N] " ans
-  [ "${ans,,}" = "y" ] || { echo "Aborted."; exit 0; }
+  [ "$(printf '%s' "$ans" | tr '[:upper:]' '[:lower:]')" = "y" ] || { echo "Aborted."; exit 0; }
 fi
 
 # 4. Download

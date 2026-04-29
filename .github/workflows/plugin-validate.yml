@@ -157,6 +157,23 @@ jobs:
           done < <(find plugins -name '*.sh' -o -name 'pp' -o -name 'install.sh')
           exit $fail
 
+      - name: ShellCheck
+        run: |
+          # ubuntu-latest ships with shellcheck preinstalled.
+          # We run at --severity=warning to catch real bugs (unquoted vars,
+          # missing cd-or-exit, redundant case patterns) without being noisy
+          # about style. Bump to info/style only after the codebase is clean.
+          fail=0
+          while IFS= read -r script; do
+              if shellcheck --severity=warning "$script"; then
+                  echo "OK    $script"
+              else
+                  echo "FAIL  $script" >&2
+                  fail=1
+              fi
+          done < <(find plugins -name '*.sh' -o -name 'pp' -o -name 'install.sh' -o -name 'pre-commit')
+          exit $fail
+
       - name: Check internal markdown links
         run: |
           python3 <<'PY_EOF'
@@ -166,7 +183,10 @@ jobs:
 
           link_re = re.compile(r"\[[^\]]+\]\(([^)]+)\)")
           all_ok = True
-          for md in Path("plugins").glob("**/*.md"):
+          md_files = list(Path("plugins").glob("**/*.md")) + [
+              p for p in Path(".").glob("*.md") if p.is_file()
+          ]
+          for md in md_files:
               text = md.read_text()
               for match in link_re.finditer(text):
                   target = match.group(1).split("#")[0]
