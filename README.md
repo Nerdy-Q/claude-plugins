@@ -1,4 +1,4 @@
-# nq-claude-plugins
+# NerdyQ Claude Power Pages Plugins
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Power Pages](https://img.shields.io/badge/Power%20Pages-hybrid%20Liquid%20%2B%20Web%20API-purple.svg)](https://learn.microsoft.com/en-us/power-pages/)
@@ -20,22 +20,22 @@ If you build classic Power Pages sites — particularly the hybrid native patter
 
 ```bash
 claude plugin marketplace add https://github.com/Nerdy-Q/claude-power-pages-plugins
-claude plugin install pp-portal@nq-claude-plugins
-claude plugin install pp-sync@nq-claude-plugins
-claude plugin install pp-permissions-audit@nq-claude-plugins
+claude plugin install pp-portal@nq-claude-power-pages-plugins
+claude plugin install pp-sync@nq-claude-power-pages-plugins
+claude plugin install pp-permissions-audit@nq-claude-power-pages-plugins
 ```
 
 After installing `pp-sync`, run its installer once to put the `pp` CLI on your PATH:
 
 ```bash
-~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>/install.sh
+~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh
 pp setup    # interactive bootstrap — auto-detects PAC profiles + site folders
 ```
 
 ## Marketplace structure
 
 ```
-nq-claude-plugins/
+claude-power-pages-plugins/
 ├── .claude-plugin/
 │   └── marketplace.json              # marketplace manifest
 ├── plugins/
@@ -53,7 +53,7 @@ nq-claude-plugins/
 1. Create `plugins/<name>/` with `.claude-plugin/plugin.json`
 2. Add a `skills/<name>/SKILL.md` (or commands, agents, or MCP server)
 3. Add an entry to `.claude-plugin/marketplace.json` under `plugins`
-4. From any Claude Code session: `claude plugin install <name>@nq-claude-plugins`
+4. From any Claude Code session: `claude plugin install <name>@nq-claude-power-pages-plugins`
 
 If the marketplace was already added, re-add it to refresh: `claude plugin marketplace add <path>`.
 

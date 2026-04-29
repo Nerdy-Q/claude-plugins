@@ -2,6 +2,17 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.5.0] — 2026-04-29
+
+### Changed
+
+- **Marketplace identity renamed** from `nq-claude-plugins` to `nq-claude-power-pages-plugins` to match the repo's actual scope and positioning.
+- **Branding tightened** across the README and contributor docs to use the human-facing name **NerdyQ Claude Power Pages Plugins**.
+- **Install and cache-path docs updated** to use the new marketplace name in `claude plugin install ...@nq-claude-power-pages-plugins` examples and `~/.claude/plugins/cache/nq-claude-power-pages-plugins/...` paths.
+- **Backward-compatible cache lookup retained** in `pp-sync` and the audit git-hook examples so older local installs under `nq-claude-plugins` still resolve.
+- **Repo-slug alignment completed** across docs, raw GitHub URLs, plugin homepages, and Action templates for `Nerdy-Q/claude-power-pages-plugins`.
+- **Contributor roadmap note added** in `CONTRIBUTING.md` to call out `pp-sync/bin/pp` behavioral tests as the next hardening surface after the audit regression suite.
+
 ## [2.4.0] — 2026-04-29
 
 ### Added (pp-permissions-audit v1.4.0)
@@ -81,7 +92,7 @@ Six reference-layer gaps surfaced by the v2.2.0 recipes pass, now closed:
 ## [2.0.0] — 2026-04-29
 
 ### Breaking
-- **Plugin renamed**: `pp-liquid` → `pp-portal`. Reinstall path: `claude plugin uninstall pp-liquid@nq-claude-plugins && claude plugin install pp-portal@nq-claude-plugins`.
+- **Plugin renamed**: `pp-liquid` → `pp-portal`. Reinstall path: `claude plugin uninstall pp-liquid@nq-claude-power-pages-plugins && claude plugin install pp-portal@nq-claude-power-pages-plugins`.
 - **References reorganized** into 5 category subdirectories: `language/`, `data/`, `pages/`, `workflow/`, `quality/`. Internal links updated automatically; any external bookmarks need updating to `references/<category>/<file>.md`.
 
 ### Added
@@ -147,7 +158,7 @@ Six reference-layer gaps surfaced by the v2.2.0 recipes pass, now closed:
 
 ### Initial public release
 
-Three plugins in the `nq-claude-plugins` marketplace at v1.0.0 each, sanitized and verified leak-free.
+Three plugins in the `nq-claude-power-pages-plugins` marketplace at v1.0.0 each, sanitized and verified leak-free.
 
 #### pp-liquid (v1.0.0)
 Knowledge skill for Power Pages classic Liquid templating. 8 reference files covering FetchXML count+paginate+filter, Web API in custom JS with the safeAjax / `__RequestVerificationToken` pattern, entity tags (entitylist, entityform, webform), DotLiquid quirks vs Shopify Liquid, hybrid render-then-mutate pages, and a troubleshooting matrix mapping common errors to causes and fixes.
@@ -165,6 +176,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.5.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.5.0
 [2.3.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.3.0
 [2.4.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.4.0
 [2.2.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.2.0

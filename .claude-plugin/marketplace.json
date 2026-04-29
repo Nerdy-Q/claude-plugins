@@ -1,11 +1,11 @@
 {
-    "name": "nq-claude-plugins",
+    "name": "nq-claude-power-pages-plugins",
     "owner": {
         "name": "NerdyQ",
         "url": "https://github.com/Nerdy-Q"
     },
     "metadata": {
-        "description": "Open-source Claude Code plugins from NerdyQ for Microsoft Power Pages classic portals — Liquid templating reference, safe pac paportal sync workflows, and static-analysis security audit."
+        "description": "Open-source Claude Code plugins from NerdyQ for Microsoft Power Pages classic portals — optimized for the current enhanced-model workflow around native Power Pages Studio's hybrid Liquid + Web API pattern, plus safe pac paportal sync workflows and static-analysis security audit."
     },
     "plugins": [
         {

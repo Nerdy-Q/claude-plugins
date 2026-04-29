@@ -5,7 +5,7 @@ Thanks for your interest in improving the Power Pages plugins. These plugins exi
 ## Plugin layout
 
 ```
-nq-claude-plugins/
+claude-power-pages-plugins/
 ├── .claude-plugin/marketplace.json     # marketplace manifest
 └── plugins/
     └── <plugin>/
@@ -71,8 +71,16 @@ claude plugin validate .                                        # marketplace
 ### Local marketplace install
 
 ```bash
-claude plugin marketplace add /path/to/nq-claude-plugins
-claude plugin install pp-portal@nq-claude-plugins
+claude plugin marketplace add /path/to/claude-power-pages-plugins
+claude plugin install pp-portal@nq-claude-power-pages-plugins
+
+## Near-term hardening
+
+The audit now has regression tests. The next test surface worth adding is `pp-sync/bin/pp`:
+
+- project-config generation fixtures (`pp setup`, `pp project add`)
+- changed-file counting and bulk-upload warnings
+- repo-local vs plugin-cache audit fallback behavior
 ```
 
 ## Conventions

@@ -2,7 +2,7 @@
 # Power Pages permissions audit — pre-commit hook installer
 #
 # Run from the root of your Power Pages project's git repo:
-#   ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
+#   ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
 #
 # What it does:
 #   1. Verifies cwd is a git repo
@@ -30,7 +30,10 @@ TEMPLATE="$SCRIPT_DIR/pre-commit"
 
 if [ ! -f "$TEMPLATE" ]; then
   # Fall back to the plugin cache (in case someone copies just this installer).
-  PLUGIN_CACHE="$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit"
+  PLUGIN_CACHE="$HOME/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit"
+  if [ ! -d "$PLUGIN_CACHE" ]; then
+    PLUGIN_CACHE="$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit"
+  fi
   TEMPLATE=$(find "$PLUGIN_CACHE" -maxdepth 4 -path '*/examples/git-hooks/pre-commit' 2>/dev/null \
              | sort -V | tail -1)
 fi
@@ -38,7 +41,7 @@ fi
 if [ -z "$TEMPLATE" ] || [ ! -f "$TEMPLATE" ]; then
   echo "ERROR: pre-commit template not found." >&2
   echo "Expected next to this installer or under:" >&2
-  echo "  ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/examples/git-hooks/pre-commit" >&2
+  echo "  ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/examples/git-hooks/pre-commit" >&2
   exit 1
 fi
 

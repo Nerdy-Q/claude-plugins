@@ -122,7 +122,7 @@ A ready-to-use pre-commit hook ships at [`examples/git-hooks/`](examples/git-hoo
 Install from the root of your Power Pages project's git repo:
 
 ```bash
-~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
+~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
 ```
 
 The installer backs up any existing `.git/hooks/pre-commit`, symlinks the bundled template into place, and chmods it executable. Test it without committing real work:

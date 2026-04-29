@@ -914,7 +914,9 @@ cmd_audit() {
 
     # Find audit.py — prefer installed plugin cache, fall back to this repo checkout
     local audit_py
-    audit_py=$(find "$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit" \
+    audit_py=$(find \
+        "$HOME/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit" \
+        "$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit" \
         -name "audit.py" 2>/dev/null | sort -V | tail -1)
     if [ -z "$audit_py" ] && [ -f "$REPO/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py" ]; then
         audit_py="$REPO/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py"

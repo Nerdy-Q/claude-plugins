@@ -5,7 +5,7 @@
 #   .git/hooks/pre-commit
 #
 # Or use the bundled installer:
-#   ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
+#   ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
 #
 # It auto-detects the Power Pages site folder (the first `<name>---<name>/`
 # containing website.yml + web-pages/), runs `audit.py --severity ERROR
@@ -44,7 +44,10 @@ fi
 # Prefer the newest installed version of the plugin cache. Fall back to a
 # plain `audit.py` on PATH for adventurous users.
 AUDIT_SCRIPT=""
-PLUGIN_CACHE="$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit"
+PLUGIN_CACHE="${PP_AUDIT_PLUGIN_CACHE:-$HOME/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit}"
+if [ ! -d "$PLUGIN_CACHE" ]; then
+  PLUGIN_CACHE="$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit"
+fi
 if [ -d "$PLUGIN_CACHE" ]; then
   # `sort -V` orders semver-ish names (1.2.0 < 1.10.0 correctly); tail -1
   # picks the newest. Glob expands across version directories.
@@ -57,10 +60,10 @@ if [ -z "$AUDIT_SCRIPT" ] || [ ! -f "$AUDIT_SCRIPT" ]; then
 pp-permissions-audit pre-commit hook: audit.py not found.
 
 Expected location:
-  ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/skills/pp-permissions-audit/scripts/audit.py
+  ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/skills/pp-permissions-audit/scripts/audit.py
 
 Install the plugin via Claude Code:
-  /plugin install nq-claude-plugins/pp-permissions-audit
+  /plugin install nq-claude-power-pages-plugins/pp-permissions-audit
 
 Or bypass this hook on a one-off (NOT recommended):
   git commit --no-verify

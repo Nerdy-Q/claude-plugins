@@ -16,7 +16,7 @@ ERROR-class findings indicate **definite** security or runtime bugs. WARN and IN
 From the root of your Power Pages project's git repo:
 
 ```bash
-~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
+~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit/<version>/examples/git-hooks/install-hook.sh
 ```
 
 The installer:
@@ -66,7 +66,7 @@ repos:
     hooks:
       - id: pp-permissions-audit
         name: Power Pages permissions audit
-        entry: bash -c 'SITE_DIR=$(find . -maxdepth 6 -type d -name "*---*" | while read d; do [ -f "$d/website.yml" ] && [ -d "$d/web-pages" ] && echo "$d" && break; done); SCRIPT=$(find ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit -path "*/scripts/audit.py" | sort -V | tail -1); python3 "$SCRIPT" "$SITE_DIR" --severity ERROR --exit-code'
+        entry: bash -c 'SITE_DIR=$(find . -maxdepth 6 -type d -name "*---*" | while read d; do [ -f "$d/website.yml" ] && [ -d "$d/web-pages" ] && echo "$d" && break; done); SCRIPT=$(find ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit ~/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit -path "*/scripts/audit.py" 2>/dev/null | sort -V | tail -1); python3 "$SCRIPT" "$SITE_DIR" --severity ERROR --exit-code'
         language: system
         pass_filenames: false
         always_run: true

@@ -29,7 +29,7 @@ Full reference: [cli-reference.md](references/cli-reference.md). Subcommand reso
 command -v pp >/dev/null && pp list >/dev/null 2>&1
 ```
 
-If yes, prefer `pp <op> <project>` over the per-project wrapper scripts. If no, fall back to wrapper scripts (or propose `~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>/install.sh` to install).
+If yes, prefer `pp <op> <project>` over the per-project wrapper scripts. If no, fall back to wrapper scripts (or propose `~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh` to install).
 
 ## When to apply
 
@@ -199,7 +199,7 @@ This skill ships ready-to-use wrapper scripts in `templates/` that you can drop 
 When the user is in a project **without** existing wrappers, propose installing the templates:
 
 ```bash
-PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>
+PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>
 cp $PLUGIN_CACHE/templates/*.sh /path/to/repo/
 chmod +x /path/to/repo/*.sh
 # then edit the CONFIG block at the top of each script

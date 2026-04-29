@@ -2,7 +2,7 @@
 
 Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each script encodes the safety logic the bare `pac` commands lack — auth confirmation, env URL display, working-dir checks, bulk-upload warnings, post-flight smoke tests.
 
-> **Most users want the `pp` CLI instead.** See [`../bin/pp`](../bin/pp) and [`../skills/pp-sync/references/cli-reference.md`](../skills/pp-sync/references/cli-reference.md). It uses a project registry (`~/.config/nq-pp-sync/projects/`) so `pp down anchor` works from anywhere — no per-project script copying. Run `~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>/install.sh` once, then `pp setup` to register projects.
+> **Most users want the `pp` CLI instead.** See [`../bin/pp`](../bin/pp) and [`../skills/pp-sync/references/cli-reference.md`](../skills/pp-sync/references/cli-reference.md). It uses a project registry (`~/.config/nq-pp-sync/projects/`) so `pp down anchor` works from anywhere — no per-project script copying. Run `~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh` once, then `pp setup` to register projects.
 >
 > Use these standalone templates only when (a) you want wrappers committed to the project repo for teammates without `pp` installed, or (b) you're working a one-off project you don't want to register globally.
 
@@ -21,7 +21,7 @@ Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each scr
 
 1. Copy the scripts you need to your project's repo root:
    ```bash
-   PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>
+   PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>
    cp $PLUGIN_CACHE/templates/*.sh /path/to/your/repo/
    chmod +x /path/to/your/repo/*.sh
    ```

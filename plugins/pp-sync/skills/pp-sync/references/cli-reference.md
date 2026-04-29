@@ -6,10 +6,10 @@ The `pp` command is a unified dispatcher for Power Pages portal sync, solution i
 
 ```bash
 # From the plugin cache:
-~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>/install.sh
+~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh
 
 # Or from the source repo:
-cd ~/Projects/nq-claude-plugins/plugins/pp-sync
+cd ~/Projects/claude-power-pages-plugins/plugins/pp-sync
 ./install.sh
 ```
 
