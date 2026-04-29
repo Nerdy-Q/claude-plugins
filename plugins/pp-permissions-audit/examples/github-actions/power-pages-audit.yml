@@ -41,7 +41,7 @@ on:
 
 env:
   # Pin to a released version of the audit script. Update when you upgrade.
-  AUDIT_REPO: 'Nerdy-Q/claude-plugins'
+  AUDIT_REPO: 'Nerdy-Q/claude-power-pages-plugins'
   AUDIT_REF:  'v1.2.0'
   AUDIT_PATH: 'plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py'
 

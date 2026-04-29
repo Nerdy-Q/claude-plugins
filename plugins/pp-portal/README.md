@@ -81,15 +81,15 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 ## Install
 
 ```bash
-claude plugin marketplace add https://github.com/Nerdy-Q/claude-plugins
+claude plugin marketplace add https://github.com/Nerdy-Q/claude-power-pages-plugins
 claude plugin install pp-portal@nq-claude-plugins
 ```
 
 Or from a local checkout:
 
 ```bash
-git clone https://github.com/Nerdy-Q/claude-plugins
-claude plugin marketplace add ./claude-plugins
+git clone https://github.com/Nerdy-Q/claude-power-pages-plugins
+claude plugin marketplace add ./claude-power-pages-plugins
 claude plugin install pp-portal@nq-claude-plugins
 ```
 

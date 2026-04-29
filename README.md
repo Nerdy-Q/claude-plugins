@@ -19,7 +19,7 @@ If you build classic Power Pages sites — particularly the hybrid native patter
 ## Install
 
 ```bash
-claude plugin marketplace add https://github.com/Nerdy-Q/claude-plugins
+claude plugin marketplace add https://github.com/Nerdy-Q/claude-power-pages-plugins
 claude plugin install pp-portal@nq-claude-plugins
 claude plugin install pp-sync@nq-claude-plugins
 claude plugin install pp-permissions-audit@nq-claude-plugins

@@ -4,7 +4,7 @@
 # Single-command interface for Power Pages portal sync, solution import/export,
 # and permissions audit, backed by a per-project config registry.
 #
-# See: https://github.com/Nerdy-Q/claude-plugins
+# See: https://github.com/Nerdy-Q/claude-power-pages-plugins
 #
 # Quick start:
 #   pp setup              # one-time bootstrap (auto-detects projects + PAC profiles)

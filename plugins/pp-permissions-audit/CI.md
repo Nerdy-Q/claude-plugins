@@ -9,7 +9,7 @@ A ready-to-use workflow ships at [`examples/github-actions/power-pages-audit.yml
 ```bash
 mkdir -p .github/workflows
 curl -o .github/workflows/power-pages-audit.yml \
-     https://raw.githubusercontent.com/Nerdy-Q/claude-plugins/main/plugins/pp-permissions-audit/examples/github-actions/power-pages-audit.yml
+     https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/main/plugins/pp-permissions-audit/examples/github-actions/power-pages-audit.yml
 ```
 
 What it does:
@@ -94,7 +94,7 @@ steps:
       versionSpec: '3.11'
 
   - bash: |
-      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-plugins/v1.2.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v1.2.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
            -o /tmp/audit.py
     displayName: 'Fetch audit script'
 
@@ -157,7 +157,7 @@ If your CI is generic shell (Jenkins, CircleCI, GitLab, Buildkite):
 set -euo pipefail
 
 # 1. Fetch the audit script
-curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-plugins/v1.2.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v1.2.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
      -o /tmp/audit.py
 
 # 2. Detect site folder

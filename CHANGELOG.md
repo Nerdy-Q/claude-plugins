@@ -165,11 +165,11 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
-[2.3.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.3.0
-[2.4.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.4.0
-[2.2.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.2.0
-[2.1.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.1.0
-[2.0.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.0.0
-[1.2.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v1.2.0
-[1.1.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v1.1.0
-[1.0.0]: https://github.com/Nerdy-Q/claude-plugins/commit/a96c400
+[2.3.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.3.0
+[2.4.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.4.0
+[2.2.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.2.0
+[2.1.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.1.0
+[2.0.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.0.0
+[1.2.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v1.2.0
+[1.1.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v1.1.0
+[1.0.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/commit/a96c400
