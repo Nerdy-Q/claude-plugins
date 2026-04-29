@@ -297,6 +297,8 @@ def _load_schema(schema_dir: Path) -> dict[str, dict[str, Any]]:
     Returns a dict keyed by entity logical name (lowercase) with:
       - fields: list of attribute logical names (lowercase)
       - lookup_value_fields: list of `_<attr>_value` forms for lookup reads
+      - secured_fields: list of field logical names with IsSecured=1
+      - readable_fields: list of field logical names with ValidForReadApi=1
       - entity_set_name: lowercase plural name used in Web API URLs
       - nav_props: list of navigation property names (case-preserved) from relationships
     """
@@ -317,9 +319,10 @@ def _load_schema(schema_dir: Path) -> dict[str, dict[str, Any]]:
         field_names = re.findall(r'<attribute\s+PhysicalName="([^"]+)"', text)
         lower_fields = [f.lower() for f in field_names]
 
-        # Detect lookup attributes — they have a <Type>lookup</Type> or <Type>customer</Type>
-        # inside the attribute. For each lookup, the `_<attr>_value` form is also valid in $select.
+        # Per-attribute metadata used for lookup handling and security-aware checks.
         lookup_attrs = []
+        secured_fields = []
+        readable_fields = []
         for attr_match in re.finditer(
             r'<attribute\s+PhysicalName="([^"]+)"[^>]*>(.*?)</attribute>',
             text, re.DOTALL,
@@ -328,6 +331,10 @@ def _load_schema(schema_dir: Path) -> dict[str, dict[str, Any]]:
             attr_body = attr_match.group(2)
             if re.search(r'<Type>(lookup|customer|owner)</Type>', attr_body, re.IGNORECASE):
                 lookup_attrs.append(attr_name)
+            if re.search(r'<IsSecured>\s*1\s*</IsSecured>', attr_body, re.IGNORECASE):
+                secured_fields.append(attr_name)
+            if re.search(r'<ValidForReadApi>\s*1\s*</ValidForReadApi>', attr_body, re.IGNORECASE):
+                readable_fields.append(attr_name)
 
         lookup_value_fields = [f"_{a}_value" for a in lookup_attrs]
 
@@ -344,6 +351,8 @@ def _load_schema(schema_dir: Path) -> dict[str, dict[str, Any]]:
         entities[entity_name] = {
             "fields": lower_fields,
             "lookup_value_fields": lookup_value_fields,
+            "secured_fields": secured_fields,
+            "readable_fields": readable_fields,
             "entity_set_name": entity_set_name,
             "nav_props": nav_props,
         }
@@ -397,6 +406,25 @@ def schema_field_valid(state: AuditState, entity: str, field: str) -> bool:
     if f in info["lookup_value_fields"]:
         return True
     return False
+
+
+def schema_secured_readable_fields(state: AuditState, entity: str) -> set[str]:
+    """Return fields that are both field-secured and readable through the Web API.
+
+    Returns an empty set when schema isn't authoritative for the entity.
+    """
+    if not state.schema_entities:
+        return set()
+    if is_microsoft_entity(entity):
+        return set()
+    info = state.schema_entities.get(entity.lower())
+    if not info:
+        return set()
+    secured = set(info.get("secured_fields", []))
+    readable = set(info.get("readable_fields", []))
+    if not secured or not readable:
+        return set()
+    return secured & readable
 
 
 # ---------------------------------------------------------------------------
@@ -651,21 +679,61 @@ def check_pages_auth_no_role(state: AuditState) -> None:
             )
 
 
-def check_fls_with_wildcard(state: AuditState) -> None:
-    """ERROR — `Webapi/<entity>/fields = *` on a table that has FLS-protected columns (best-effort)."""
+def check_secured_fields_wildcard(state: AuditState) -> None:
+    """WARN — `fields = *` on an entity with field-secured readable columns."""
     if state.schema_entities is None:
         return
-    # Heuristic: if schema indicates FLS attribute on any column, flag fields=* for that entity.
     for name, value in state.site_settings.items():
-        m = re.fullmatch(r"Webapi/([A-Za-z0-9_]+)/fields", name)
-        if not m or value.strip() != "*":
+        m = re.fullmatch(r"Webapi/([A-Za-z0-9_]+)/[Ff]ields", name)
+        if not m or str(value).strip() != "*":
             continue
         entity = m.group(1).lower()
-        # No clean way to detect FLS without parsing Entity.xml in detail; emit guidance only
-        # when entity exists in schema.
-        if entity in state.schema_entities:
-            # Not an automatic ERROR — we don't have FLS info reliably from here. Just info.
-            pass  # placeholder for future FLS-aware extension
+        secured_readable = sorted(schema_secured_readable_fields(state, entity))
+        if not secured_readable:
+            continue
+        sample = ", ".join(secured_readable[:5])
+        suffix = "…" if len(secured_readable) > 5 else ""
+        state.add(
+            "WARN",
+            "WRN-009",
+            f"Web API on `{entity}` uses `fields = *` and the entity has secured readable fields",
+            f"Entity.xml marks {len(secured_readable)} field(s) as both `IsSecured = 1` and "
+            f"`ValidForReadApi = 1` (sample: {sample}{suffix}). A wildcard Web API whitelist is "
+            "higher risk here because future callers can read more than an explicit allowlist "
+            "makes obvious. Prefer a narrow `Webapi/<entity>/Fields` whitelist.",
+            location=f"site-settings/.../{name}",
+        )
+
+
+def check_secured_fields_in_webapi_whitelist(state: AuditState) -> None:
+    """ERROR — explicit Web API whitelist includes secured readable fields."""
+    if state.schema_entities is None:
+        return
+    for name, value in state.site_settings.items():
+        m = re.fullmatch(r"Webapi/([A-Za-z0-9_]+)/[Ff]ields", name)
+        if not m:
+            continue
+        entity = m.group(1).lower()
+        whitelist = str(value).strip()
+        if whitelist in {"", "*"}:
+            continue
+        secured_readable = schema_secured_readable_fields(state, entity)
+        if not secured_readable:
+            continue
+        listed_fields = [f.strip().lower() for f in whitelist.split(",") if f.strip()]
+        exposed = sorted(f for f in listed_fields if f in secured_readable)
+        if not exposed:
+            continue
+        state.add(
+            "ERROR",
+            "ERR-004",
+            f"`Webapi/{entity}/Fields` explicitly whitelists secured readable field(s)",
+            f"The Web API whitelist includes field-secured columns that Entity.xml marks as "
+            f"`IsSecured = 1` and `ValidForReadApi = 1`: {', '.join(exposed)}. Verify that "
+            "portal callers should read these columns; otherwise remove them from the whitelist "
+            "or redesign the endpoint so only non-sensitive fields are exposed.",
+            location=f"site-settings/.../{name}",
+        )
 
 
 def check_base_vs_localized_divergence(state: AuditState) -> None:
@@ -1161,7 +1229,8 @@ def main(argv: list[str] | None = None) -> int:
     check_polymorphic_lookups_in_js(state)
     check_orphaned_roles(state)
     check_pages_auth_no_role(state)
-    check_fls_with_wildcard(state)
+    check_secured_fields_wildcard(state)
+    check_secured_fields_in_webapi_whitelist(state)
     check_base_vs_localized_divergence(state)
     check_base_vs_localized_divergence_content(state)
     check_unsafe_dotliquid_escape(state)

@@ -133,6 +133,11 @@ jobs:
           python3 -c "import py_compile; py_compile.compile('plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py', doraise=True)"
           echo "OK    audit.py compiles"
 
+      - name: Run audit.py regression tests
+        run: |
+          python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py
+          echo "OK    audit.py regression tests pass"
+
       - name: Bash syntax check
         run: |
           fail=0

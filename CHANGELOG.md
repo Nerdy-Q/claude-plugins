@@ -2,6 +2,28 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.4.0] — 2026-04-29
+
+### Added (pp-permissions-audit v1.4.0)
+
+- **Schema-aware field-security checks** in `audit.py`:
+  - `ERR-004` when `Webapi/<entity>/Fields` explicitly whitelists fields whose `Entity.xml` metadata marks them as both `IsSecured = 1` and `ValidForReadApi = 1`
+  - `WRN-009` when `Webapi/<entity>/Fields = *` is used on an entity that has secured readable fields
+- **Regression tests** for the audit at `plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py`, covering generic wildcard exposure, wildcard-plus-secured-field warning, and explicit secured-field whitelist error.
+- **CI validation step** in `.github/workflows/plugin-validate.yml` that runs the audit regression suite on every PR and push.
+
+### Changed (pp-sync v1.5.0)
+
+- Fixed a `v2.3.0` regression where `pp setup` and `pp project add` wrote literal `$name` / `$repo` strings into generated config files instead of real values.
+- `pp up` and the standalone `templates/up.sh` now count tracked plus untracked files when deciding whether to warn about risky bulk uploads.
+- `pp audit` now falls back to the repo-local `audit.py` when the cached Claude plugin install is missing, so contributors can use the command directly from a checkout.
+- Updated install docs to use `~/.claude/plugins/cache/.../<version>/` instead of a stale hard-coded cache version.
+
+### Changed (pp-portal v2.2.1)
+
+- Tightened positioning copy across the README, manifest, and skill docs to state explicitly that `pp-portal` is optimized for the current enhanced-model workflow around native Power Pages Studio's hybrid Liquid + Web API pattern, and is intentionally not for full Power Pages code sites / React-style SPAs.
+- Removed stale “coming in this release” placeholders now that the referenced files are present in-repo.
+
 ## [2.3.0] — 2026-04-29
 
 ### Added (pp-portal v2.2.0)
@@ -144,6 +166,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
 [2.3.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.3.0
+[2.4.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.4.0
 [2.2.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.2.0
 [2.1.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.1.0
 [2.0.0]: https://github.com/Nerdy-Q/claude-plugins/releases/tag/v2.0.0

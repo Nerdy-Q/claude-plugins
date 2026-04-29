@@ -9,6 +9,7 @@ Full list of checks the audit script performs, with codes, severity, and what tr
 | ERR-001 | Web API enabled for `<entity>` but no Table Permission grants Read | A `Webapi/<entity>/Enabled = true` site setting exists but no Table Permission with `adx_read: true` references the same entity. Web API calls would return 401/403. |
 | ERR-002 | Orphaned Table Permission `<name>` | A Table Permission has empty `adx_entitypermission_webrole`. Skipped if the export format doesn't include the role junction (see INFO-004). |
 | ERR-003 | Anonymous Users role granted `<ops>` on `<entity>` | A role marked `adx_anonymoususersrole: true` is referenced in a permission with Write, Create, or Delete on a non-trivial table. |
+| ERR-004 | `Webapi/<entity>/Fields` explicitly whitelists secured readable field(s) | **Schema-aware check**. An explicit Web API whitelist includes field logical names whose `Entity.xml` attribute blocks have both `IsSecured = 1` and `ValidForReadApi = 1`. This is a direct exposure decision and should be reviewed as a security issue. |
 
 ## WARN-class
 
@@ -22,6 +23,7 @@ Full list of checks the audit script performs, with codes, severity, and what tr
 | WRN-006 | `$select=<field>` references a field that does not exist on `<entity>` | **Schema-aware check** (only runs when `dataverse-schema/` is in the repo). Custom JS has `/_api/<entityset>?$select=...` with a field name not present in the entity's `Entity.xml`. Skips Microsoft built-in entities (we only see partial customizations). Likely a typo or stale reference after a column rename. |
 | WRN-007 | FetchXML attribute `<name>` does not exist on `<entity>` | **Schema-aware check**. A `{% fetchxml %}` block uses an `<attribute name="...">` not present in the entity's `Entity.xml`. Common after a column rename or removal — the FetchXML wasn't updated. Will fail at page render time. |
 | WRN-008 | `Webapi/<entity>/Fields` lists field(s) that do not exist on `<entity>` | **Schema-aware check**. The Site Setting whitelist references attributes not in `Entity.xml`. Doesn't break the API (silently ignored) but signals config drift after a column rename or removal. Update the whitelist. |
+| WRN-009 | Web API on `<entity>` uses `fields = *` and the entity has secured readable fields | **Schema-aware check**. The entity has one or more attributes with both `IsSecured = 1` and `ValidForReadApi = 1`, and the portal uses `Webapi/<entity>/Fields = *`. This is riskier than a narrow whitelist because the exposure set is implicit. |
 
 ## INFO-class
 
@@ -40,6 +42,7 @@ Full list of checks the audit script performs, with codes, severity, and what tr
 - **WRN-001** uses name-substring matching to flag *possible* polymorphic lookups. Power Pages doesn't expose the polymorphic-vs-singular field type in the per-page YAML; the script can't be 100% sure. Always cross-check against the entity schema before applying a fix. False positives are expected; false negatives are unlikely.
 - **WRN-002** skips implicit roles (`Anonymous Users`, `Authenticated Users`) which always have an "implicit" association via the role flag — they don't need to be referenced by GUID.
 - **ERR-001** falls back to entity-only matching (without role validation) when the export format omits the role junction (INFO-004 case). It still catches the most common misalignment (Web API enabled, zero permissions exist), but won't catch role-specific gaps.
+- **ERR-004 / WRN-009** rely on `Entity.xml` carrying accurate `IsSecured` and `ValidForReadApi` flags for the entity. They skip Microsoft built-in entities because custom-solution exports only include partial metadata for those tables.
 
 ## Adding a new check
 

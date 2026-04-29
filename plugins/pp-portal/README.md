@@ -48,7 +48,7 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 ### Language
 
 - `references/language/operators.md` — Liquid operators, truthy / falsy
-- `references/language/types.md` — Liquid type system *(coming in this release)*
+- `references/language/types.md` — Liquid type system
 - `references/language/tags.md` — Power Pages tags (`{% fetchxml %}`, `{% entitylist %}`, `{% entityform %}`, `{% webform %}`, `{% editable %}`, `{% chart %}`, `{% include %}`, `{% block %}`/`{% extends %}`)
 - `references/language/filters.md` — DotLiquid filter table + Power Pages-specific extensions
 - `references/language/objects.md` — `user`, `page`, `website`, `request`, `weblinks`, `snippets`, `sitemarkers`, `settings`
@@ -60,7 +60,7 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 - `references/data/fetchxml-patterns.md` — count + paginate + filter, link-entity, aggregation
 - `references/data/dataverse-naming.md` — the 4-name model + navigation property casing + error decoding
 - `references/data/permissions-and-roles.md` — Web Roles, Table Permissions, Web API access requirements
-- `references/data/site-settings.md` — site setting catalog *(coming in this release)*
+- `references/data/site-settings.md` — site setting catalog
 
 ### Pages + presentation
 
@@ -71,7 +71,7 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 ### Workflow + tooling
 
 - `references/workflow/sync-workflow.md` — `pac paportal` patterns, wrapper scripts, cache hangs
-- `references/workflow/microsoft-plugins.md` — when to defer to Microsoft's plugins instead *(coming in this release)*
+- `references/workflow/microsoft-plugins.md` — when to defer to Microsoft's plugins instead
 
 ### Quality + compliance
 

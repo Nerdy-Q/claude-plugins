@@ -60,12 +60,12 @@ See [checks.md](references/checks.md) for the full list. Highlights:
 | ERROR | Web API enabled (`Webapi/<entity>/enabled = true`) but no Table Permission grants Read for any Web Role |
 | ERROR | Table Permission with empty `adx_webroles` array (orphaned) |
 | ERROR | Anonymous Users role granted Write/Delete on a sensitive table |
-| ERROR | `Webapi/<entity>/fields = *` on a table that has FLS-protected columns |
-| WARN | Table Permission grants Read but Web API site setting is missing — Web API will 404 |
-| WARN | Web Page requires authentication but no Web Role rule (any auth user can see) |
+| ERROR | `Webapi/<entity>/Fields` explicitly whitelists field-secured readable columns |
+| INFO | Table Permission grants Read but Web API site setting is missing — Web API will 404 |
+| INFO | Web Page requires authentication but no Web Role rule (any auth user can see) |
 | WARN | Custom JS has `<lookup>@odata.bind` without `_contact` / `_account` suffix on a polymorphic field — runtime 400 |
 | WARN | Web Role exists but has zero contacts assigned (orphaned role) |
-| INFO | Web API enabled but `fields` whitelist is the safer pattern than `*` |
+| WARN | `Webapi/<entity>/Fields = *` on an entity that has field-secured readable columns |
 | INFO | Table Permission with Global scope but the entity has user-owned records |
 
 ## Interpreting findings
@@ -73,7 +73,7 @@ See [checks.md](references/checks.md) for the full list. Highlights:
 Three categories of fix:
 
 1. **Add missing config**: Web API site setting is missing — add it to `site-settings/`
-2. **Tighten config**: `fields = *` exposes too much — narrow to a whitelist
+2. **Tighten config**: `fields = *` is broader than necessary — narrow to a whitelist
 3. **Remove dead config**: orphaned permission with no roles — delete the YAML file
 
 The script flags issues. **You** make the call about which to fix and how — based on whether the data is genuinely sensitive, whether the role is intended to have access, etc. Always discuss findings with the user before applying fixes.

@@ -1,13 +1,13 @@
 ---
 name: pp-portal
-description: Microsoft Power Pages classic portals — the hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use when working in *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, or when the user mentions Power Pages, fetchxml, entitylist, entityform, webform, web roles, table permissions, sitemarkers, or pac paportal. NOT for code sites (use Microsoft's power-pages plugin); for Dataverse-side work (schema authoring, data import, solutions), defer to Microsoft's dataverse plugin (dv-connect, dv-query, dv-metadata, dv-solution).
+description: Microsoft Power Pages classic portals — optimized for the current enhanced-model workflow around the native Power Pages Studio hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use when working in *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, or when the user mentions Power Pages, fetchxml, entitylist, entityform, webform, web roles, table permissions, sitemarkers, or pac paportal. NOT for full code sites / React-style SPAs (use Microsoft's power-pages plugin); for Dataverse-side work (schema authoring, data import, solutions), defer to Microsoft's dataverse plugin (dv-connect, dv-query, dv-metadata, dv-solution).
 ---
 
 # Power Pages Portal (classic, hybrid)
 
-Classic-portal reference for Microsoft Power Pages (formerly Power Apps Portals, formerly Dynamics 365 Portals). Covers the **server-rendered Liquid + client-side Web API** hybrid pattern that real production portals use.
+Classic-portal reference for Microsoft Power Pages (formerly Power Apps Portals, formerly Dynamics 365 Portals). Optimized for the current enhanced-model workflow around the **server-rendered Liquid + client-side Web API** hybrid pattern that real production portals use in native Power Pages Studio-managed portal assets.
 
-> **NOT for**: Power Pages **code sites** (React/Vue/Astro SPAs that call the Web API directly — those use Microsoft's `power-pages` plugin). NOT for Shopify, Jekyll, or generic Liquid — Power Pages uses **DotLiquid**, a .NET reimplementation with different filter behavior in important places (see [references/language/dotliquid-gotchas.md](references/language/dotliquid-gotchas.md)).
+> **NOT for**: Power Pages **code sites** or React/Vue/Astro-style SPAs that call the Web API directly — those use Microsoft's `power-pages` plugin. NOT for Shopify, Jekyll, or generic Liquid — Power Pages uses **DotLiquid**, a .NET reimplementation with different filter behavior in important places (see [references/language/dotliquid-gotchas.md](references/language/dotliquid-gotchas.md)).
 
 ## When this skill applies
 
@@ -157,7 +157,7 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 How DotLiquid itself works in Power Pages — the syntactic surface.
 
 - [references/language/operators.md](references/language/operators.md) — Liquid operators (`==`, `!=`, `contains`, `and`, `or`, truthy/falsy rules)
-- `references/language/types.md` — Liquid type system (string, number, boolean, array, hash, drop, dates) *(coming in this release)*
+- [references/language/types.md](references/language/types.md) — Liquid type system (string, number, boolean, array, hash, drop, dates)
 - [references/language/tags.md](references/language/tags.md) — Power Pages tags: `{% fetchxml %}`, `{% entitylist %}`, `{% entityform %}`, `{% webform %}`, `{% editable %}`, `{% chart %}`, `{% include %}`, `{% block %}`/`{% extends %}`
 - [references/language/filters.md](references/language/filters.md) — DotLiquid filter table with examples + Power Pages-specific extensions
 - [references/language/objects.md](references/language/objects.md) — `user`, `page`, `website`, `request`, `weblinks`, `snippets`, `sitemarkers`, `settings`, `now`, `params`
@@ -171,7 +171,7 @@ How the portal talks to Dataverse — names, queries, mutations, permissions, se
 - [references/data/fetchxml-patterns.md](references/data/fetchxml-patterns.md) — `{% fetchxml %}` count + paginate + filter, link-entity, aggregation
 - [references/data/dataverse-naming.md](references/data/dataverse-naming.md) — the 4-name model (Logical / Schema / Display / Entity Set), navigation property casing, error-decoding cheat sheet
 - [references/data/permissions-and-roles.md](references/data/permissions-and-roles.md) — Web Roles, Table Permissions scopes, Web API access requirements
-- `references/data/site-settings.md` — site setting catalog (CSP, Web API enablement, feature flags) *(coming in this release)*
+- [references/data/site-settings.md](references/data/site-settings.md) — site setting catalog (CSP, Web API enablement, feature flags)
 
 ### Pages + presentation
 
@@ -186,7 +186,7 @@ How a page is constructed and styled — the rendering surface users actually se
 How you get code in and out of Dataverse and which adjacent tools to reach for.
 
 - [references/workflow/sync-workflow.md](references/workflow/sync-workflow.md) — `pac paportal` patterns, wrapper scripts, cache hangs, GCC vs commercial differences
-- `references/workflow/microsoft-plugins.md` — when to defer to Microsoft's `dataverse` / `power-pages` / `canvas-apps` / `model-apps` / `mcp-apps` plugins instead of stretching this one *(coming in this release)*
+- [references/workflow/microsoft-plugins.md](references/workflow/microsoft-plugins.md) — when to defer to Microsoft's `dataverse` / `power-pages` / `canvas-apps` / `model-apps` / `mcp-apps` plugins instead of stretching this one
 
 ### Quality + compliance
 

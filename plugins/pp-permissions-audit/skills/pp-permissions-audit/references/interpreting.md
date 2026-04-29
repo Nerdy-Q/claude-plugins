@@ -89,6 +89,28 @@ For these, ensure:
 - For tables with **PII, financial, or confidential fields**: replace `*` with an explicit whitelist.
 - Audit periodically as new fields are added.
 
+## WRN-009 — `fields = *` on entity with secured readable fields
+
+**Likely real**: High-signal when schema is present.
+
+**What it means**: The entity's `Entity.xml` shows one or more attributes with both `IsSecured = 1` and `ValidForReadApi = 1`, and the portal uses `Webapi/<entity>/Fields = *`. The wildcard is the risk here: it makes the exposure set implicit instead of deliberate.
+
+**Action**:
+- Treat this as stronger than INFO-002. Replace `*` with an explicit whitelist.
+- Review whether any secured field truly belongs in a portal response.
+- If a secured field must remain readable, document the rationale explicitly.
+
+## ERR-004 — Whitelist includes secured readable fields
+
+**Likely real**: High-signal and usually actionable.
+
+**What it means**: The explicit `Webapi/<entity>/Fields` setting names one or more fields whose `Entity.xml` attribute blocks have both `IsSecured = 1` and `ValidForReadApi = 1`. This is no longer an implicit wildcard problem; it is a direct allowlist decision.
+
+**Action**:
+- Confirm each flagged field is intentionally exposed to portal callers.
+- Remove any field that does not have a clear business need.
+- If the field must stay, verify the surrounding Table Permission scope and role access are as narrow as possible.
+
 ## INFO-003 — Page requires auth but no role rule
 
 **Likely real**: Often intentional (any-authenticated-user pages exist legitimately).

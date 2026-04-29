@@ -199,7 +199,7 @@ This skill ships ready-to-use wrapper scripts in `templates/` that you can drop 
 When the user is in a project **without** existing wrappers, propose installing the templates:
 
 ```bash
-PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/0.2.0
+PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>
 cp $PLUGIN_CACHE/templates/*.sh /path/to/repo/
 chmod +x /path/to/repo/*.sh
 # then edit the CONFIG block at the top of each script

@@ -55,8 +55,10 @@ case "$ENV_URL" in
     ;;
 esac
 
-# 3. Estimate change count by recent git diff vs HEAD
-CHANGED=$(git diff --name-only HEAD 2>/dev/null | grep "^$SITE_DIR" | wc -l | tr -d ' ' || echo 0)
+# 3. Estimate change count by tracked + untracked files in SITE_DIR
+TRACKED=$(git diff --name-only HEAD -- "$SITE_DIR" 2>/dev/null || true)
+UNTRACKED=$(git ls-files --others --exclude-standard -- "$SITE_DIR" 2>/dev/null || true)
+CHANGED=$(printf '%s\n%s\n' "$TRACKED" "$UNTRACKED" | grep -v '^$' | sort -u | wc -l | tr -d ' ')
 echo "→ Estimated changed files in $SITE_DIR: $CHANGED"
 
 if [ "$CHANGED" -gt "$BULK_THRESHOLD" ] && [ "$FORCE_BULK" -eq 0 ]; then

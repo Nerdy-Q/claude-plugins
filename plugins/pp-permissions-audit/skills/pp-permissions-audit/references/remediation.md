@@ -77,6 +77,14 @@ If anonymous create is genuinely needed (public contact form etc.):
 3. Configure CAPTCHA on the form (Site Setting `Authentication/Registration/CaptchaEnabled = true` and `Authentication/Registration/Captcha/<page>` references)
 4. Add server-side validation via plugins if write is allowed
 
+## ERR-004 — Web API whitelist includes secured readable fields
+
+1. Open the `Webapi/<entity>/Fields` site setting
+2. Compare the listed fields against the entity's `Entity.xml` attribute blocks
+3. Remove any field the audit flagged as secured unless the portal truly needs to expose it
+4. If the portal does need it, document the business reason and verify the caller is restricted to the minimum necessary role/scope
+5. Re-test the affected `/_api/<entity>` calls after tightening the list
+
 ## WRN-001 — Polymorphic lookup without disambiguator
 
 1. Identify the entity that owns this lookup. Look at the calling URL to infer which table the new record is being created in.
@@ -133,6 +141,14 @@ If access is purely server-side via FetchXML in Liquid: leave as-is, this findin
 5. Sync
 
 The transition from `*` to a whitelist often catches dead code that was reading fields nobody knew were exposed.
+
+## WRN-009 — Wildcard on entity with secured readable fields
+
+1. Treat the wildcard as the first thing to remove
+2. Inventory which fields the portal actually reads from this entity
+3. Replace `Webapi/<entity>/Fields = *` with only those fields
+4. Double-check whether any secured field truly belongs in a portal response; if yes, prefer documenting that decision explicitly in the whitelist review
+5. Re-run the audit to confirm the warning clears
 
 ## INFO-003 — Page requires auth but no role rule
 

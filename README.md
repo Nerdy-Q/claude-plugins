@@ -4,9 +4,9 @@
 [![Power Pages](https://img.shields.io/badge/Power%20Pages-hybrid%20Liquid%20%2B%20Web%20API-purple.svg)](https://learn.microsoft.com/en-us/power-pages/)
 [![Claude Code](https://img.shields.io/badge/Claude%20Code-plugin%20marketplace-orange.svg)](https://docs.claude.com/en/docs/claude-code/plugins)
 
-Open-source Claude Code plugins from [NerdyQ](https://github.com/Nerdy-Q) for **Microsoft Power Pages classic portals**: hybrid Liquid + Web API patterns, safe `pac paportal` sync workflows, and static-analysis security audit.
+Open-source Claude Code plugins from [NerdyQ](https://github.com/Nerdy-Q) for **Microsoft Power Pages classic portals**: optimized for the current enhanced-model workflow around native Power Pages Studio's **hybrid Liquid + Web API** pattern, plus safe `pac paportal` sync workflows and static-analysis security audit.
 
-If you build classic Power Pages sites — particularly the hybrid pattern where Liquid renders the initial state and custom JS calls `/_api/<entity>` for interactivity — this marketplace turns Claude Code into a Power Pages-aware pair programmer that knows the gotchas, runs the right `pac` commands with the right safety guards, and audits your portal's permissions for misalignment.
+If you build classic Power Pages sites — particularly the hybrid native pattern where Liquid renders the initial state in Studio-managed portal assets and custom JS calls `/_api/<entity>` for interactivity — this marketplace turns Claude Code into a Power Pages-aware pair programmer that knows the gotchas, runs the right `pac` commands with the right safety guards, and audits your portal's permissions for misalignment. It is intentionally scoped away from full Power Pages code sites built as React-style SPAs; for those, use Microsoft's `power-pages` plugin.
 
 ## Plugins
 

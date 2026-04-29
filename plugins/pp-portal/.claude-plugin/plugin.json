@@ -1,7 +1,7 @@
 {
     "name": "pp-portal",
-    "description": "Microsoft Power Pages classic portals — the hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use when working in *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, or when the user mentions Power Pages, fetchxml, entitylist, entityform, webform, web roles, table permissions, sitemarkers, or pac paportal. NOT for code sites (use Microsoft's power-pages plugin); for Dataverse-side work (schema authoring, data import, solutions), defer to Microsoft's dataverse plugin (dv-connect, dv-query, dv-metadata, dv-solution).",
-    "version": "2.2.0",
+    "description": "Microsoft Power Pages classic portals — optimized for the current enhanced-model workflow around the native Power Pages Studio hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use when working in *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, or when the user mentions Power Pages, fetchxml, entitylist, entityform, webform, web roles, table permissions, sitemarkers, or pac paportal. NOT for full code sites / React-style SPAs (use Microsoft's power-pages plugin); for Dataverse-side work (schema authoring, data import, solutions), defer to Microsoft's dataverse plugin (dv-connect, dv-query, dv-metadata, dv-solution).",
+    "version": "2.2.1",
     "author": {
         "name": "NerdyQ",
         "url": "https://github.com/Nerdy-Q"

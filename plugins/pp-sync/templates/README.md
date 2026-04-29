@@ -21,7 +21,7 @@ Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each scr
 
 1. Copy the scripts you need to your project's repo root:
    ```bash
-   PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/0.2.0
+   PLUGIN_CACHE=~/.claude/plugins/cache/nq-claude-plugins/pp-sync/<version>
    cp $PLUGIN_CACHE/templates/*.sh /path/to/your/repo/
    chmod +x /path/to/your/repo/*.sh
    ```
