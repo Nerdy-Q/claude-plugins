@@ -81,7 +81,7 @@ Examples (assuming you've registered `anchor`, `contoso-dev`, `contoso-client`, 
 
 ```bash
 pp down anchor              # exact
-pp down petr                # ambiguous → error (matches both contoso-*)
+pp down contoso             # ambiguous → error (matches both contoso-*)
 pp down contoso-d         # unique prefix → contoso-dev
 pp alias add petro contoso-dev
 pp down petro               # alias

@@ -320,6 +320,16 @@ page_dir="$site_dir/web-pages/my-new-page"
     || assert_fail "base HTML missing"
 [ -d "$page_dir/content-pages" ] && assert_pass "content-pages dir created" \
     || assert_fail "content-pages dir missing"
+[ -d "$page_dir/content-pages/en-US" ] && assert_pass "content-pages/en-US dir created" \
+    || assert_fail "content-pages/en-US dir missing"
+[ -f "$page_dir/content-pages/en-US/My New Page.en-US.webpage.copy.html" ] && assert_pass "localized HTML created in lang dir" \
+    || assert_fail "localized HTML missing in lang dir"
+[ -f "$page_dir/content-pages/en-US/My New Page.en-US.webpage.custom_javascript.js" ] && assert_pass "localized JS created in lang dir" \
+    || assert_fail "localized JS missing in lang dir"
+[ ! -f "$page_dir/content-pages/My New Page.en-US.webpage.copy.html" ] && assert_pass "no legacy flat localized HTML created" \
+    || assert_fail "legacy flat localized HTML should not exist"
+[ ! -f "$page_dir/content-pages/My New Page.en-US.webpage.custom_javascript.js" ] && assert_pass "no legacy flat localized JS created" \
+    || assert_fail "legacy flat localized JS should not exist"
 
 # Existing page → die
 out=$(PP_CONFIG_DIR="$reg" "$PP_BIN" generate-page alpha "My New Page" 2>&1 || true)
@@ -334,17 +344,22 @@ echo
 reg=$(make_registry alpha)
 project_repo="$reg/repo-alpha"
 page_dir="$project_repo/site---site/web-pages/test-page"
-mkdir -p "$page_dir/content-pages/en-US"
+mkdir -p "$page_dir/content-pages/en-US" "$page_dir/content-pages/fr-FR"
 echo "BASE CONTENT" > "$page_dir/test-page.webpage.copy.html"
 echo "OLD LOCALIZED" > "$page_dir/content-pages/en-US/test-page.en-US.webpage.copy.html"
+echo "ANCIEN LOCALIZED" > "$page_dir/content-pages/fr-FR/test-page.fr-FR.webpage.copy.html"
 
-# base-to-localized: base content should overwrite localized
+# base-to-localized: base content should overwrite all localized variants
 out=$(PP_CONFIG_DIR="$reg" "$PP_BIN" sync-pages alpha base-to-localized 2>&1 || true)
-loc=$(cat "$page_dir/content-pages/en-US/test-page.en-US.webpage.copy.html" 2>/dev/null || echo "")
-[ "$loc" = "BASE CONTENT" ] && assert_pass "base-to-localized copied content" \
-    || assert_fail "base-to-localized failed" "loc='$loc'"
+loc_en=$(cat "$page_dir/content-pages/en-US/test-page.en-US.webpage.copy.html" 2>/dev/null || echo "")
+loc_fr=$(cat "$page_dir/content-pages/fr-FR/test-page.fr-FR.webpage.copy.html" 2>/dev/null || echo "")
+[ "$loc_en" = "BASE CONTENT" ] && assert_pass "base-to-localized copied en-US content" \
+    || assert_fail "base-to-localized en-US failed" "loc_en='$loc_en'"
+[ "$loc_fr" = "BASE CONTENT" ] && assert_pass "base-to-localized copied fr-FR content" \
+    || assert_fail "base-to-localized fr-FR failed" "loc_fr='$loc_fr'"
 
 # Reset and test the other direction
+rm -f "$page_dir/content-pages/fr-FR/test-page.fr-FR.webpage.copy.html"
 echo "NEW BASE" > "$page_dir/test-page.webpage.copy.html"
 echo "LOCALIZED CONTENT" > "$page_dir/content-pages/en-US/test-page.en-US.webpage.copy.html"
 
@@ -357,6 +372,10 @@ base=$(cat "$page_dir/test-page.webpage.copy.html" 2>/dev/null || echo "")
 # Invalid direction
 out=$(printf 'invalid\n' | PP_CONFIG_DIR="$reg" "$PP_BIN" sync-pages alpha 2>&1 || true)
 assert_contains "invalid sync-pages direction rejected" "Invalid choice" "$out"
+
+# Invalid explicit direction should also reject rather than no-op
+out=$(PP_CONFIG_DIR="$reg" "$PP_BIN" sync-pages alpha bogus 2>&1 || true)
+assert_contains "invalid explicit sync-pages direction rejected" "Invalid sync-pages direction" "$out"
 
 # --- Section 10: cmd_help ------------------------------------------------
 
