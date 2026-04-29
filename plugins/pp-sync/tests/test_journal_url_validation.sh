@@ -105,6 +105,18 @@ run_url_test "wrong host rejected" \
 # patterns the same as GitHub, and the same-repo enforcement uses the
 # same code path differing only in which CLI is invoked.
 
+# Reject: subdomain spoof — host is "github.com.evil.com" not "github.com"
+run_url_test "subdomain spoof rejected (github.com.evil.com)" \
+    "https://github.com.evil.com/owner/repo/issues/1" "$CURRENT" "reject"
+
+# Reject: port number injection (regex doesn't allow colon)
+run_url_test "port number rejected" \
+    "https://github.com:8080/Nerdy-Q/claude-power-pages-plugins/issues/1" "$CURRENT" "reject"
+
+# Reject: http (not https) — would reveal token in cleartext
+run_url_test "http scheme rejected" \
+    "http://github.com/Nerdy-Q/claude-power-pages-plugins/issues/1" "$CURRENT" "reject"
+
 # Reject: trailing slash after issue number
 run_url_test "trailing slash rejected" \
     "$CURRENT/issues/42/" "$CURRENT" "reject"
