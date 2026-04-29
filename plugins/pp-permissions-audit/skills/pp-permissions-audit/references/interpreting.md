@@ -119,6 +119,130 @@ For these, ensure:
 
 **Action**: If the page should be role-restricted (e.g., only Contractors should see contractor-specific pages), add a Web Page Access Control Rule referencing the allowed roles.
 
+## WRN-003 — Sitemarker referenced in Liquid but not defined
+
+**Likely real**: Yes — manifests as a missing link or broken nav.
+
+**What it means**: A Liquid template uses `sitemarkers['Name']` but no `sitemarker.yml` record with that `adx_name` exists in the export.
+
+**False-positive cases**: The sitemarker exists in the environment but wasn't downloaded. Re-run `pac paportal download`.
+
+**To verify**: Search `sitemarker*.yml` for the missing name. If absent, the navigation link or destination it builds will render as `null`/empty in the portal.
+
+## WRN-004 — Custom JS calls `/_api/` without anti-forgery token
+
+**Likely real**: Yes — calls will 403 at runtime.
+
+**What it means**: A `*.webpage.custom_javascript.js` file makes Web API calls but does not reference `__RequestVerificationToken` or the standard `safeAjax` helper. Power Pages requires anti-forgery tokens on `/_api/` writes (and many reads).
+
+**False-positive cases**: The token logic lives in a shared `web-files/*.js` and is called from this page. The audit doesn't follow `<script>` cross-references.
+
+**To verify**: Test the affected page in a browser — a 403 from `/_api/` is the runtime symptom.
+
+## WRN-005 — All-lowercase navigation property in `@odata.bind`
+
+**Likely real**: Likely — but check the schema first.
+
+**What it means**: `<lookup>@odata.bind` uses an all-lowercase name. Custom-entity navigation properties usually use PascalCase (matching the schema name) — all-lowercase suggests the developer used the Logical Name where the Navigation Property was needed.
+
+**To verify**: Open `dataverse-schema/<solution>/Entities/<entity>/Entity.xml`, find the relationship, and check `<EntityRelationship Name="...">`. If the Navigation Property differs from the Logical Name, the binding will 400.
+
+## WRN-006 — `$select=` references a non-existent field
+
+**Likely real**: Yes — query will 400.
+
+**What it means**: Custom JS does `$select=<field>` and `<field>` does not appear as an attribute in the entity's `Entity.xml`.
+
+**False-positive cases**: The field was added to Dataverse but the schema export is stale. Re-run `pac solution export/unpack`.
+
+**To verify**: Check `Entity.xml` for the attribute — case matters. Logical names are lowercase.
+
+## WRN-007 — FetchXML attribute does not exist on root entity
+
+**Likely real**: Yes — FetchXML will fail with a generic SOAP error.
+
+**What it means**: A `<fetch>` block uses `<attribute name="x">` and `x` is not an attribute on the root `<entity>`.
+
+**To verify**: Same as WRN-006 — check `Entity.xml` for the attribute. If the field is on a linked entity, move the `<attribute>` inside the corresponding `<link-entity>` block.
+
+## WRN-008 — `Webapi/<entity>/Fields` lists non-existent field(s)
+
+**Likely real**: Yes for typo'd fields, false-positive if schema is stale.
+
+**What it means**: One or more comma-separated fields in the `Fields` site setting don't exist on the entity per `Entity.xml`. They have no effect — readers can request only fields that genuinely exist — but they're noise that hides the real allowlist.
+
+**Action**: Remove the bogus entries or refresh the schema export.
+
+## WRN-010 — Content Snippet referenced but not defined
+
+**Likely real**: Yes — content will render empty.
+
+**What it means**: A Liquid template uses `snippets['Name']` but no Content Snippet record with that name exists in the export.
+
+**False-positive cases**: Snippet exists in the environment but wasn't included in `pac paportal download` (rare).
+
+**To verify**: Search `contentsnippet*.yml`. If the name truly doesn't exist, the page will render with empty content where the snippet should appear.
+
+## WRN-011 — Possible sensitive Site Setting exposed
+
+**Likely real**: Sometimes — depends on the value pattern.
+
+**What it means**: A Site Setting's value matches a heuristic for secrets (long random-looking string, OAuth client secret pattern, API-key-like prefix).
+
+**False-positive cases**: The setting genuinely is a public key (e.g., a public reCAPTCHA site key) or a non-secret token.
+
+**To verify**: Identify what the setting is for. If it's a secret consumed only by Power Pages internals (auth providers, Bing Maps, etc.), confirm it's NOT marked "Visible to Portal" in Studio.
+
+## WRN-012 — Form references unknown field
+
+**Likely real**: Yes — form will fail to render or fail validation.
+
+**What it means**: A Basic Form (`adx_entityform`) names a field via `adx_attributelogicalname` that doesn't exist on the target entity per `Entity.xml`.
+
+**False-positive cases**: Field was added to Dataverse but the schema export is stale.
+
+## INFO-005 — Empty base file with populated localized variant
+
+**Likely real**: Yes — the canonical "page renders blank" bug.
+
+**What it means**: `web-pages/<page>/<Page>.webpage.copy.html` is empty (or just whitespace) but `web-pages/<page>/content-pages/<lang>/<Page>.<lang>.webpage.copy.html` has content. Power Pages serves the base file by default for un-localized requests, so visitors hitting the page in any other locale see a blank page.
+
+**Action**: Copy the localized content into the base file (or use `pp sync-pages localized-to-base` to do it in bulk).
+
+## INFO-006 — FetchXML missing `count` attribute
+
+**Always informational, but worth fixing for performance.**
+
+**What it means**: `{% fetchxml %}` doesn't set `count="<n>"` on the `<fetch>` element. Without an explicit count, Power Pages applies its server default, which may be larger than the page actually needs and forces an unnecessary round-trip on subsequent pages.
+
+**Action**: Add `count="50"` (or a value matching what the page actually displays).
+
+## INFO-007 — Unsafe DotLiquid JSON escape
+
+**Likely real**: Often — DotLiquid is not Shopify Liquid here.
+
+**What it means**: Liquid does `replace: '"', '\\"'` expecting the replacement to be `\"` (one backslash, one quote). DotLiquid produces THREE characters: `\`, `\`, `"`. JSON consumers see invalid escape sequences.
+
+**To verify**: Render the page, view the HTML source, and inspect the JSON-embedded values. If you see `\\"` instead of `\"`, this finding is real.
+
+**Workaround**: Use single-character replacement or build the JSON via `to_json` filter rather than manual escaping.
+
+## INFO-008 — N+1 query pattern in Liquid
+
+**Likely real**: Yes — page slowness compounds with row count.
+
+**What it means**: A `{% for %}` loop contains a nested `{% fetchxml %}` query or `entities[...]` lookup. Each iteration runs a separate query. A 50-row table becomes 50 queries.
+
+**Action**: Move the query outside the loop. Pre-fetch all related records in one FetchXML, then filter inside the loop.
+
+## INFO-009 — Diverged base/localized files
+
+**Likely real**: Yes — base and localized copies have drifted.
+
+**What it means**: Both files have content but their sizes differ significantly. One was edited; the other wasn't synced.
+
+**Action**: Decide which is current, then propagate to the other (`pp sync-pages` does this in bulk). Common when devs edit only the en-US localized file and forget the base.
+
 ## INFO-004 — Junction not exported
 
 **Always informational, not actionable.**

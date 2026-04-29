@@ -86,6 +86,32 @@ def sync_audit_github_action(path: Path, ci_ref: str) -> str:
     return text
 
 
+def latest_changelog_version() -> str:
+    """Return the version from the topmost `## [X.Y.Z] — DATE` line in CHANGELOG.md."""
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    match = re.search(r"^##\s+\[(\d+\.\d+\.\d+)\]", changelog, flags=re.MULTILINE)
+    if not match:
+        raise ValueError("CHANGELOG.md: no `## [X.Y.Z]` header found")
+    return match.group(1)
+
+
+def check_marketplace_version_matches_changelog(versions: dict) -> str | None:
+    """Return an error message if marketplace.version drifts from the latest
+    CHANGELOG entry, otherwise None.
+    """
+    declared = versions.get("marketplace", {}).get("version")
+    if declared is None:
+        return "versions.json: marketplace.version is missing"
+    actual = latest_changelog_version()
+    if declared != actual:
+        return (
+            f"versions.json: marketplace.version='{declared}' does not match "
+            f"latest CHANGELOG header '[{actual}]'. "
+            "Update one or the other so they agree."
+        )
+    return None
+
+
 def build_expected_files(versions: dict) -> dict[Path, str]:
     plugin_versions = versions["plugins"]
     ci_ref = versions["docs"]["pp_permissions_audit_ci_ref"]
@@ -123,6 +149,18 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     versions = load_versions()
+
+    # Cross-check marketplace.version vs CHANGELOG header. This is a
+    # one-way assertion — the script does not auto-edit CHANGELOG headers
+    # because they are historical record. If they disagree, the contributor
+    # decides which side to fix.
+    marketplace_err = check_marketplace_version_matches_changelog(versions)
+    if marketplace_err:
+        print(f"ERROR: {marketplace_err}", file=sys.stderr)
+        return 1
+    if not args.check:
+        print(f"OK      marketplace.version matches CHANGELOG ({versions['marketplace']['version']})")
+
     expected_files = build_expected_files(versions)
     drifted: list[Path] = []
 

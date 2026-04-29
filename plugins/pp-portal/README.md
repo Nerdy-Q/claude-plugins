@@ -51,7 +51,7 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 - `references/language/types.md` — Liquid type system
 - `references/language/tags.md` — Power Pages tags (`{% fetchxml %}`, `{% entitylist %}`, `{% entityform %}`, `{% webform %}`, `{% editable %}`, `{% chart %}`, `{% include %}`, `{% block %}`/`{% extends %}`)
 - `references/language/filters.md` — DotLiquid filter table + Power Pages-specific extensions
-- `references/language/objects.md` — `user`, `page`, `website`, `request`, `weblinks`, `snippets`, `sitemarkers`, `settings`
+- `references/language/objects.md` — `user`, `page`, `website`, `request`, `weblinks`, `snippets`, `sitemarkers`, `settings`, `now`, `params`
 - `references/language/dotliquid-gotchas.md` — DotLiquid behavioral differences from Shopify Liquid
 
 ### Data + integration

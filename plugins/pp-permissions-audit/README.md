@@ -8,19 +8,47 @@ A **knowledge + analytical skill**. The skill ships a stdlib-only Python script 
 
 ## What it catches
 
-| Code | Severity | Finding |
-|---|---|---|
-| ERR-001 | ERROR | Web API enabled but no Table Permission grants Read |
-| ERR-002 | ERROR | Orphaned Table Permission (no Web Roles assigned) |
-| ERR-003 | ERROR | Anonymous Users role granted Write/Create/Delete on a sensitive table |
-| ERR-004 | ERROR | `Webapi/<entity>/Fields` explicitly whitelists secured readable field(s) |
-| WRN-001 | WARN | Custom JS uses `<lookup>@odata.bind` without `_contact` / `_account` suffix on a polymorphic field — runtime 400 risk |
-| WRN-002 | WARN | Web Role exists but no Table Permission references it |
-| WRN-009 | WARN | `Webapi/<entity>/Fields = *` is used on an entity with secured readable fields |
-| INFO-001 | INFO | Table Permission allows Read but Web API isn't enabled (would 404) |
-| INFO-002 | INFO | `Webapi/<entity>/Fields = *` exposes all fields (consider narrowing) |
-| INFO-003 | INFO | Page requires auth but no role rule (any authenticated user can see) |
-| INFO-004 | INFO | Role-permission junction not exported — role-aware checks skipped |
+All 25 checks shipped by `audit.py`. Authoritative definitions in `audit.py`; this table is a navigation aid.
+
+### ERROR (4) — security risks or blockers
+
+| Code | Finding |
+|---|---|
+| ERR-001 | Web API enabled but no Table Permission grants Read |
+| ERR-002 | Orphaned Table Permission (no Web Roles assigned) |
+| ERR-003 | Anonymous Users role granted Write/Create/Delete on a sensitive table |
+| ERR-004 | `Webapi/<entity>/Fields` explicitly whitelists secured readable field(s) |
+
+### WARN (12) — likely bugs or risks
+
+| Code | Finding |
+|---|---|
+| WRN-001 | Custom JS uses `<lookup>@odata.bind` without `_contact` / `_account` suffix on a polymorphic field — runtime 400 risk |
+| WRN-002 | Web Role exists but no Table Permission references it |
+| WRN-003 | Sitemarker referenced in Liquid but not defined |
+| WRN-004 | Custom JS calls `/_api/` without anti-forgery token pattern — runtime 403 risk |
+| WRN-005 | `<nav>@odata.bind` uses all-lowercase navigation property — likely a Logical Name where Navigation Property was needed |
+| WRN-006 | `$select=<field>` in custom JS references a field that does not exist on the entity (verified against `dataverse-schema/`) |
+| WRN-007 | FetchXML `<attribute name=>` references a field that does not exist on the root entity |
+| WRN-008 | `Webapi/<entity>/Fields` lists field(s) that do not exist on the entity (stale or typo) |
+| WRN-009 | `Webapi/<entity>/Fields = *` is used on an entity with secured readable fields |
+| WRN-010 | Content Snippet referenced in Liquid but not defined |
+| WRN-011 | Possible sensitive Site Setting exposed (looks like a secret or API key) |
+| WRN-012 | Entity Form references a field that does not exist on the entity |
+
+### INFO (9) — observations and quality
+
+| Code | Finding |
+|---|---|
+| INFO-001 | Table Permission allows Read but Web API isn't enabled (would 404) |
+| INFO-002 | `Webapi/<entity>/Fields = *` exposes all fields (consider narrowing) |
+| INFO-003 | Page requires auth but no role rule (any authenticated user can see) |
+| INFO-004 | Role-permission junction not exported — role-aware checks skipped |
+| INFO-005 | Page has empty base file but populated localized file — base-vs-localized blank-page bug |
+| INFO-006 | `{% fetchxml %}` missing `count` attribute — performance |
+| INFO-007 | Unsafe DotLiquid JSON escape — `replace: '"', '\\"'` produces 3 chars |
+| INFO-008 | Possible N+1 query pattern in Liquid (`fetchxml` or `entities[...]` inside a `{% for %}`) |
+| INFO-009 | Diverged base/localized files — sizes differ significantly |
 
 ## Run it directly
 

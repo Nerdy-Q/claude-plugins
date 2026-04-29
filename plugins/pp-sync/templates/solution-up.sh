@@ -15,6 +15,13 @@ PROFILE="${PROFILE:-PUT_PAC_PROFILE_HERE}"
 SCHEMA_DIR="${SCHEMA_DIR:-./dataverse-schema}"
 # =====================================
 
+case "$SOLUTION$PROFILE" in
+  *PUT_*_HERE*)
+    echo "ERROR: pass solution name as arg ('./solution-up.sh MySolution') or set SOLUTION / PROFILE at the top." >&2
+    exit 2
+    ;;
+esac
+
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$ROOT"
 

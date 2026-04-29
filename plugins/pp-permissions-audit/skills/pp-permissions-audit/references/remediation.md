@@ -158,6 +158,80 @@ The transition from `*` to a whitelist often catches dead code that was reading 
 
 If the intent IS "any authenticated user," document it explicitly so the finding is dismissable next time.
 
+## WRN-003 — Sitemarker referenced but not defined
+
+1. Search `sitemarker*.yml` for the missing name. If it's truly absent, create the record in Studio (Settings → Site Markers).
+2. If the sitemarker exists in the environment but not the export, re-run `pac paportal download`.
+3. If the reference is a typo, fix the `sitemarkers['Name']` reference in the Liquid template.
+4. Sync.
+
+## WRN-004 — Custom JS calls `/_api/` without anti-forgery token
+
+1. Open the offending `*.webpage.custom_javascript.js` file.
+2. Add the standard `safeAjax` wrapper or include `__RequestVerificationToken` explicitly:
+   ```js
+   var token = $("input[name='__RequestVerificationToken']").val();
+   $.ajax({
+       url: "/_api/...",
+       type: "POST",
+       headers: { "__RequestVerificationToken": token, "Accept": "application/json" },
+       contentType: "application/json",
+       ...
+   });
+   ```
+3. If the page doesn't render the token form, add `<form>` with `@Html.AntiForgeryToken()` (the Power Pages master template already does this on most pages).
+4. Test the affected operation in a browser — the 403 should clear.
+
+## WRN-005 — All-lowercase navigation property in `@odata.bind`
+
+1. Open `dataverse-schema/<solution>/Entities/<entity>/Entity.xml`.
+2. Find the relationship; the schema name is the Navigation Property (usually PascalCase, e.g. `Contoso_Applicant`).
+3. Update the JS: `<lookup>@odata.bind` → `<NavigationProperty>@odata.bind`.
+4. Test the affected create/update flow.
+
+## WRN-006 — `$select=` references non-existent field
+
+1. Open `Entity.xml` for the entity in question.
+2. Confirm the attribute name (logical name, lowercase). Common fixes: typo, stale schema export.
+3. If the field is genuinely missing: re-run `pac solution export/unpack` to refresh.
+4. Update the JS `$select=` clause to use the correct attribute name.
+
+## WRN-007 — FetchXML attribute does not exist on root entity
+
+1. Open the FetchXML block. Confirm the `<entity name="...">` is the table you actually want.
+2. Check `Entity.xml` for the attribute. If it doesn't exist on the root, but exists on a related entity, move the `<attribute>` inside the relevant `<link-entity>` block.
+3. Re-test the page.
+
+## WRN-008 — `Webapi/<entity>/Fields` lists non-existent field(s)
+
+1. Open the `Webapi/<entity>/Fields` site setting.
+2. Cross-reference each listed field against `Entity.xml`.
+3. Remove the entries that don't exist (typos or fields removed from Dataverse).
+4. If the field was renamed, update to the new logical name.
+5. Sync.
+
+## INFO-005 — Empty base file with populated localized variant
+
+1. Use `pp sync-pages <project> localized-to-base` to copy the localized content into the base file in bulk, OR copy by hand:
+   - `cp web-pages/<page>/content-pages/en-US/<Page>.en-US.webpage.copy.html web-pages/<page>/<Page>.webpage.copy.html`
+2. Verify in a browser: hit the portal page from a clean session (no localization preference) and confirm content renders.
+3. Sync.
+
+## INFO-007 — Unsafe DotLiquid JSON escape
+
+1. Replace manual escape patterns with the `to_json` filter where possible:
+   - Before: `'value': '{{ entity.field | replace: '"', '\\"' }}'`
+   - After:  `'value': {{ entity.field | to_json }}`
+2. If `to_json` isn't available (older runtimes), use a safer manual approach: replace `"` with the HTML entity `&quot;` and let the JSON parser handle it.
+3. Re-render the page and inspect the HTML source — the produced JSON must parse cleanly.
+
+## INFO-009 — Diverged base/localized files
+
+1. Decide which file is canonical (usually the one most recently edited).
+2. Diff the two: `diff web-pages/<page>/<Page>.webpage.copy.html web-pages/<page>/content-pages/en-US/<Page>.en-US.webpage.copy.html`
+3. Reconcile manually, or use `pp sync-pages <project> base-to-localized` (or `localized-to-base`) to overwrite one direction.
+4. Sync.
+
 ## INFO-006 — FetchXML missing `count` attribute
 
 1. Open the template or page containing the `{% fetchxml %}` block.

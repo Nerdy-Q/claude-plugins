@@ -21,16 +21,18 @@
 #   3. Unique prefix match (e.g. "acm" -> "acme-dev" if no other "acm*")
 #   4. Active project (~/.config/nq-pp-sync/active) if no arg passed
 
-set -uo pipefail
+# Strict mode is enabled inside main() rather than at the top of the file.
+# This lets test_load_project.sh source bin/pp to access load_project()
+# without forcing set -e on the test runner's outer shell.
 
 # ===========================================================================
 # Paths
 # ===========================================================================
 
 PP_CONFIG_DIR="${PP_CONFIG_DIR:-$HOME/.config/nq-pp-sync}"
-PP_PROJECTS_DIR="$PP_CONFIG_DIR/projects"
-PP_ALIASES_FILE="$PP_CONFIG_DIR/aliases"
-PP_ACTIVE_FILE="$PP_CONFIG_DIR/active"
+PP_PROJECTS_DIR="${PP_PROJECTS_DIR:-$PP_CONFIG_DIR/projects}"
+PP_ALIASES_FILE="${PP_ALIASES_FILE:-$PP_CONFIG_DIR/aliases}"
+PP_ACTIVE_FILE="${PP_ACTIVE_FILE:-$PP_CONFIG_DIR/active}"
 
 # ===========================================================================
 # Output helpers
@@ -59,6 +61,61 @@ validate_identifier() {
     if [[ ! "$value" =~ $pattern ]]; then
         die "$field must match $pattern: got '$value'"
     fi
+}
+
+# Validate that an issue URL points to the *current* git repository.
+# Closes the journal-URL hijacking path: JOURNAL.md is committed and
+# shared via PR, so an attacker who lands a PR appending a URL like
+# https://github.com/other-org/private-repo/issues/42 could cause the
+# next `pp journal note|close` to post (or close) an arbitrary issue
+# the maintainer has push access to.
+#
+# Strategy: enforce a strict URL shape (no unexpected path segments) AND
+# require a host+path-prefix match against `gh repo view` / `glab repo
+# view`. If the current-repo URL cannot be determined, refuse the action.
+#
+# Same-repo issue confusion (an attacker swapping issue NUMBER within the
+# same repo) is not addressed here — that requires a side-channel state
+# file tracking which issue `pp journal open` actually created. Tracked
+# as a follow-up in audit umbrella #1.
+validate_issue_url_for_current_repo() {
+    local url="$1"
+    if [[ ! "$url" =~ ^https://(github|gitlab)\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+(/-)?/issues/[0-9]+$ ]]; then
+        die "Refusing to operate on issue URL with unexpected shape: $url"
+    fi
+    local current_repo=""
+    case "$url" in
+        https://github.com/*)
+            command -v gh >/dev/null 2>&1 || die "gh required to validate GitHub issue URL"
+            current_repo=$(gh repo view --json url -q .url 2>/dev/null || true)
+            ;;
+        https://gitlab.com/*)
+            command -v glab >/dev/null 2>&1 || die "glab required to validate GitLab issue URL"
+            current_repo=$(glab repo view 2>/dev/null | grep -oE 'https://gitlab\.com/[A-Za-z0-9_./-]+' | head -1 || true)
+            ;;
+    esac
+    [ -n "$current_repo" ] || die "Cannot determine current repo to validate issue URL: $url"
+    case "$url" in
+        "$current_repo"/issues/*|"$current_repo"/-/issues/*) return 0 ;;
+    esac
+    die "Refusing: issue URL is outside current repo. URL=$url current=$current_repo"
+}
+
+# Validate a comma-separated list of solution names and emit the matching
+# `SOLUTIONS=("a" "b")` line on stdout. Dies on any invalid entry BEFORE
+# any output is produced — callers can capture the result and write it to
+# the conf in one shot, avoiding partial writes when validation rejects a
+# name mid-list. Empty input emits nothing.
+format_solutions_array() {
+    local input="$1" s s_trim entries=""
+    local IFS=','
+    for s in $input; do
+        s_trim=$(echo "$s" | xargs)
+        [ -z "$s_trim" ] && continue
+        validate_identifier "Solution name" "$s_trim" '^[A-Za-z0-9_.-]+$'
+        entries+="\"$s_trim\" "
+    done
+    [ -n "$entries" ] && printf 'SOLUTIONS=(%s)\n' "$entries"
 }
 
 # ===========================================================================
@@ -121,24 +178,85 @@ resolve_project() {
     return 1
 }
 
-# Source a project's config file into the current shell. Sets:
-#   NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION SOLUTIONS BRANCH SCHEMA_DIR TAGS
+# Read a project's config file into the current shell WITHOUT sourcing it.
+#
+# The conf format is intentionally a subset of bash that this parser can
+# handle directly: simple `KEY="value"` lines plus an optional
+# `SOLUTIONS=("Foo" "Bar")` array form. Keys outside the allowlist are
+# warned-and-skipped; lines that don't match the expected pattern are also
+# skipped with a warning. No shell evaluation occurs at any point.
+#
+# Why not source: the conf lives in ~/.config/nq-pp-sync/projects/ and
+# encodes paths, URLs, and identifiers that may have been hand-edited or
+# pre-existed before this version of pp shipped. Sourcing turned every
+# field into an arbitrary-code-execution sink (CVE-class issue #1 from
+# the 2026-04-29 audit). This parser eliminates that surface.
+#
+# Sets: NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION
+#       SOLUTIONS BRANCH SCHEMA_DIR BOARD_URL BOARD_SYSTEM AI_ATTR TAGS
 load_project() {
     local name="$1"
     local conf="$PP_PROJECTS_DIR/$name.conf"
     [ -f "$conf" ] || die "No config file: $conf"
 
-    # Reset variables before sourcing
+    # Reset variables before reading
     NAME=""; REPO=""; SITE_DIR=""; PROFILE=""; WEBSITE_ID=""
     ENV_URL=""; MODEL_VERSION="2"; BRANCH=""; SCHEMA_DIR="dataverse-schema"
     BOARD_URL=""; BOARD_SYSTEM="auto"; AI_ATTR="yes"
     TAGS=""
     SOLUTIONS=()
 
-    # shellcheck disable=SC1090
-    . "$conf"
+    local known_keys=" NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION BRANCH SCHEMA_DIR BOARD_URL BOARD_SYSTEM AI_ATTR TAGS "
+    local lineno=0 line key value
+    while IFS= read -r line || [ -n "$line" ]; do
+        lineno=$((lineno + 1))
+        # Skip blanks and comments
+        case "$line" in
+            ''|\#*) continue ;;
+        esac
 
-    # Expand ~ in REPO
+        # SOLUTIONS=("a" "b") — special-case the array form. Extract each
+        # quoted token without invoking the shell on the contents.
+        if [[ "$line" =~ ^SOLUTIONS=\((.*)\)[[:space:]]*$ ]]; then
+            SOLUTIONS=()
+            local rest="${BASH_REMATCH[1]}"
+            while [[ "$rest" =~ \"([^\"]*)\" ]]; do
+                SOLUTIONS+=( "${BASH_REMATCH[1]}" )
+                rest="${rest#*\"${BASH_REMATCH[1]}\"}"
+            done
+            continue
+        fi
+
+        # Standard KEY="value" form. Value cannot contain unescaped double
+        # quotes (we don't support backslash escaping — keep the format
+        # boring on purpose).
+        if [[ "$line" =~ ^([A-Z_]+)=\"([^\"]*)\"[[:space:]]*$ ]]; then
+            key="${BASH_REMATCH[1]}"
+            value="${BASH_REMATCH[2]}"
+            if [[ " $known_keys " != *" $key "* ]]; then
+                warn "$conf:$lineno: unknown key '$key' (skipped)"
+                continue
+            fi
+            # Reject control characters and CR/LF in values.
+            if [[ "$value" == *$'\n'* ]] || [[ "$value" == *$'\r'* ]]; then
+                die "$conf:$lineno: control character in value for $key"
+            fi
+            # printf -v assigns by name without eval. Safe because key has
+            # been allowlisted against the fixed list above.
+            printf -v "$key" '%s' "$value"
+            continue
+        fi
+
+        warn "$conf:$lineno: unparsable line (skipped): $line"
+    done < "$conf"
+
+    # Required-field validation
+    [ -n "$NAME" ] || die "$conf: missing NAME"
+    [ -n "$REPO" ] || die "$conf: missing REPO"
+    [ -n "$SITE_DIR" ] || die "$conf: missing SITE_DIR"
+    [ -n "$PROFILE" ] || die "$conf: missing PROFILE"
+
+    # Expand ~ in REPO via bash parameter expansion (no shell evaluation)
     REPO="${REPO/#~/$HOME}"
 
     # Session safety for journaling only. Do not block non-interactive pp flows.
@@ -336,6 +454,13 @@ cmd_setup() {
             ai_attr="${ai_attr:-y}"
         fi
 
+        # Validate solutions BEFORE creating the conf so registration is
+        # atomic: a bad solution name aborts before any file is written.
+        local solutions_block=""
+        if [ -n "$solutions" ]; then
+            solutions_block=$(format_solutions_array "$solutions")
+        fi
+
         # Write the conf
         cat > "$PP_PROJECTS_DIR/$name.conf" <<EOF
 # $name — auto-generated by 'pp setup'
@@ -353,14 +478,7 @@ BOARD_SYSTEM="$board_system"
 AI_ATTR="$ai_attr"
 TAGS=""
 EOF
-        if [ -n "$solutions" ]; then
-            printf 'SOLUTIONS=(' >> "$PP_PROJECTS_DIR/$name.conf"
-            local IFS=','
-            for s in $solutions; do
-                printf '"%s" ' "$(echo "$s" | xargs)" >> "$PP_PROJECTS_DIR/$name.conf"
-            done
-            printf ')\n' >> "$PP_PROJECTS_DIR/$name.conf"
-        fi
+        [ -n "$solutions_block" ] && printf '%s' "$solutions_block" >> "$PP_PROJECTS_DIR/$name.conf"
 
         ok "Registered $name"
 
@@ -1251,14 +1369,18 @@ EOF
             info "Adding note..."
             echo "- **Note$attr**: $msg" >> "$REPO/JOURNAL.md"
             
-            # Post comment to issue if possible (heuristic: find last issue URL in JOURNAL.md)
+            # Post comment to issue if possible (heuristic: find last issue
+            # URL in JOURNAL.md, validated against current repo).
             local last_issue
-            last_issue=$(grep -o 'https://[^ ]*' "$REPO/JOURNAL.md" | tail -1)
+            last_issue=$(grep -oE 'https://(github|gitlab)\.com/[^ )]+' "$REPO/JOURNAL.md" | tail -1 || true)
             if [ -n "$last_issue" ]; then
+                validate_issue_url_for_current_repo "$last_issue"
                 if [[ "$last_issue" == *"github.com"* ]] && [ "$has_gh" = "1" ]; then
-                    gh issue comment "$last_issue" --body "$msg$attr" >/dev/null 2>&1
+                    gh issue comment "$last_issue" --body "$msg$attr" >/dev/null 2>&1 \
+                        || warn "Failed to post comment to $last_issue"
                 elif [[ "$last_issue" == *"gitlab.com"* ]] && [ "$has_glab" = "1" ]; then
-                    glab issue note "$last_issue" --message "$msg$attr" >/dev/null 2>&1
+                    glab issue note "$last_issue" --message "$msg$attr" >/dev/null 2>&1 \
+                        || warn "Failed to post note to $last_issue"
                 fi
             fi
             ;;
@@ -1267,16 +1389,21 @@ EOF
             local summary="${1:-}"
             info "Closing task..."
             echo "- **CLOSED**: $summary" >> "$REPO/JOURNAL.md"
-            
+
             local last_issue
-            last_issue=$(grep -o 'https://[^ ]*' "$REPO/JOURNAL.md" | tail -1)
+            last_issue=$(grep -oE 'https://(github|gitlab)\.com/[^ )]+' "$REPO/JOURNAL.md" | tail -1 || true)
             if [ -n "$last_issue" ]; then
+                validate_issue_url_for_current_repo "$last_issue"
                 if [[ "$last_issue" == *"github.com"* ]] && [ "$has_gh" = "1" ]; then
-                    gh issue comment "$last_issue" --body "Task closed: $summary" >/dev/null 2>&1
-                    gh issue close "$last_issue" >/dev/null 2>&1
+                    gh issue comment "$last_issue" --body "Task closed: $summary" >/dev/null 2>&1 \
+                        || warn "Failed to post close comment to $last_issue"
+                    gh issue close "$last_issue" >/dev/null 2>&1 \
+                        || warn "Failed to close $last_issue"
                 elif [[ "$last_issue" == *"gitlab.com"* ]] && [ "$has_glab" = "1" ]; then
-                    glab issue note "$last_issue" --message "Task closed: $summary" >/dev/null 2>&1
-                    glab issue close "$last_issue" >/dev/null 2>&1
+                    glab issue note "$last_issue" --message "Task closed: $summary" >/dev/null 2>&1 \
+                        || warn "Failed to post close note to $last_issue"
+                    glab issue close "$last_issue" >/dev/null 2>&1 \
+                        || warn "Failed to close $last_issue"
                 fi
                 ok "Closed issue $last_issue"
             fi
@@ -1308,6 +1435,19 @@ cmd_project_add() {
     read -r -p "Board system (github/gitlab/none): " board_system
     read -r -p "Tag AI notes? [y/n]: " ai_attr
 
+    local alias_input
+    read -r -p "Add an alias? (blank = none): " alias_input
+
+    # Validate everything BEFORE creating the conf so registration is atomic.
+    # If solutions or alias fail validation, no file is touched.
+    local solutions_block=""
+    if [ -n "$solutions" ]; then
+        solutions_block=$(format_solutions_array "$solutions")
+    fi
+    if [ -n "$alias_input" ]; then
+        validate_identifier "Alias" "$alias_input" '^[A-Za-z0-9_-]+$'
+    fi
+
     cat > "$PP_PROJECTS_DIR/$name.conf" <<EOF
 # $name — created by 'pp project add'
 NAME="$name"
@@ -1324,20 +1464,10 @@ BOARD_SYSTEM="$board_system"
 AI_ATTR="$ai_attr"
 TAGS=""
 EOF
-    if [ -n "$solutions" ]; then
-        printf 'SOLUTIONS=(' >> "$PP_PROJECTS_DIR/$name.conf"
-        local IFS=','
-        for s in $solutions; do
-            printf '"%s" ' "$(echo "$s" | xargs)" >> "$PP_PROJECTS_DIR/$name.conf"
-        done
-        printf ')\n' >> "$PP_PROJECTS_DIR/$name.conf"
-    fi
+    [ -n "$solutions_block" ] && printf '%s' "$solutions_block" >> "$PP_PROJECTS_DIR/$name.conf"
     ok "Registered $name"
 
-    local alias_input
-    read -r -p "Add an alias? (blank = none): " alias_input
     if [ -n "$alias_input" ]; then
-        validate_identifier "Alias" "$alias_input" '^[A-Za-z0-9_-]+$'
         echo "${alias_input}=${name}" >> "$PP_ALIASES_FILE"
         ok "Alias: pp <op> $alias_input"
     fi
@@ -1455,6 +1585,7 @@ EOF
 # ===========================================================================
 
 main() {
+    set -euo pipefail
     local cmd="${1:-help}"
     shift || true
 
@@ -1498,4 +1629,8 @@ main() {
     esac
 }
 
-main "$@"
+# Source-safe guard: when this file is sourced (e.g. by tests), `return`
+# succeeds and we skip dispatching. When executed as a script, `return`
+# errors and main runs. Allows the bash test suite to load helpers and
+# load_project() in isolation.
+return 2>/dev/null || main "$@"
