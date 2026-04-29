@@ -1234,20 +1234,23 @@ cmd_sync_pages() {
             done
             [ -z "$base_file" ] && continue
 
-            # Find first localized file
-            local loc_file=""
-            for f in "$cp_dir"/*"$suffix"; do
-                [ -f "$f" ] || continue
-                loc_file="$f"
-                break
-            done
+            # Find localized files. Power Pages classic stores them
+            # under content-pages/<lang>/, so we must recurse via find
+            # rather than glob. The previous `*$suffix` shell glob only
+            # matched files DIRECTLY in content-pages/ — which doesn't
+            # match the actual export layout.
+            local loc_file="" loc_files=()
+            while IFS= read -r f; do
+                [ -n "$f" ] || continue
+                loc_files+=( "$f" )
+                [ -z "$loc_file" ] && loc_file="$f"
+            done < <(find "$cp_dir" -type f -name "*$suffix" 2>/dev/null || true)
             [ -z "$loc_file" ] && continue
 
             case "$direction" in
                 base-to-localized)
                     # Copy base content into ALL localized variants
-                    for f in "$cp_dir"/*"$suffix"; do
-                        [ -f "$f" ] || continue
+                    for f in "${loc_files[@]}"; do
                         if cmp -s "$base_file" "$f"; then
                             skipped=$((skipped + 1))
                         else
@@ -1314,9 +1317,11 @@ cmd_generate_page() {
     # 1. Base Metadata (.webpage.yml)
     # We use some heuristics to guess valid references
     local website_id_val="${WEBSITE_ID:-00000000-0000-0000-0000-000000000000}"
-    # Pick the first page template we find, or use a placeholder
+    # Pick the first page template we find, or use a placeholder. The
+    # `|| true` guards against pipefail aborting the function when
+    # page-templates/ doesn't exist (e.g. fresh portal source).
     local template_name
-    template_name=$(find "$SITE_DIR/page-templates" -name "*.pagetemplate.yml" -maxdepth 1 2>/dev/null | head -1 | sed 's/.*\///; s/\.pagetemplate\.yml//')
+    template_name=$(find "$SITE_DIR/page-templates" -name "*.pagetemplate.yml" -maxdepth 1 2>/dev/null | head -1 | sed 's/.*\///; s/\.pagetemplate\.yml//' || true)
     template_name="${template_name:-Full Page}"
 
     cat > "$page_dir/$page_name.webpage.yml" <<EOF

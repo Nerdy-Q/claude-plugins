@@ -2,6 +2,32 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.7.5] — 2026-04-29
+
+Deeper test coverage release. Added `tests/test_command_flows.sh` — 59 cases across 10 sections covering pp subcommand flows the previous suites didn't reach. Writing the tests surfaced **two more real bugs**, both fixed in this same release.
+
+### Tests added
+
+- **New suite `tests/test_command_flows.sh`** — 59 cases across 10 sections:
+  1. **Project name resolution** (8): exact match, unique prefix, ambiguous prefix (asserts both candidates listed in error), no-match, alias resolution, exact-match-wins-over-alias.
+  2. **`cmd_show`** (6): all field labels present, ghost-project error.
+  3. **`cmd_list`** (5): empty registry friendly message, populated registry tabular output.
+  4. **`cmd_alias_add` / `cmd_alias_list`** (9): valid add, ghost target rejected (atomic), shell-metachar name rejected, list output, duplicate replacement, no-duplicate-rows invariant.
+  5. **`cmd_project_remove`** (6): atomic deletion of conf + alias rows + active file, unrelated aliases preserved, ghost-project error.
+  6. **`cmd_switch` / `cmd_status`** (5): no-active message, switch writes active file, status reflects active project, switch-to-other updates status.
+  7. **`cmd_journal init`** (4): file creation, project-name in template, Project Context section present, idempotency (manual edits preserved).
+  8. **`cmd_generate_page` happy path** (5): page dir created, base YAML + HTML created, content-pages dir created, duplicate generate-page rejected.
+  9. **`cmd_sync_pages`** (3): base-to-localized copy, localized-to-base copy, invalid direction rejected.
+  10. **`cmd_help`** (7): exits 0, output mentions every major subcommand.
+- **CI wired** — new "Run pp command-flow tests" step.
+
+Test count: **127 total** (was 60) across 5 bash suites + 1 Python suite. All pass on local + ubuntu-latest.
+
+### Fixed (pp-sync v2.0.4)
+
+- **`cmd_generate_page` aborted under strict mode against fresh portal source.** The `find $SITE_DIR/page-templates -name "*.pagetemplate.yml" | head -1 | sed ...` pipeline used to discover a default page template tripped pipefail when the `page-templates/` directory didn't exist (a fresh portal source, or one where templates were never exported). The function reported "Generating page" but produced zero files because the assignment aborted before `mkdir -p` could run. Added `|| true` to the discovery pipeline; missing template directory now falls through to the placeholder default.
+- **`cmd_sync_pages` could not find localized files in the actual Power Pages layout.** Power Pages classic stores localized page assets at `web-pages/<slug>/content-pages/<lang>/<Page>.<lang>.webpage.copy.html`, but the function's glob `"$cp_dir"/*"$suffix"` only matched files DIRECTLY in `content-pages/`, never recursing into `<lang>/` subdirectories. Result: every `pp sync-pages` run on a real portal source reported "Copied: 0" regardless of how out-of-sync the files were. Replaced the glob with `find -type f -name "*$suffix"` which recurses correctly. Same fix the audit.py `iter_localized_page_files` helper got.
+
 ## [2.7.4] — 2026-04-29
 
 Test-coverage release: codified the v2.7.2 + v2.7.3 fixes as regression tests so they cannot quietly regress, and surfaced one additional bug while writing the tests.
@@ -357,6 +383,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.7.5]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.5
 [2.7.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.4
 [2.7.3]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.3
 [2.7.2]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.2
