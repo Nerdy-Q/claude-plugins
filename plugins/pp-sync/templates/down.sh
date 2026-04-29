@@ -22,6 +22,15 @@ WEBSITE_ID="${WEBSITE_ID:-PUT_WEBSITE_GUID_HERE}"                     # from `pa
 MODEL_VERSION="${MODEL_VERSION:-2}"                                   # 1 = Standard, 2 = Enhanced
 # =============================================================
 
+# Refuse to run with placeholders still in CONFIG (clearer than letting
+# pac fail with a confusing "site not found" message).
+case "$SITE_DIR$PROFILE$WEBSITE_ID" in
+  *PUT_*_HERE*)
+    echo "ERROR: edit this script first — set SITE_DIR / PROFILE / WEBSITE_ID at the top." >&2
+    exit 2
+    ;;
+esac
+
 CLEAN=1
 for arg in "$@"; do
   case "$arg" in

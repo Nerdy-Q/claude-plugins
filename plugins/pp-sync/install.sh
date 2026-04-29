@@ -32,9 +32,16 @@ chmod +x "$BIN_SOURCE"
 
 # 2. Create bin dir + symlink
 mkdir -p "$BIN_DIR"
-if [ -L "$BIN_TARGET" ] || [ -f "$BIN_TARGET" ]; then
-    echo "${YLW}⚠${RST} $BIN_TARGET already exists. Replacing."
+if [ -L "$BIN_TARGET" ]; then
+    # Existing symlink — safe to replace (we own it).
     rm -f "$BIN_TARGET"
+elif [ -e "$BIN_TARGET" ]; then
+    # A real file (not a symlink) means a different `pp` is installed
+    # — back it up rather than silently overwriting.
+    backup="$BIN_TARGET.bak.$(date +%Y%m%d-%H%M%S)"
+    echo "${YLW}⚠${RST} $BIN_TARGET is a regular file, not a symlink."
+    echo "    Backing up to: $backup"
+    mv "$BIN_TARGET" "$backup"
 fi
 ln -s "$BIN_SOURCE" "$BIN_TARGET"
 echo "${GRN}✓${RST} Symlinked: $BIN_TARGET -> $BIN_SOURCE"

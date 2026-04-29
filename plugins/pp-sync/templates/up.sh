@@ -22,6 +22,13 @@ MODEL_VERSION="${MODEL_VERSION:-2}"
 BULK_THRESHOLD="${BULK_THRESHOLD:-50}"
 # =============================================================
 
+case "$SITE_DIR$PROFILE" in
+  *PUT_*_HERE*)
+    echo "ERROR: edit this script first — set SITE_DIR / PROFILE at the top." >&2
+    exit 2
+    ;;
+esac
+
 VALIDATE_ONLY=0
 FORCE_BULK=0
 for arg in "$@"; do

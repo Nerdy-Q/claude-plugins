@@ -13,6 +13,13 @@ SITE_DIR="${SITE_DIR:-PUT_SITE_FOLDER_HERE---PUT_SITE_FOLDER_HERE}"
 PROFILE="${PROFILE:-PUT_PAC_PROFILE_HERE}"
 # =====================================
 
+case "$SITE_DIR$PROFILE" in
+  *PUT_*_HERE*)
+    echo "ERROR: edit this script first — set SITE_DIR / PROFILE at the top." >&2
+    exit 2
+    ;;
+esac
+
 ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
 cd "$ROOT" || exit 1
 
