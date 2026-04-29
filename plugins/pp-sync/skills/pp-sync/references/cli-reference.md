@@ -91,7 +91,7 @@ pp down                     # uses active project (energy)
 
 ## Project config files
 
-Each project lives in a single bash file at `~/.config/nq-pp-sync/projects/<name>.conf`. The file is sourced by `pp` at runtime, so any valid bash works. Supported variables:
+Each project lives in a single config file at `~/.config/nq-pp-sync/projects/<name>.conf`. The file uses a strict `KEY="value"` line format — it is **parsed**, not sourced, so values are stored as literal strings (no shell interpolation, no command substitution). Supported variables:
 
 | Variable | Required? | Description |
 |---|---|---|
@@ -107,7 +107,7 @@ Each project lives in a single bash file at `~/.config/nq-pp-sync/projects/<name
 | `BOARD_URL` | optional | URL or ID of the GitHub/GitLab project board |
 | `BOARD_SYSTEM` | default: `auto` | `github`, `gitlab`, or `none` |
 | `AI_ATTR` | default: `yes` | Whether to tag notes as `[AI-Assisted]` |
-| `SOLUTIONS` | optional | Bash array — `SOLUTIONS=("Foo" "Bar")` |
+| `SOLUTIONS` | optional | List of solution names — `SOLUTIONS=("Foo" "Bar")` |
 | `TAGS` | optional | Free-form tags; not used by pp itself |
 
 Example:

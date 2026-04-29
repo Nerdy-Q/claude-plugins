@@ -21,16 +21,18 @@
 #   3. Unique prefix match (e.g. "acm" -> "acme-dev" if no other "acm*")
 #   4. Active project (~/.config/nq-pp-sync/active) if no arg passed
 
-set -uo pipefail
+# Strict mode is enabled inside main() rather than at the top of the file.
+# This lets test_load_project.sh source bin/pp to access load_project()
+# without forcing set -e on the test runner's outer shell.
 
 # ===========================================================================
 # Paths
 # ===========================================================================
 
 PP_CONFIG_DIR="${PP_CONFIG_DIR:-$HOME/.config/nq-pp-sync}"
-PP_PROJECTS_DIR="$PP_CONFIG_DIR/projects"
-PP_ALIASES_FILE="$PP_CONFIG_DIR/aliases"
-PP_ACTIVE_FILE="$PP_CONFIG_DIR/active"
+PP_PROJECTS_DIR="${PP_PROJECTS_DIR:-$PP_CONFIG_DIR/projects}"
+PP_ALIASES_FILE="${PP_ALIASES_FILE:-$PP_CONFIG_DIR/aliases}"
+PP_ACTIVE_FILE="${PP_ACTIVE_FILE:-$PP_CONFIG_DIR/active}"
 
 # ===========================================================================
 # Output helpers
@@ -121,24 +123,85 @@ resolve_project() {
     return 1
 }
 
-# Source a project's config file into the current shell. Sets:
-#   NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION SOLUTIONS BRANCH SCHEMA_DIR TAGS
+# Read a project's config file into the current shell WITHOUT sourcing it.
+#
+# The conf format is intentionally a subset of bash that this parser can
+# handle directly: simple `KEY="value"` lines plus an optional
+# `SOLUTIONS=("Foo" "Bar")` array form. Keys outside the allowlist are
+# warned-and-skipped; lines that don't match the expected pattern are also
+# skipped with a warning. No shell evaluation occurs at any point.
+#
+# Why not source: the conf lives in ~/.config/nq-pp-sync/projects/ and
+# encodes paths, URLs, and identifiers that may have been hand-edited or
+# pre-existed before this version of pp shipped. Sourcing turned every
+# field into an arbitrary-code-execution sink (CVE-class issue #1 from
+# the 2026-04-29 audit). This parser eliminates that surface.
+#
+# Sets: NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION
+#       SOLUTIONS BRANCH SCHEMA_DIR BOARD_URL BOARD_SYSTEM AI_ATTR TAGS
 load_project() {
     local name="$1"
     local conf="$PP_PROJECTS_DIR/$name.conf"
     [ -f "$conf" ] || die "No config file: $conf"
 
-    # Reset variables before sourcing
+    # Reset variables before reading
     NAME=""; REPO=""; SITE_DIR=""; PROFILE=""; WEBSITE_ID=""
     ENV_URL=""; MODEL_VERSION="2"; BRANCH=""; SCHEMA_DIR="dataverse-schema"
     BOARD_URL=""; BOARD_SYSTEM="auto"; AI_ATTR="yes"
     TAGS=""
     SOLUTIONS=()
 
-    # shellcheck disable=SC1090
-    . "$conf"
+    local known_keys=" NAME REPO SITE_DIR PROFILE WEBSITE_ID ENV_URL MODEL_VERSION BRANCH SCHEMA_DIR BOARD_URL BOARD_SYSTEM AI_ATTR TAGS "
+    local lineno=0 line key value
+    while IFS= read -r line || [ -n "$line" ]; do
+        lineno=$((lineno + 1))
+        # Skip blanks and comments
+        case "$line" in
+            ''|\#*) continue ;;
+        esac
 
-    # Expand ~ in REPO
+        # SOLUTIONS=("a" "b") — special-case the array form. Extract each
+        # quoted token without invoking the shell on the contents.
+        if [[ "$line" =~ ^SOLUTIONS=\((.*)\)[[:space:]]*$ ]]; then
+            SOLUTIONS=()
+            local rest="${BASH_REMATCH[1]}"
+            while [[ "$rest" =~ \"([^\"]*)\" ]]; do
+                SOLUTIONS+=( "${BASH_REMATCH[1]}" )
+                rest="${rest#*\"${BASH_REMATCH[1]}\"}"
+            done
+            continue
+        fi
+
+        # Standard KEY="value" form. Value cannot contain unescaped double
+        # quotes (we don't support backslash escaping — keep the format
+        # boring on purpose).
+        if [[ "$line" =~ ^([A-Z_]+)=\"([^\"]*)\"[[:space:]]*$ ]]; then
+            key="${BASH_REMATCH[1]}"
+            value="${BASH_REMATCH[2]}"
+            if [[ " $known_keys " != *" $key "* ]]; then
+                warn "$conf:$lineno: unknown key '$key' (skipped)"
+                continue
+            fi
+            # Reject control characters and CR/LF in values.
+            if [[ "$value" == *$'\n'* ]] || [[ "$value" == *$'\r'* ]]; then
+                die "$conf:$lineno: control character in value for $key"
+            fi
+            # printf -v assigns by name without eval. Safe because key has
+            # been allowlisted against the fixed list above.
+            printf -v "$key" '%s' "$value"
+            continue
+        fi
+
+        warn "$conf:$lineno: unparsable line (skipped): $line"
+    done < "$conf"
+
+    # Required-field validation
+    [ -n "$NAME" ] || die "$conf: missing NAME"
+    [ -n "$REPO" ] || die "$conf: missing REPO"
+    [ -n "$SITE_DIR" ] || die "$conf: missing SITE_DIR"
+    [ -n "$PROFILE" ] || die "$conf: missing PROFILE"
+
+    # Expand ~ in REPO via bash parameter expansion (no shell evaluation)
     REPO="${REPO/#~/$HOME}"
 
     # Session safety for journaling only. Do not block non-interactive pp flows.
@@ -355,9 +418,12 @@ TAGS=""
 EOF
         if [ -n "$solutions" ]; then
             printf 'SOLUTIONS=(' >> "$PP_PROJECTS_DIR/$name.conf"
-            local IFS=','
+            local IFS=',' s s_trim
             for s in $solutions; do
-                printf '"%s" ' "$(echo "$s" | xargs)" >> "$PP_PROJECTS_DIR/$name.conf"
+                s_trim=$(echo "$s" | xargs)
+                [ -z "$s_trim" ] && continue
+                validate_identifier "Solution name" "$s_trim" '^[A-Za-z0-9_.-]+$'
+                printf '"%s" ' "$s_trim" >> "$PP_PROJECTS_DIR/$name.conf"
             done
             printf ')\n' >> "$PP_PROJECTS_DIR/$name.conf"
         fi
@@ -1326,9 +1392,12 @@ TAGS=""
 EOF
     if [ -n "$solutions" ]; then
         printf 'SOLUTIONS=(' >> "$PP_PROJECTS_DIR/$name.conf"
-        local IFS=','
+        local IFS=',' s s_trim
         for s in $solutions; do
-            printf '"%s" ' "$(echo "$s" | xargs)" >> "$PP_PROJECTS_DIR/$name.conf"
+            s_trim=$(echo "$s" | xargs)
+            [ -z "$s_trim" ] && continue
+            validate_identifier "Solution name" "$s_trim" '^[A-Za-z0-9_.-]+$'
+            printf '"%s" ' "$s_trim" >> "$PP_PROJECTS_DIR/$name.conf"
         done
         printf ')\n' >> "$PP_PROJECTS_DIR/$name.conf"
     fi
@@ -1455,6 +1524,7 @@ EOF
 # ===========================================================================
 
 main() {
+    set -euo pipefail
     local cmd="${1:-help}"
     shift || true
 
@@ -1498,4 +1568,8 @@ main() {
     esac
 }
 
-main "$@"
+# Source-safe guard: when this file is sourced (e.g. by tests), `return`
+# succeeds and we skip dispatching. When executed as a script, `return`
+# errors and main runs. Allows the bash test suite to load helpers and
+# load_project() in isolation.
+return 2>/dev/null || main "$@"
