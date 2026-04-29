@@ -1,22 +1,24 @@
 ---
 name: pp-permissions-audit
-description: Audit a Power Pages classic portal's Web Roles, Table Permissions, Site Settings, and Web API configuration for misalignments — orphaned permissions, missing Webapi/<entity>/enabled site settings, exposed `fields = *` whitelists, broken polymorphic lookups in custom JS, anonymous-role exposure, and security gaps. Use when the user reports unexpected 401/403/404 from /_api/, missing data, role-specific access bugs, or wants a portal security review. NOT for code sites.
+description: Audit a Power Pages classic portal's Web Roles, Table Permissions, Site Settings, and Web API configuration for misalignments — orphaned permissions, missing Webapi/<entity>/enabled site settings, exposed `fields = *` whitelists, broken polymorphic lookups in custom JS, anonymous-role exposure, performance bottlenecks (N+1 queries), and metadata gaps (missing snippets). Use when the user reports unexpected 401/403/404 from /_api/, missing data, slow page loads, role-specific access bugs, or wants a portal security/quality review. NOT for code sites.
 ---
 
-# Power Pages Permissions Audit
+# Power Pages Permissions & Quality Audit
 
-Static analysis of a Power Pages classic site's permissions configuration. The skill reads YAML metadata + custom JavaScript, cross-references findings, and produces a prioritized report of misalignments and security risks.
+Static analysis of a Power Pages classic site's configuration. The skill reads YAML metadata, Liquid templates, and custom JavaScript, cross-references findings, and produces a prioritized report of security risks, performance bottlenecks, and metadata misalignments.
 
 ## When to apply
 
 User says any of:
 
 - "audit my Power Pages permissions"
-- "review the portal security"
+- "review the portal security/quality"
 - "I'm getting 401 / 403 / 404 from /_api/<something> — why?"
 - "this page works for me but not for <other-user>"
-- "unauthenticated users can see X"
 - "make sure I'm not exposing any sensitive fields"
+- "why is this page so slow to load?"
+- "I'm seeing blank content where a snippet should be"
+- "did I miss any FetchXML best practices?"
 
 ## How this skill works
 
@@ -64,9 +66,14 @@ See [checks.md](references/checks.md) for the full list. Highlights:
 | INFO | Table Permission grants Read but Web API site setting is missing — Web API will 404 |
 | INFO | Web Page requires authentication but no Web Role rule (any auth user can see) |
 | WARN | Custom JS has `<lookup>@odata.bind` without `_contact` / `_account` suffix on a polymorphic field — runtime 400 |
-| WARN | Web Role exists but has zero contacts assigned (orphaned role) |
+| WARN | Web Role exists but no Table Permission references it |
 | WARN | `Webapi/<entity>/Fields = *` on an entity that has field-secured readable columns |
-| INFO | Table Permission with Global scope but the entity has user-owned records |
+| WARN | Content Snippet is referenced in Liquid but not defined locally |
+| WARN | **Liquid references `snippets['Name']` that isn't defined locally** |
+| WARN | **Basic Form references a field that does not exist in the schema** |
+| INFO | **N+1 query pattern detected in Liquid (lookup inside `{% for %}`)** |
+| INFO | **`{% fetchxml %}` block is missing a `count` attribute** |
+| WARN | **Site Setting appears to contain a secret and is visible to portal** |
 
 ## Interpreting findings
 

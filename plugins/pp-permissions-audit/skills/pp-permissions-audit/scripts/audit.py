@@ -66,6 +66,7 @@ class AuditState:
     web_templates: list[Path] = field(default_factory=list)                  # *.webtemplate.source.html
     page_html_files: list[Path] = field(default_factory=list)                # *.webpage.copy.html (base + localized)
     content_snippets: list[Path] = field(default_factory=list)               # *.contentsnippet.value.html
+    content_snippet_names: set[str] = field(default_factory=set)             # set of defined snippet names
     custom_js: list[Path] = field(default_factory=list)
     sitemarkers: set[str] = field(default_factory=set)                       # set of defined sitemarker names
     schema_entities: dict[str, dict[str, Any]] | None = None                 # entity_name -> {fields:[...]} if available
@@ -185,6 +186,10 @@ def load_site(state: AuditState) -> None:
 
     # ---- Content snippets --------------------------------------------------
     state.content_snippets.extend(site.glob("content-snippets/**/*.contentsnippet.value.html"))
+    for record in _load_records(site, "contentsnippet", "content-snippets"):
+        name = record.get("adx_name", "")
+        if name:
+            state.content_snippet_names.add(name)
 
     # ---- Sitemarkers -------------------------------------------------------
     for record in _load_records(site, "sitemarker", "sitemarkers"):
@@ -1127,6 +1132,158 @@ def check_missing_sitemarker_references(state: AuditState) -> None:
             )
 
 
+def check_missing_snippet_references(state: AuditState) -> None:
+    """WARN — Liquid template references `snippets['<name>']` that isn't defined."""
+    if not state.content_snippet_names:
+        return
+    ref_re = re.compile(r"snippets\s*\[\s*['\"]([^'\"]+)['\"]\s*\]")
+    files_to_scan = list(state.web_templates) + list(state.page_html_files) + list(state.content_snippets)
+    referenced: dict[str, list[str]] = defaultdict(list)
+    for path in files_to_scan:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for m in ref_re.finditer(text):
+            referenced[m.group(1)].append(str(path))
+    for name, locations in referenced.items():
+        if name not in state.content_snippet_names:
+            location_str = "; ".join(locations[:3])
+            if len(locations) > 3:
+                location_str += f"; … +{len(locations) - 3} more"
+            state.add(
+                "WARN",
+                "WRN-010",
+                f"Content Snippet `{name}` referenced in Liquid but not defined",
+                f"Templates reference `snippets['{name}']` but no Content Snippet record with this name "
+                "exists in the export. The Liquid expression will return `nil`. If this snippet was intended "
+                "to provide content, the UI will be blank or broken.",
+                location=location_str,
+            )
+
+
+def check_leaky_site_settings(state: AuditState) -> None:
+    """WARN — Site Setting appears to contain a secret and is visible to portal."""
+    SENSITIVE_PATTERNS = (
+        r"key", r"secret", r"token", r"password", r"clientid", r"apikey",
+    )
+    # Common settings that are EXEMPT (known to be public/safe even with 'key' in name)
+    EXEMPT_PATTERNS = (
+        r"site/name", r"search/query", r"webapi/.*/fields", r"recaptcha/.*/sitekey",
+    )
+    for name, value in state.site_settings.items():
+        name_lower = name.lower()
+        if any(re.search(p, name_lower) for p in EXEMPT_PATTERNS):
+            continue
+        if any(re.search(p, name_lower) for p in SENSITIVE_PATTERNS):
+            # Heuristic: is it visible? (Settings are visible if they have no / and aren't in a known internal namespace,
+            # or if the user has specific settings enabling visibility. For safety, we flag anything that 'looks' secret.)
+            if len(str(value)) > 8:
+                state.add(
+                    "WARN",
+                    "WRN-011",
+                    f"Possible sensitive Site Setting exposed: `{name}`",
+                    f"Setting `{name}` contains a value that looks like a secret or API key. "
+                    "Ensure this setting is NOT intended to be private. If it is sensitive, "
+                    "ensure it is not being leaked to the client-side via `window.Microsoft.Dynamic.Settings`.",
+                    location=f"site-settings/.../{name}",
+                )
+
+
+def check_n_plus_one_liquid(state: AuditState) -> None:
+    """INFO — N+1 query pattern detected in Liquid (FetchXML or entity lookup inside loop)."""
+    # Pattern: {% for ... %} ... {% fetchxml ... %} or entities[...]
+    for_re = re.compile(r"{%\s*for\s+.*?\s*%}(.*?){%\s*endfor\s*%}", re.DOTALL)
+    n1_signals = (
+        r"{%\s*fetchxml",
+        r"entities\s*\[",
+    )
+    files_to_scan = list(state.web_templates) + list(state.page_html_files) + list(state.content_snippets)
+    for path in files_to_scan:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for m in for_re.finditer(text):
+            body = m.group(1)
+            for signal in n1_signals:
+                if re.search(signal, body):
+                    line_no = text[:m.start()].count("\n") + 1
+                    state.add(
+                        "INFO",
+                        "INFO-008",
+                        "Possible N+1 query pattern in Liquid",
+                        "A `{% for %}` loop contains a `{% fetchxml %}` or `entities[...]` lookup. "
+                        "This will execute a Dataverse query for EVERY iteration of the loop, "
+                        "severely impacting page load performance. Consider refactoring to a single "
+                        "FetchXML query with a `join` or an `in` filter before the loop.",
+                        location=f"{path}:{line_no}",
+                    )
+
+
+def check_missing_fetchxml_count(state: AuditState) -> None:
+    """INFO — `{% fetchxml %}` block is missing a `count` attribute."""
+    fetchxml_open_re = re.compile(r"{%\s*fetchxml\s+\w+\s*%}")
+    files_to_scan = list(state.web_templates) + list(state.page_html_files) + list(state.content_snippets)
+    for path in files_to_scan:
+        try:
+            text = path.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            continue
+        for m in fetchxml_open_re.finditer(text):
+            # Check the actual <fetch> tag inside the block
+            # The fetchxml tag spans until the matching endfetchxml
+            end_match = re.search(r"{%\s*endfetchxml\s*%}", text[m.end():])
+            if not end_match:
+                continue
+            block_body = text[m.end() : m.end() + end_match.start()]
+            if "<fetch" in block_body and not re.search(r"\bcount\s*=\s*['\"][^'\"]+['\"]", block_body):
+                line_no = text[:m.start()].count("\n") + 1
+                state.add(
+                    "INFO",
+                    "INFO-006",
+                    "`{% fetchxml %}` missing `count` attribute",
+                    "This FetchXML query does not specify a `count` attribute. For best performance "
+                    "and to prevent unexpected large payloads, always specify a `count` (e.g. `count='50'`).",
+                    location=f"{path}:{line_no}",
+                )
+
+
+def check_form_list_field_drift(state: AuditState) -> None:
+    """WARN — Basic Form references a field that does not exist on the entity per schema."""
+    if not state.schema_entities:
+        return
+    site = state.site_dir
+
+    # Basic Forms: basic-forms/*.entityform.yml (or consolidated entityform.yml)
+    forms = _load_records(site, "entityform", "basic-forms")
+
+    for record in forms:
+        entity = record.get("adx_entityname") or record.get("adx_entitylogicalname")
+        if not entity or entity.lower() not in state.schema_entities:
+            continue
+        entity = entity.lower()
+        path = Path(record.get("__path", ""))
+        if not path.exists():
+            continue
+
+        # Only validate metadata keys that are expected to hold Dataverse field logical names.
+        # Do not inspect adx_name; that's typically the form's own display/config name.
+        field_keys = ("adx_attribute", "adx_attributelogicalname")
+        for key in field_keys:
+            val = record.get(key)
+            if val and isinstance(val, str) and "_" in val:
+                if not schema_field_valid(state, entity, val):
+                    state.add(
+                        "WARN",
+                        "WRN-012",
+                        f"Form `{record.get('adx_name')}` references unknown field `{val}`",
+                        f"The form references field `{val}` which does not exist on entity `{entity}` "
+                        "per schema. This will cause a Liquid or runtime error on the portal.",
+                        location=str(path),
+                    )
+
+
 # ---------------------------------------------------------------------------
 # Report generation
 # ---------------------------------------------------------------------------
@@ -1236,6 +1393,11 @@ def main(argv: list[str] | None = None) -> int:
     check_unsafe_dotliquid_escape(state)
     check_webapi_without_safeajax(state)
     check_missing_sitemarker_references(state)
+    check_missing_snippet_references(state)
+    check_leaky_site_settings(state)
+    check_n_plus_one_liquid(state)
+    check_missing_fetchxml_count(state)
+    check_form_list_field_drift(state)
     check_lowercase_odatabind_navprop(state)
     check_select_fields_against_schema(state)
     check_fetchxml_attributes_against_schema(state)

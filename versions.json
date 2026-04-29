@@ -1,0 +1,13 @@
+{
+    "marketplace": {
+        "name": "nq-claude-power-pages-plugins"
+    },
+    "plugins": {
+        "pp-portal": "2.2.1",
+        "pp-sync": "1.6.0",
+        "pp-permissions-audit": "1.5.0"
+    },
+    "docs": {
+        "pp_permissions_audit_ci_ref": "v2.6.0"
+    }
+}

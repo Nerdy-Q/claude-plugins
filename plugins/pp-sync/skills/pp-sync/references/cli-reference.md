@@ -49,6 +49,8 @@ All sync commands take a project as the first argument. The project arg can be t
 | `pp up <project> [--validate-only] [--force-bulk] [--bulk-threshold=N]` | Upload portal changes; warns if >50 changed files |
 | `pp diff <project> [--diff] [--names-only] [--bulk-threshold=N]` | Preview what `pp up` would push — categorized changed-file list, no upload |
 | `pp doctor <project>` | Health check — tooling, auth, structure, content counts |
+| `pp generate-page <project> <Name>` | Scaffold a new hybrid-pattern page (base + en-US) |
+| `pp journal <project> {init|open|note|close} <args>` | Automated work tracking & Project Board integration |
 | `pp solution-down <project> [solution]` | Export Dataverse solution + unpack |
 | `pp solution-up <project> [solution]` | Pack + import Dataverse solution (DESTRUCTIVE) |
 | `pp audit <project> [--severity ...] [--exit-code] [--json]` | Run permissions audit (delegates to `pp-permissions-audit`) |
@@ -95,6 +97,9 @@ Each project lives in a single bash file at `~/.config/nq-pp-sync/projects/<name
 | `MODEL_VERSION` | default: `2` | `1` = Standard, `2` = Enhanced |
 | `SCHEMA_DIR` | default: `dataverse-schema` | Where solution unpack goes |
 | `BRANCH` | optional | Default git branch for this env |
+| `BOARD_URL` | optional | URL or ID of the GitHub/GitLab project board |
+| `BOARD_SYSTEM` | default: `auto` | `github`, `gitlab`, or `none` |
+| `AI_ATTR` | default: `yes` | Whether to tag notes as `[AI-Assisted]` |
 | `SOLUTIONS` | optional | Bash array — `SOLUTIONS=("Foo" "Bar")` |
 | `TAGS` | optional | Free-form tags; not used by pp itself |
 

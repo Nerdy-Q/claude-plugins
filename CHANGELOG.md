@@ -2,6 +2,33 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.6.0] — 2026-04-29
+
+### Added (pp-sync v1.6.0)
+
+- **`pp generate-page <project> <Name>`** scaffolds a new hybrid-pattern page with base HTML/CSS/JS plus an `en-US` localized copy.
+- **`pp journal <project> {init|open|note|close}`** adds built-in work journaling and project-board integration for GitHub/GitLab-aware project tracking.
+- **Project journaling config** in the `pp` project registry: `BOARD_URL`, `BOARD_SYSTEM`, and `AI_ATTR`.
+- **`references/journaling.md`** documenting the journaling workflow.
+
+### Added (pp-permissions-audit v1.5.0)
+
+- **Five new audit checks**:
+  - `WRN-010` for missing `snippets['...']` references in Liquid
+  - `WRN-011` for likely sensitive Site Settings exposed to the portal
+  - `WRN-012` for Basic Form field references that do not exist in schema
+  - `INFO-006` for `{% fetchxml %}` blocks missing a `count` attribute
+  - `INFO-008` for likely N+1 query patterns inside Liquid loops
+- **Additional regression tests** covering secured-field checks, Basic Form false-positive avoidance, single-quoted FetchXML `count`, and reCAPTCHA site-key exemptions.
+
+### Changed
+
+- **Centralized version management** via `versions.json` and `scripts/sync_versions.py`, with CI enforcement in `.github/workflows/plugin-validate.yml`.
+- **Release and contributor docs** now sync managed version values from a single source instead of hand-updating scattered manifests and CI pins.
+- **`pp journal` safety hardening**: board confirmation is scoped to interactive journaling only, and board operations run from the configured project repo.
+- **`pp setup` branch capture restored** so generated project configs keep their default branch value.
+- **Audit heuristics refined** to avoid false positives on valid single-quoted FetchXML `count` attributes, public reCAPTCHA-style site keys, and Basic Form names.
+
 ## [2.5.0] — 2026-04-29
 
 ### Changed
@@ -176,6 +203,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.6.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.6.0
 [2.5.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.5.0
 [2.3.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.3.0
 [2.4.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.4.0

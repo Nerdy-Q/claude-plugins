@@ -24,6 +24,9 @@ Full list of checks the audit script performs, with codes, severity, and what tr
 | WRN-007 | FetchXML attribute `<name>` does not exist on `<entity>` | **Schema-aware check**. A `{% fetchxml %}` block uses an `<attribute name="...">` not present in the entity's `Entity.xml`. Common after a column rename or removal — the FetchXML wasn't updated. Will fail at page render time. |
 | WRN-008 | `Webapi/<entity>/Fields` lists field(s) that do not exist on `<entity>` | **Schema-aware check**. The Site Setting whitelist references attributes not in `Entity.xml`. Doesn't break the API (silently ignored) but signals config drift after a column rename or removal. Update the whitelist. |
 | WRN-009 | Web API on `<entity>` uses `fields = *` and the entity has secured readable fields | **Schema-aware check**. The entity has one or more attributes with both `IsSecured = 1` and `ValidForReadApi = 1`, and the portal uses `Webapi/<entity>/Fields = *`. This is riskier than a narrow whitelist because the exposure set is implicit. |
+| WRN-010 | Content Snippet `<name>` referenced in Liquid but not defined | A web template / page / snippet uses `snippets['<name>']` but no Content Snippet record with this name exists in the local export. The Liquid expression returns `nil`. If this snippet was intended to provide content, the UI will be blank or broken. |
+| WRN-011 | Possible sensitive Site Setting exposed: `<name>` | Setting contains common sensitive patterns (`key`, `secret`, `token`, etc.) and is of non-trivial length. Could be leaked to the client-side via `window.Microsoft.Dynamic.Settings`. |
+| WRN-012 | Form `<name>` references unknown field `<val>` | **Schema-aware check**. A Basic Form references an attribute logical name that does not exist on the target entity's `Entity.xml`. Will cause runtime errors on the portal. |
 
 ## INFO-class
 
@@ -34,7 +37,9 @@ Full list of checks the audit script performs, with codes, severity, and what tr
 | INFO-003 | Page `<name>` requires auth but has no role rule | A Web Page requires registration but has no associated Web Page Access Control Rule. Any authenticated user can reach it. |
 | INFO-004 | Role-permission junction not exported | The site's `pac paportal` export format doesn't include `adx_entitypermission_webrole` lists. Role-aware checks (ERR-002, ERR-003, WRN-002) are skipped for this site. |
 | INFO-005 | Page `<slug>` has empty base file but populated localized file | The base `<Page>.webpage.copy.html` (or `.custom_javascript.js`, etc.) is under 50 bytes while the matching `content-pages/<lang>/...` is over 200 bytes. **Blank-page mode A**: Power Pages renders the base by default; localized content renders only when base is empty AND a matching language is requested. Most users see the empty base. |
+| INFO-006 | `{% fetchxml %}` missing `count` attribute | A FetchXML query doesn't specify a `count`. For best performance and to prevent unexpected large payloads, always specify a `count` (e.g. `count='50'`). |
 | INFO-007 | Unsafe DotLiquid JSON escape (`replace: '"', '\\"'`) | A web template / page / snippet uses the broken DotLiquid escape pattern that produces 3 chars (`\\"`) instead of the intended 2 (`\"`). Breaks JSON parsing in `<script>` blocks. Use `replace: '"', '"'` instead. |
+| INFO-008 | Possible N+1 query pattern in Liquid | A `{% for %}` loop contains a `{% fetchxml %}` or `entities[...]` lookup. This executes a Dataverse query for EVERY iteration of the loop, severely impacting page load performance. |
 | INFO-009 | Page `<slug>` has diverged base/localized files | Both base file and a `content-pages/<lang>/...` localized file are populated (>200 bytes each), but their sizes differ by more than 10%. **Inconsistent-content mode B**: some users see one version, others see the other depending on which Power Pages serves them. Pick one as authoritative and copy to the other. |
 
 ## Why some checks are heuristic

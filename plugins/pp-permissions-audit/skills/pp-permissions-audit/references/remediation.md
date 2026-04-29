@@ -158,6 +158,42 @@ The transition from `*` to a whitelist often catches dead code that was reading 
 
 If the intent IS "any authenticated user," document it explicitly so the finding is dismissable next time.
 
+## INFO-006 — FetchXML missing `count` attribute
+
+1. Open the template or page containing the `{% fetchxml %}` block.
+2. Add a `count` attribute to the `<fetch>` tag (e.g. `<fetch count="50">`).
+3. If the query expects more than 5000 records (unlikely on a portal), implement paging via `paging-cookie`.
+4. Sync and verify the page still renders correct data.
+
+## INFO-008 — Possible N+1 query pattern in Liquid
+
+1. Identify the `{% for %}` loop and the nested query (`{% fetchxml %}` or `entities[...]`).
+2. **Refactor**: Pull the query outside the loop.
+   - If looking up child records: query all children in one FetchXML before the loop, then filter in the loop.
+   - If looking up related metadata: use a single FetchXML with multiple `<filter>` conditions or an `in` operator.
+3. Verify page load time improves (check Network tab for `/_services/portal/Liquid/` responses if applicable, though static analysis catches the pattern before execution).
+
+## WRN-010 — Content Snippet referenced but not defined
+
+1. Check if the snippet exists in the Dataverse environment but was missed in the `pac paportal download`.
+2. If missing globally: create the Content Snippet record in Power Pages Studio.
+3. If it's a typo: fix the `snippets['Name']` reference in the Liquid template.
+4. Sync and verify the content appears on the portal.
+
+## WRN-011 — Possible sensitive Site Setting exposed
+
+1. Verify if the setting (e.g. `Authentication/OpenIdConnect/Google/Secret`) is intended to be private.
+2. Ensure the setting is NOT marked as "Visible to Portal" in Studio.
+3. If the setting is indeed a secret and is being leaked, move it to a secure location or ensure it's handled only on the server side (e.g. in a Cloud Flow or Dataverse Plugin).
+
+## WRN-012 — Form references unknown field
+
+1. Cross-reference the field logical name against `Entity.xml` in your solution.
+2. If the field was renamed or deleted:
+   - Update the Basic Form metadata in Studio to remove or replace the field.
+   - Sync down to refresh your local YAML.
+3. If the field is missing from the export but exists in Dataverse: re-run `pac solution export/unpack` to update the schema metadata.
+
 ## INFO-004 — Junction not exported
 
 This is informational only. To get role-aware audit checks:

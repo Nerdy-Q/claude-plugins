@@ -64,9 +64,25 @@ pp setup                                                        # bootstrap with
 ### Plugin manifest validation
 
 ```bash
+python3 scripts/sync_versions.py                              # sync versions.json into live files
 claude plugin validate plugins/<plugin>
 claude plugin validate .                                        # marketplace
 ```
+
+## Version management
+
+Use [versions.json](versions.json) as the single source of truth for the live versioned values currently managed by the repo:
+
+- per-plugin manifest versions
+- repo-tag pins used in shipped CI/docs templates
+
+After changing a value there, run:
+
+```bash
+python3 scripts/sync_versions.py
+```
+
+CI runs `python3 scripts/sync_versions.py --check`, so version drift in those managed files will fail validation.
 
 ### Local marketplace install
 

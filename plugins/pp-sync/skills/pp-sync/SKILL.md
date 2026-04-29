@@ -47,6 +47,8 @@ User says any of:
 | **down** | Download portal from Dataverse to local | `*-down.sh` / `*-paportal-down.sh` / `sync-down-dev.sh` | `pac paportal download --path . --webSiteId <id> --modelVersion <n>` |
 | **up** | Upload local changes to Dataverse | `*-up.sh` / `*-paportal-up.sh` / `sync-up-dev.sh` | `pac paportal upload --path . --modelVersion <n>` |
 | **doctor** | Health check (auth, tooling, structure, noise) | `*-doctor.sh` / `contosodoctor.sh` | manual checks (see `references/safety-checks.md`) |
+| **generate-page** | **Scaffold a new hybrid-pattern page (base + en-US)** | (internal template) | manual mkdir + copy |
+| **journal** | **Automated work tracking & Project Board integration** | (internal logic) | `gh` / `glab` / `git commit` |
 | **commit** | Interactive selective commit | `*-commit.sh` | `git status` + `git add -p` + `git commit` |
 | **solution-down** | Export Dataverse solution + unpack | `*-solution-down.sh` | `pac solution export` then `pac solution unpack` |
 | **solution-up** | Import Dataverse solution | `*-solution-up.sh` | `pac solution pack` then `pac solution import` |
