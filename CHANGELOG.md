@@ -2,6 +2,33 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.9.0] — 2026-04-29
+
+Pac-mocked CI integration tests. Closes the "pac happy paths only run locally" gap by introducing a shell-script mock of the Microsoft Power Platform CLI.
+
+### Added (pp-sync v2.2.0)
+
+- **`tests/mocks/pac`** — a 250-line shell-script mock of `pac`. Implements the subset `pp-sync` invokes (`auth list/select/create`, `org who`, `paportal list/download/upload`, `solution export/unpack/pack/import`, `--version`) with realistic stdout shapes that `pp` parses against. Backed by a state directory (`$PP_MOCK_PAC_STATE_DIR`) so multiple invocations within one test interact coherently.
+- **Failure injection via env vars** — `PP_MOCK_PAC_FAIL_AUTH_LIST=1` and `PP_MOCK_PAC_FAIL_ORG_WHO=1` force the mock to fail those specific commands, letting tests exercise pp's error-handling paths.
+- **`tests/test_pac_mocked.sh`** — 13 tests exercising the mocked path:
+  - `pp doctor` full pac auth path (registered profile, connected env URL, all sections complete)
+  - `pp doctor` against unregistered profile — surfaces the registration error
+  - `pp switch` writes active + invokes `pac auth select`
+  - `pp status` reports live env URL from `pac org who`
+  - `pp up --validate-only` invokes pac validate path
+  - `pp down` end-to-end with mocked `pac paportal download`
+  - `pp up` (full) with mocked `pac paportal upload`
+  - `pp solution-down` end-to-end with mocked solution export/unpack
+  - Failure injection: pac auth list failure surfaces correctly
+- **CI wired** — new "Run pp pac-mocked tests" step runs on every PR. Total CI test count: **184** (was 171). Local-only `tests/integration/test_pac_dependent.sh` still runs against real pac for smoke-gating before each release.
+- **`tests/mocks/README.md`** — documents what's mocked, the state-directory layout, failure-injection env vars, and what's NOT mocked (yet).
+
+### Why this matters
+
+Before this release, `pp doctor`, `pp down`, `pp up`, `pp solution-down/up`, and other pac-dependent operations had **zero CI coverage**. They could only be tested locally on a developer machine with a real Power Platform tenant. Any regression to those code paths would have been invisible to CI until a maintainer happened to run the local integration suite.
+
+The mock removes that gap. The mocked test suite runs in 1-2 seconds in CI, requires no external dependencies, and exercises the same `bin/pp` code paths as a real pac. Combined with the local integration tests (which still verify the bash → pac → portal hand-off works against real environments), pp now has a two-layer coverage strategy: **mock-driven unit-style tests in CI for every PR, plus real-environment smoke tests before each release**.
+
 ## [2.8.0] — 2026-04-29
 
 Integration test framework + a real-world backward-compat fix surfaced by running tests against a real portal.
@@ -452,6 +479,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.9.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.0
 [2.8.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.8.0
 [2.7.7]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.7
 [2.7.6]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.6

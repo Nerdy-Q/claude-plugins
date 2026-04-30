@@ -1,0 +1,315 @@
+#!/usr/bin/env bash
+# Mock for the Microsoft Power Platform CLI (`pac`).
+#
+# Implements the subset of pac that pp-sync invokes, with realistic
+# stdout shapes pp parses against. Backed by a state directory so
+# `auth select` / `org who` / `auth create` interact coherently across
+# multiple invocations within one test.
+#
+# Tests put this script's directory first in PATH so it shadows any
+# real `pac` install:
+#
+#   PATH="$SCRIPT_DIR/../tests/mocks:$PATH" pp doctor anchor
+#
+# State directory: $PP_MOCK_PAC_STATE_DIR (default: $HOME/.pp-mock-pac)
+# Files in state dir:
+#   profiles      — one line per registered profile: name=env_url
+#   selected      — currently selected profile name
+#
+# To inject a profile for a test:
+#   mkdir -p "$state/profiles" && echo "myprof=https://acme-dev.crm.dynamics.com/" >> "$state/profiles"
+
+set -uo pipefail
+
+STATE_DIR="${PP_MOCK_PAC_STATE_DIR:-$HOME/.pp-mock-pac}"
+mkdir -p "$STATE_DIR"
+PROFILES_FILE="$STATE_DIR/profiles"
+SELECTED_FILE="$STATE_DIR/selected"
+[ -f "$PROFILES_FILE" ] || : > "$PROFILES_FILE"
+
+# Test failure injection: when set, pac fails with a configurable error.
+# Tests use this to exercise pp's error-handling paths.
+#
+#   PP_MOCK_PAC_FAIL_AUTH_LIST=1 pp doctor anchor   → pac auth list fails
+#   PP_MOCK_PAC_FAIL_ORG_WHO=1                       → pac org who returns no URL
+
+# --- helpers -------------------------------------------------------------
+
+profile_url() {
+    # Look up env URL for a profile name. Echo URL on stdout if found,
+    # exit 1 if not.
+    local name="$1" line
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            "$name="*) printf '%s\n' "${line#*=}"; return 0 ;;
+        esac
+    done < "$PROFILES_FILE"
+    return 1
+}
+
+selected_profile() {
+    [ -f "$SELECTED_FILE" ] && cat "$SELECTED_FILE" || true
+}
+
+# --- subcommand: auth list -----------------------------------------------
+
+cmd_auth_list() {
+    if [ "${PP_MOCK_PAC_FAIL_AUTH_LIST:-0}" = "1" ]; then
+        echo "Error: failed to read profile list" >&2
+        return 1
+    fi
+    echo "Index   Active   Kind        Name                    Environment URL"
+    echo "----    ------   ----------  ----------------------  -------------------"
+    local i=1 line
+    local sel
+    sel=$(selected_profile)
+    while IFS= read -r line || [ -n "$line" ]; do
+        [ -z "$line" ] && continue
+        local name="${line%%=*}"
+        local url="${line#*=}"
+        local marker=" "
+        [ "$name" = "$sel" ] && marker="*"
+        printf '[%d]    %s        UNIVERSAL   %-22s  %s\n' "$i" "$marker" "$name" "$url"
+        i=$((i + 1))
+    done < "$PROFILES_FILE"
+}
+
+# --- subcommand: auth select ---------------------------------------------
+
+cmd_auth_select() {
+    local name=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --name) name="${2:-}"; shift 2 ;;
+            *) shift ;;
+        esac
+    done
+    [ -z "$name" ] && { echo "Error: --name required" >&2; return 1; }
+    if ! profile_url "$name" >/dev/null; then
+        echo "Error: profile '$name' not found" >&2
+        return 1
+    fi
+    printf '%s' "$name" > "$SELECTED_FILE"
+    echo "Profile '$name' is now active."
+}
+
+# --- subcommand: auth create ---------------------------------------------
+
+cmd_auth_create() {
+    local name="" env_url=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --name)        name="${2:-}";    shift 2 ;;
+            --environment) env_url="${2:-}"; shift 2 ;;
+            *)             shift ;;
+        esac
+    done
+    [ -z "$name" ] && { echo "Error: --name required" >&2; return 1; }
+    [ -z "$env_url" ] && { echo "Error: --environment required" >&2; return 1; }
+    # If profile already exists, replace its URL.
+    if profile_url "$name" >/dev/null; then
+        local tmp
+        tmp=$(mktemp)
+        grep -v "^$name=" "$PROFILES_FILE" > "$tmp" || true
+        mv "$tmp" "$PROFILES_FILE"
+    fi
+    printf '%s=%s\n' "$name" "$env_url" >> "$PROFILES_FILE"
+    printf '%s' "$name" > "$SELECTED_FILE"
+    echo "Profile '$name' created."
+}
+
+# --- subcommand: org who -------------------------------------------------
+
+cmd_org_who() {
+    if [ "${PP_MOCK_PAC_FAIL_ORG_WHO:-0}" = "1" ]; then
+        echo "No profile selected. Run 'pac auth select --name <profile>' first." >&2
+        return 1
+    fi
+    local sel
+    sel=$(selected_profile)
+    if [ -z "$sel" ]; then
+        echo "No profile selected." >&2
+        return 1
+    fi
+    local url
+    if ! url=$(profile_url "$sel"); then
+        echo "Selected profile '$sel' has no recorded URL." >&2
+        return 1
+    fi
+    echo "Connected to..."
+    echo "  Name:            $sel"
+    echo "  Environment Url: $url"
+    echo "  Region:          unitedstates"
+}
+
+# --- subcommand: paportal list -------------------------------------------
+
+cmd_paportal_list() {
+    cat <<'EOF'
+Index  Website Name              Website Id                              Model Version
+-----  ------------------------  ------------------------------------    -------------
+[1]    Sample Site               00000000-0000-0000-0000-000000000001    Enhanced
+[2]    Another Site              00000000-0000-0000-0000-000000000002    Standard
+EOF
+}
+
+# --- subcommand: paportal download ---------------------------------------
+# Creates a minimal Power Pages site folder structure under --path.
+
+cmd_paportal_download() {
+    local path="" website_id="" model_version=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --path)         path="${2:-}";          shift 2 ;;
+            --webSiteId)    website_id="${2:-}";    shift 2 ;;
+            --modelVersion) model_version="${2:-}"; shift 2 ;;
+            *)              shift ;;
+        esac
+    done
+    [ -z "$path" ] && { echo "Error: --path required" >&2; return 1; }
+    [ -z "$website_id" ] && { echo "Error: --webSiteId required" >&2; return 1; }
+    local site_dir="$path/sample-site---sample-site"
+    mkdir -p "$site_dir/web-pages" "$site_dir/web-templates" "$site_dir/site-settings"
+    cat > "$site_dir/website.yml" <<'EOF'
+adx_name: Sample Site
+adx_websitelanguage: 1033
+EOF
+    echo "Downloaded portal: Sample Site (id $website_id, model $model_version)"
+    echo "  to: $site_dir"
+}
+
+# --- subcommand: paportal upload -----------------------------------------
+
+cmd_paportal_upload() {
+    local validate=0
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --validateBeforeUpload) validate=1; shift ;;
+            *) shift ;;
+        esac
+    done
+    if [ "$validate" = "1" ]; then
+        echo "Validating site..."
+        echo "Validation OK"
+    else
+        echo "Uploading site..."
+        echo "Upload complete"
+    fi
+}
+
+# --- subcommand: solution ------------------------------------------------
+
+cmd_solution_export() {
+    local name="" path=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --name) name="${2:-}"; shift 2 ;;
+            --path) path="${2:-}"; shift 2 ;;
+            *)      shift ;;
+        esac
+    done
+    [ -z "$path" ] && { echo "Error: --path required" >&2; return 1; }
+    # Produce a zip containing one file. Use printf instead of zip
+    # binary to keep the mock dependency-free.
+    printf 'PK\x03\x04' > "$path"  # ZIP local file header magic
+    echo "Exported solution: $name -> $path"
+}
+
+cmd_solution_unpack() {
+    local zipfile="" folder=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --zipfile) zipfile="${2:-}"; shift 2 ;;
+            --folder)  folder="${2:-}";  shift 2 ;;
+            *)         shift ;;
+        esac
+    done
+    [ -z "$folder" ] && { echo "Error: --folder required" >&2; return 1; }
+    mkdir -p "$folder/Entities" "$folder/Other"
+    cat > "$folder/Other/Solution.xml" <<'EOF'
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml>
+  <SolutionManifest>
+    <UniqueName>SampleSolution</UniqueName>
+    <Version>1.0.0.0</Version>
+  </SolutionManifest>
+</ImportExportXml>
+EOF
+    echo "Unpacked $zipfile to $folder"
+}
+
+cmd_solution_pack() {
+    local zipfile="" folder=""
+    while [ $# -gt 0 ]; do
+        case "$1" in
+            --zipfile) zipfile="${2:-}"; shift 2 ;;
+            --folder)  folder="${2:-}";  shift 2 ;;
+            *)         shift ;;
+        esac
+    done
+    [ -z "$zipfile" ] && { echo "Error: --zipfile required" >&2; return 1; }
+    [ -d "$folder" ] || { echo "Error: folder '$folder' does not exist" >&2; return 1; }
+    printf 'PK\x03\x04' > "$zipfile"
+    echo "Packed $folder to $zipfile"
+}
+
+cmd_solution_import() {
+    echo "Imported solution"
+}
+
+# --- dispatcher ----------------------------------------------------------
+
+main() {
+    local sub="${1:-}"
+    shift 2>/dev/null || true
+    case "$sub" in
+        auth)
+            local action="${1:-}"
+            shift 2>/dev/null || true
+            case "$action" in
+                list)   cmd_auth_list "$@" ;;
+                select) cmd_auth_select "$@" ;;
+                create) cmd_auth_create "$@" ;;
+                *)      echo "mock pac: unknown auth action: $action" >&2; return 2 ;;
+            esac
+            ;;
+        org)
+            local action="${1:-}"
+            shift 2>/dev/null || true
+            case "$action" in
+                who) cmd_org_who "$@" ;;
+                *)   echo "mock pac: unknown org action: $action" >&2; return 2 ;;
+            esac
+            ;;
+        paportal)
+            local action="${1:-}"
+            shift 2>/dev/null || true
+            case "$action" in
+                list)     cmd_paportal_list "$@" ;;
+                download) cmd_paportal_download "$@" ;;
+                upload)   cmd_paportal_upload "$@" ;;
+                *)        echo "mock pac: unknown paportal action: $action" >&2; return 2 ;;
+            esac
+            ;;
+        solution)
+            local action="${1:-}"
+            shift 2>/dev/null || true
+            case "$action" in
+                export) cmd_solution_export "$@" ;;
+                unpack) cmd_solution_unpack "$@" ;;
+                pack)   cmd_solution_pack "$@" ;;
+                import) cmd_solution_import "$@" ;;
+                *)      echo "mock pac: unknown solution action: $action" >&2; return 2 ;;
+            esac
+            ;;
+        --version|version)
+            echo "Microsoft PowerPlatform CLI (mock) Version: 0.0.0-mock"
+            ;;
+        *)
+            echo "mock pac: unknown subcommand: $sub" >&2
+            return 2
+            ;;
+    esac
+}
+
+main "$@"
