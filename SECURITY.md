@@ -48,7 +48,7 @@ We will:
 
 ## Security-relevant test surfaces
 
-The marketplace ships **330 regression tests** across Python, bash, pac-mocked, journal-state, pac-contract, template-integration, and design-system-knowledge coverage, including:
+The marketplace ships **404 regression tests** across Python, bash, pac-mocked, journal-state, pac-contract, template-integration, design-system-knowledge, JSON-contract, performance-regression, metadata-consistency, and help-text-completeness coverage, including:
 - conf-parser attack-vector fixtures for `pp-sync` (`$(...)`, backticks, env-var poisoning, control characters, literal-metachar resolution)
 - URL-shape and same-repo enforcement tests for `pp journal note|close` (subdomain spoof, port injection, scheme downgrade, prefix confusion, path traversal)
 - page-name validation tests for `pp generate-page` (path traversal, injection, shell metacharacters)
