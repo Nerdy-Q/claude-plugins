@@ -1,16 +1,18 @@
 # pp-sync test suites
 
-Bash regression tests for `pp` CLI behavior. Five suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
+Bash regression tests for `pp` CLI behavior. Seven suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
 
 ## Suites
 
 | File | Tests | What it verifies |
 |---|---|---|
-| `test_load_project.sh` | 15 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts) plus literal-metachar project-resolution checks verifying that command-injection payloads are stored as literal strings, never executed. |
+| `test_load_project.sh` | 21 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts), literal-metachar project-resolution checks, parser edge cases (leading whitespace, only-comments, no-trailing-newline), and the `$HOME` backward-compat expansion path. |
 | `test_register_atomic.sh` | 6 | `pp project add` atomicity. Asserts that rejected runs (invalid project name / PAC profile / solution / alias) leave zero files behind in `$PP_CONFIG_DIR/projects/`. |
 | `test_journal_url_validation.sh` | 16 | `validate_issue_url_for_current_repo()` URL-shape regex + same-repo enforcement. Mocks `gh repo view` to test cross-repo hijack rejection without a real git checkout. Covers subdomain spoof, port injection, http downgrade, prefix confusion, path traversal, non-issue URLs, and 9 other attack vectors. |
-| `test_command_flows.sh` | 66 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page`, `sync-pages`, and help output. |
-| `test_subcommand_safety.sh` | 23 | Negative and edge-case coverage for subcommands beyond the parser: page-name traversal/injection rejection, journal `Issue:` extraction invariants, solution-pick range validation, and doctor pipefail tolerance. |
+| `test_command_flows.sh` | 78 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page` (incl. content correctness + JS/CSS placeholders), `sync-pages`, `setup` detection phase, and help output. |
+| `test_subcommand_safety.sh` | 30 | Negative and edge-case coverage for subcommands beyond the parser: page-name traversal/injection rejection (incl. empty-slug rejection), solution-name CLI-arg validation, journal `Issue:` extraction invariants, solution-pick range validation, and doctor pipefail tolerance. |
+| `test_install_script.sh` | 13 | Installer UX and safety: fresh install, idempotent re-run, non-symlink backup behavior, PATH guidance, and installed `pp help` smoke check. |
+| `test_pac_mocked.sh` | 23 | Mocked `pac` CLI flows in CI: doctor, switch/status, download/upload, solution export/import, validate-only upload, diff, and failure-injection paths without requiring a real tenant. |
 
 Run any suite locally:
 
@@ -53,7 +55,7 @@ When the file is sourced, `return` succeeds (we're inside a sourced script), so 
 
 ## Why bash and not pytest
 
-The system under test is `bin/pp`, a 1500-line bash script. Sourcing it from bash gives direct access to its functions and variables. Re-implementing the same harness in Python would need a subprocess shim that hides the very behavior we want to verify (function-table state, IFS handling, dynamic scoping) — exactly the things that surface real bugs in shell code.
+The system under test is `bin/pp`, a ~1800-line bash script. Sourcing it from bash gives direct access to its functions and variables. Re-implementing the same harness in Python would need a subprocess shim that hides the very behavior we want to verify (function-table state, IFS handling, dynamic scoping) — exactly the things that surface real bugs in shell code.
 
 The Python suite (`audit.py`) tests Python code; the bash suites test bash code.
 

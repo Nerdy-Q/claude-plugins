@@ -52,7 +52,7 @@ touch "$CONFIG_DIR/aliases"
 echo "${GRN}✓${RST} Config dir: $CONFIG_DIR"
 
 # 4. PATH check
-if ! echo "$PATH" | tr ':' '\n' | grep -qx "$BIN_DIR"; then
+if ! echo "$PATH" | tr ':' '\n' | grep -qFx "$BIN_DIR"; then
     echo
     echo "${YLW}⚠${RST} $BIN_DIR is not in your PATH."
     echo "Add this to your shell rc (~/.zshrc, ~/.bashrc):"

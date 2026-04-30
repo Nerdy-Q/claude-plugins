@@ -2,6 +2,32 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.9.4] — 2026-04-30
+
+Fifteenth review pass. 5 real bugs surfaced + fixed. Test count: **218** (was 211).
+
+### Fixed (pp-sync v2.2.4)
+
+- **`pp setup` aborted under `set -euo pipefail` when zero PAC profiles were registered.** The `echo "$pac_output" | grep -E '^\[[0-9]+\]' | head -10` pipeline tripped pipefail when grep found no matches (the empty-profile case is valid state for first-time users — they haven't run `pac auth create` yet). Same pattern at line 483 in the candidate-walkthrough loop. Both pipelines now end with `|| true`. Real-user impact: anyone running `pp setup` for the first time without any registered PAC profiles saw the script die silently after listing the (empty) profiles.
+- **`pp solution-down|up` accepted unvalidated solution names from CLI args and the interactive name branch.** A user typing `pp solution-down acme '../../etc/foo'` (or selecting non-numeric input at the multi-solution prompt) passed unchecked text into `mkdir`/`mv`/`rm -rf` paths under `$SCHEMA_DIR`. `format_solutions_array` validates entries at registration time but those code paths bypass it. Both subcommands now call `validate_identifier "Solution name" "$solution" '^[A-Za-z0-9_.-]+$'` after the resolution branch. Self-attack severity (the user types the bad input themselves), but real path-traversal mechanism.
+- **`pp generate-page` accepted whitespace-only and pure-dot/dash names** that passed `validate_identifier` but slugified to an empty string, causing `page_dir` to resolve to `$SITE_DIR/web-pages/` itself. On a fresh portal source (where `web-pages/` doesn't exist), the function then wrote `.webpage.yml` files directly into the parent directory. Added an explicit empty-slug check after slug derivation.
+- **`install.sh` PATH check used unanchored regex grep (false positives).** `grep -qx "$BIN_DIR"` treated the value as a basic regex; the `.` in `~/.local/bin` matched any character, so `~/zlocal/bin` (a path the user does NOT have) was treated as already in PATH. Switched to `grep -qFx` (fixed-string mode).
+- **`load_project` aborted under `set -u` when `$HOME` was unset** (chroot, `env -i`, scratch container). The new `${REPO/#~/$HOME}` and `${REPO/#\$HOME/$HOME}` expansions referenced `$HOME` directly. Now defaults via `${HOME:-}` and skips both expansions if empty.
+
+### Tests added (test count: 218, was 211)
+
+- 4 cases in `test_subcommand_safety.sh` exercising the new solution-name CLI-arg validation (path traversal, slash injection, shell metachar, semicolon).
+- 3 cases in `test_subcommand_safety.sh` for the generate-page empty-slug rejection (whitespace-only, pure dots, pure dashes).
+
+### Documentation
+
+- **`tests/README.md`** test-count table updated: `test_load_project.sh` 15 → 21, `test_command_flows.sh` 66 → 78, `test_subcommand_safety.sh` 23 → 30. Description for `bin/pp` updated from "1500-line" to "~1800-line".
+- **`tests/mocks/README.md`** mock line-count updated 250 → 330.
+
+### Pattern note
+
+This is the 15th review pass and the bug count per round is plateauing — no architectural issues, no new attack surfaces. The 5 bugs found here all fall into known categories already extensively covered: pipefail aborts (1), input-validation bypasses (2), edge cases in identifier handling (1), defensive-default omissions (1). The ratio of "scrutinized assertion : surfaced bug" for the top-level adversarial review was about 7:1 — substantially lower bug-yield than earlier rounds.
+
 ## [2.9.3] — 2026-04-29
 
 Chunk 4 of pac mocking — `pp setup` detection phase coverage. Test count: **211** (was 204).
@@ -554,6 +580,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.9.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.4
 [2.9.3]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.3
 [2.9.2]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.2
 [2.9.1]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.1

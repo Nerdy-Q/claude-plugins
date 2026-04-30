@@ -66,7 +66,7 @@ Full schema reference: [`skills/pp-sync/references/cli-reference.md`](skills/pp-
 
 ## Tests
 
-`plugins/pp-sync/tests/` ships regression coverage across five bash suites covering parser correctness, registration atomicity, URL validation, command flows, and subcommand safety. Run locally:
+`plugins/pp-sync/tests/` ships regression coverage across seven bash suites covering parser correctness, registration atomicity, URL validation, command flows, subcommand safety, installer behavior, and mocked `pac` CLI flows. Run locally:
 
 ```bash
 bash plugins/pp-sync/tests/test_load_project.sh
@@ -74,6 +74,8 @@ bash plugins/pp-sync/tests/test_register_atomic.sh
 bash plugins/pp-sync/tests/test_journal_url_validation.sh
 bash plugins/pp-sync/tests/test_command_flows.sh
 bash plugins/pp-sync/tests/test_subcommand_safety.sh
+bash plugins/pp-sync/tests/test_install_script.sh
+bash plugins/pp-sync/tests/test_pac_mocked.sh
 ```
 
 See [`tests/README.md`](tests/README.md) for fixture conventions and how to add tests for new subcommands.

@@ -125,16 +125,20 @@ Every audit rule shipped today has both positive coverage (rule fires on a fixtu
 
 ## Test suites
 
-The marketplace runs four test suites in CI. Run any of them locally:
+The marketplace runs multiple test suites in CI. Run the core ones locally:
 
 ```bash
 # pp-permissions-audit — Python unit tests (audit.py rule logic)
 python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py
 
 # pp-sync — bash regression tests
-bash plugins/pp-sync/tests/test_load_project.sh           # 12 cases — strict conf parser
+bash plugins/pp-sync/tests/test_load_project.sh           # strict conf parser
 bash plugins/pp-sync/tests/test_register_atomic.sh        # 6 cases — pp project add atomicity
 bash plugins/pp-sync/tests/test_journal_url_validation.sh # 16 cases — journal URL hardening
+bash plugins/pp-sync/tests/test_subcommand_safety.sh      # subcommand edge cases
+bash plugins/pp-sync/tests/test_command_flows.sh          # happy-path + error-path flows
+bash plugins/pp-sync/tests/test_install_script.sh         # installer behavior
+bash plugins/pp-sync/tests/test_pac_mocked.sh            # mocked pac CLI flows
 ```
 
 The bash suites use fixture files under `plugins/pp-sync/tests/fixtures/` and a source-safe pattern that loads `bin/pp` without dispatching commands. See `plugins/pp-sync/tests/README.md` for fixture conventions and how to add a new test.
@@ -143,7 +147,7 @@ When adding a new `pp` subcommand or registration path, add fixtures + assertion
 
 ## Integration tests (local-only)
 
-Beyond the four bash suites that run in CI, `plugins/pp-sync/tests/integration/test_pac_dependent.sh` exercises pp subcommands against a real `pac` install + a registered project. **Run this before each release** as a smoke gate:
+Beyond the in-CI unit and regression suites, `plugins/pp-sync/tests/integration/test_pac_dependent.sh` exercises pp subcommands against a real `pac` install + a registered project. **Run this before each release** as a smoke gate:
 
 ```bash
 bash plugins/pp-sync/tests/integration/test_pac_dependent.sh

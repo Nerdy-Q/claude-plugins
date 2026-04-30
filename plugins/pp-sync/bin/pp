@@ -310,9 +310,14 @@ load_project() {
     # and `$HOME` was expanded by the shell). Both expansions are pure
     # string substitution — only the matching prefix is replaced; no
     # other `$VAR` references are processed and no shell evaluation
-    # occurs.
-    REPO="${REPO/#~/$HOME}"
-    REPO="${REPO/#\$HOME/$HOME}"
+    # occurs. The `${HOME:-}` defaulting protects against `set -u` aborts
+    # in chroot / `env -i` / scratch-container environments where HOME
+    # may legitimately be unset.
+    local home_dir="${HOME:-}"
+    if [ -n "$home_dir" ]; then
+        REPO="${REPO/#~/$home_dir}"
+        REPO="${REPO/#\$HOME/$home_dir}"
+    fi
 
     # Session safety for journaling only. Do not block non-interactive pp flows.
     local board_verify_key=""
@@ -408,7 +413,12 @@ cmd_setup() {
     fi
     local pac_output
     pac_output=$(pac auth list 2>/dev/null) || die "pac auth list failed"
-    echo "$pac_output" | grep -E '^\[[0-9]+\]' | head -10
+    # `|| true` on the pipeline: when the user has zero PAC profiles
+    # registered, grep finds no matches and exits 1, which pipefail
+    # propagates and (under set -e) would abort setup before reaching
+    # the candidate-scan section. Empty profile list is valid state —
+    # the user just hasn't run `pac auth create` yet.
+    echo "$pac_output" | grep -E '^\[[0-9]+\]' | head -10 || true
     echo
 
     # Detect candidate site folders
@@ -480,7 +490,7 @@ cmd_setup() {
 
         # Profile selection
         echo "PAC profiles available:"
-        echo "$pac_output" | grep -E '^\[[0-9]+\]' | awk '{print "  " $0}' | head
+        echo "$pac_output" | grep -E '^\[[0-9]+\]' | awk '{print "  " $0}' | head || true
         echo
         read -r -p "PAC profile name (exact, from list): " pac_profile
         [ -z "$pac_profile" ] && { warn "Skipping (no profile given)"; continue; }
@@ -1056,6 +1066,13 @@ cmd_solution_down() {
         fi
     fi
 
+    # Validate solution name — it flows into mkdir / mv / rm -rf paths
+    # under $SCHEMA_DIR. A `../foo` value would escape into parent dirs.
+    # `format_solutions_array` enforces this at registration time, but
+    # CLI args (`pp solution-down acme '../escape'`) and the interactive
+    # name branch bypass that.
+    validate_identifier "Solution name" "$solution" '^[A-Za-z0-9_.-]+$'
+
     info "${BOLD}Solution down: $name / $solution${RST}"
     cd_repo_root "$REPO"
     confirm_pac_profile "$PROFILE" >/dev/null
@@ -1125,6 +1142,11 @@ cmd_solution_up() {
             fi
         fi
     fi
+
+    # Validate solution name — same path-traversal protection as
+    # cmd_solution_down. CLI arg or interactive name input bypasses
+    # the registration-time validation otherwise.
+    validate_identifier "Solution name" "$solution" '^[A-Za-z0-9_.-]+$'
 
     info "${BOLD}Solution up: $name / $solution${RST}"
     cd_repo_root "$REPO"
@@ -1328,7 +1350,13 @@ cmd_generate_page() {
     # Clean the name for folders/filenames: "My Awesome Page" -> "my-awesome-page"
     local slug
     slug=$(echo "$page_name" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g; s/--*/-/g; s/^-//; s/-$//')
-    
+    # Reject names that slugify to an empty string (whitespace-only,
+    # or composed entirely of characters the slugifier strips). The
+    # earlier validate_identifier accepts " " and "." but those would
+    # produce an empty slug → page_dir would be SITE_DIR/web-pages/
+    # itself, polluting the parent.
+    [ -n "$slug" ] || die "Page name produces an empty slug after normalization: '$page_name'"
+
     local page_dir="$SITE_DIR/web-pages/$slug"
     [ -d "$page_dir" ] && die "Page folder already exists: $page_dir"
 

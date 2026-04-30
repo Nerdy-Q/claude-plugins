@@ -82,7 +82,7 @@ run_page_name_reject() {
     output=$(PP_CONFIG_DIR="$conf" "$PP_BIN" generate-page test "$page_name" 2>&1 || true)
     # Validation must reject — script either dies with "must match" or
     # the explicit traversal-shape error.
-    if [[ "$output" != *"must match"* ]] && [[ "$output" != *"may not contain"* ]]; then
+    if [[ "$output" != *"must match"* ]] && [[ "$output" != *"may not contain"* ]] && [[ "$output" != *"empty slug"* ]]; then
         FAIL=$((FAIL + 1))
         FAIL_NAMES+=( "$label" )
         printf '  FAIL %s — accepted bad name; output: %s\n' "$label" "$output" >&2
@@ -108,6 +108,14 @@ run_page_name_reject "semicolon injection: Foo;rm"     'Foo;rm -rf /'
 run_page_name_reject "double-quote injection"          'Foo"; rm; "'
 run_page_name_reject "command substitution: \$(...)"   'Foo$(touch /tmp/page-pwn)'
 run_page_name_reject "backtick: \`...\`"               'Foo`touch /tmp/page-pwn`'
+
+# Names that pass identifier validation but slugify to empty —
+# v2.9.4 added an explicit empty-slug check after identifier
+# validation. Without this guard, the slug would be "" and page_dir
+# would resolve to SITE_DIR/web-pages/ itself, polluting the parent.
+run_page_name_reject "whitespace-only name"            "   "
+run_page_name_reject "pure dots"                       "..."
+run_page_name_reject "pure dashes"                     "---"
 
 # Verify the trap files were NOT created
 if [ -e /tmp/page-pwn ]; then
@@ -276,6 +284,38 @@ run_solution_pick "pick zero (0)"                "0"   "reject"
 run_solution_pick "pick way out of range (1000)" "1000" "reject"
 run_solution_pick "pick valid (1)"               "1"   "accept"
 run_solution_pick "pick valid (2)"               "2"   "accept"
+
+# CLI arg path traversal — solution name from `pp solution-down acme X`
+# must validate against [A-Za-z0-9_.-]+
+echo
+echo "Section 3b — solution name CLI arg validation"
+echo
+
+run_solution_cli_arg() {
+    local label="$1" arg="$2"
+    local conf
+    conf=$(make_project test '"FooSolution"')
+    local out
+    out=$(PP_CONFIG_DIR="$conf" "$PP_BIN" solution-down test "$arg" 2>&1 || true)
+    if [[ "$out" == *"must match"* ]]; then
+        PASS=$((PASS + 1))
+        printf '  OK   %s (rejected: %s)\n' "$label" "$arg"
+    elif [[ "$out" == *"unbound variable"* ]] || [[ "$out" == *"bad array"* ]]; then
+        FAIL=$((FAIL + 1))
+        FAIL_NAMES+=( "$label" )
+        printf '  FAIL %s — bash crash instead of friendly reject\n' "$label" >&2
+    else
+        FAIL=$((FAIL + 1))
+        FAIL_NAMES+=( "$label" )
+        printf '  FAIL %s — accepted bad solution name\n' "$label" >&2
+        printf '       out: %s\n' "$out" >&2
+    fi
+}
+
+run_solution_cli_arg "path traversal: ../../etc/foo"    "../../etc/foo"
+run_solution_cli_arg "slash injection: Foo/Bar"         "Foo/Bar"
+run_solution_cli_arg "shell metachar: Foo\$bar"         'Foo$bar'
+run_solution_cli_arg "semicolon: Foo;rm"                'Foo;rm'
 
 # --- Section 4: cmd_doctor outside git tree ------------------------------
 

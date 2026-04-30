@@ -70,4 +70,4 @@ Add new subcommands to `pac` as new `cmd_<sub>_<action>()` functions and dispatc
 
 ## Why this is a shell script and not a Python tool
 
-Same reason the test suites are bash: it runs on every machine that has bash, with no `pip install`. Tests that depend on the mock add no new dependencies to CI. The mock is ~250 lines — short enough to read end-to-end before trusting.
+Same reason the test suites are bash: it runs on every machine that has bash, with no `pip install`. Tests that depend on the mock add no new dependencies to CI. The mock is ~330 lines — short enough to read end-to-end before trusting.

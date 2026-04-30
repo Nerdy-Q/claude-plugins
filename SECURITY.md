@@ -4,8 +4,8 @@
 
 | Version | Status |
 |---|---|
-| 2.7.x | Active — security fixes shipped within days of disclosure |
-| 2.6.x and earlier | **Unsupported** — upgrade to 2.7.x |
+| 2.9.x | Active — security fixes shipped within days of disclosure |
+| 2.8.x and earlier | **Unsupported** — upgrade to 2.9.x |
 
 The 2.7.0 release (2026-04-29) closed a CVE-class arbitrary-code-execution sink in the `pp-sync` conf loader (`source` → strict parser). All earlier versions of `pp-sync` are vulnerable when run against a hand-edited or attacker-tampered project conf file. **Upgrade required.**
 
@@ -48,11 +48,12 @@ We will:
 
 ## Security-relevant test surfaces
 
-The marketplace ships **161 regression tests** including:
-- 7 attack-vector fixtures for the `pp-sync` conf parser (command substitution, backticks, env-var poisoning, control characters)
-- 16 URL-shape and same-repo enforcement tests for `pp journal note|close` (subdomain spoof, port injection, scheme downgrade, prefix confusion, path traversal)
-- 10 page-name validation tests for `pp generate-page` (path traversal, injection, every shell metacharacter)
-- 8 atomic-registration tests for `pp project add` / `pp setup` (no partial conf writes on rejection)
+The marketplace ships **211 regression tests** across Python, bash, and pac-mocked coverage, including:
+- conf-parser attack-vector fixtures for `pp-sync` (`$(...)`, backticks, env-var poisoning, control characters, literal-metachar resolution)
+- URL-shape and same-repo enforcement tests for `pp journal note|close` (subdomain spoof, port injection, scheme downgrade, prefix confusion, path traversal)
+- page-name validation tests for `pp generate-page` (path traversal, injection, shell metacharacters)
+- atomic-registration tests for `pp project add` / `pp setup` (no partial conf writes on rejection)
+- command-flow, install-script, and pac-mocked tests that exercise real CLI behavior beyond isolated parser rules
 
 If you find a path through the parser, the URL validator, the page-name validator, or the registration flow that the existing tests don't cover, that's the highest-value report we can receive.
 
