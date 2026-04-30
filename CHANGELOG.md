@@ -2,6 +2,26 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.7.7] — 2026-04-29
+
+Final coverage round + security disclosure docs. Adds tests for the last 9 untested audit rules, a `SECURITY.md` for vulnerability reporting, and a CONTRIBUTING section on adding audit rules.
+
+### Tests added (test count: 170, was 161)
+
+- **9 new audit rule tests** in `test_audit.py` covering the last untested rules: WRN-003 (sitemarker), WRN-005 (lowercase navigation property), WRN-006 (`$select=` unknown field), WRN-007 (FetchXML unknown attribute), WRN-008 (Webapi/Fields unknown), WRN-010 (snippet undefined), INFO-001 (permission without Web API), INFO-007 (DotLiquid unsafe escape), INFO-008 (N+1 in Liquid).
+- **All 25 audit rules now have unit-test coverage.** No rule can silently break under refactor — each fires on at least one fixture in CI.
+
+### Documentation
+
+- **NEW `SECURITY.md`** — vulnerability reporting policy. Documents the supported-version matrix (2.7.x active, 2.6.x and earlier unsupported), what's in/out of scope, the response timeline by severity, the disclosure history (4 CVE-class issues already closed), and what kinds of reports we don't accept. Important for a security-relevant plugin to publish this explicitly rather than rely on goodwill from researchers.
+- **NEW `CONTRIBUTING.md` "Adding an audit rule" section** — 7-step contributor guide for extending `pp-permissions-audit`. Covers the `check_*` function shape, code numbering, doc-update obligations (checks.md + interpreting.md + remediation.md + plugin README + root README), the unit-test requirement (positive + negative cases), and the CI gates that enforce coherence.
+
+### Two key learnings, codified in the test fixtures
+
+While writing the WRN-003 / WRN-010 tests, two non-obvious behaviors surfaced — both are correct-but-subtle and would have made future test additions confusing:
+
+- **WRN-003** (undefined sitemarker reference) and **WRN-010** (undefined snippet reference) both short-circuit if zero sitemarkers/snippets are exported. The rationale is that the audit can't distinguish "no sitemarkers exported" from "no sitemarkers used" — emitting WRN-003 against a portal that never exported sitemarkers would be a flood of false positives. The fix-in-tests is to seed the fixture with at least one valid record before adding the broken reference. Codified in the test fixtures as a comment.
+
 ## [2.7.6] — 2026-04-29
 
 Edge-case + install + audit-rule coverage. Adds 25 more tests across three new areas:
@@ -410,6 +430,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.7.7]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.7
 [2.7.6]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.6
 [2.7.5]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.5
 [2.7.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.4

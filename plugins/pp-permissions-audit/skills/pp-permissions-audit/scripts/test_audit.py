@@ -505,6 +505,246 @@ class AuditPermissionRulesTest(unittest.TestCase):
 
     # --- INFO-003: Page requires auth but no role rule ---
 
+    # --- WRN-003: Sitemarker referenced in Liquid but not defined ---
+
+    def test_wrn003_undefined_sitemarker_warns(self) -> None:
+        site = self.make_minimal_site()
+        # Need at least one sitemarker defined — without any, the check
+        # short-circuits because the audit can't tell if sitemarkers
+        # were exported at all.
+        sm = site / "sitemarkers"; sm.mkdir()
+        (sm / "home.sitemarker.yml").write_text(
+            textwrap.dedent("""\
+                adx_name: Home
+                adx_pageid: 12345678-1234-1234-1234-123456789abc
+                """),
+            encoding="utf-8",
+        )
+        wt = site / "web-templates"; wt.mkdir()
+        (wt / "nav.webtemplate.source.html").write_text(
+            "<a href='{{ sitemarkers[\"NonExistent\"].url }}'>Link</a>",
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("WRN-003", self.codes(report))
+
+    # --- WRN-005: Lowercase navigation property in @odata.bind ---
+
+    def test_wrn005_lowercase_nav_property_warns(self) -> None:
+        site = self.make_minimal_site()
+        page = site / "web-pages" / "form"
+        page.mkdir(parents=True)
+        (page / "form.webpage.custom_javascript.js").write_text(
+            textwrap.dedent("""\
+                $.ajax({
+                  url: "/_api/contoso_applications",
+                  type: "POST",
+                  data: JSON.stringify({
+                    "contoso_owner@odata.bind": "/contacts(" + cid + ")"
+                  })
+                });
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        codes = self.codes(report)
+        # WRN-005 fires for all-lowercase navigation property names.
+        # The lookup name `contoso_owner` matches the heuristic.
+        self.assertIn("WRN-005", codes)
+
+    # --- WRN-006: $select= references non-existent field ---
+
+    def test_wrn006_select_unknown_field_warns(self) -> None:
+        site = self.make_minimal_site()
+        page = site / "web-pages" / "list"
+        page.mkdir(parents=True)
+        (page / "list.webpage.custom_javascript.js").write_text(
+            textwrap.dedent("""\
+                $.ajax({
+                  url: "/_api/acme_cases?$select=acme_publicname,acme_doesnotexist",
+                  type: "GET"
+                });
+                """),
+            encoding="utf-8",
+        )
+        sch = site.parent / "dataverse-schema" / "Sol" / "Entities" / "acme_case"
+        sch.mkdir(parents=True)
+        (sch / "Entity.xml").write_text(
+            textwrap.dedent("""\
+                <ImportExportXml>
+                  <Entities>
+                    <EntityInfo>
+                      <entity Name="acme_case">
+                        <attributes>
+                          <attribute PhysicalName="acme_publicname">
+                            <Type>nvarchar</Type>
+                          </attribute>
+                        </attributes>
+                      </entity>
+                    </EntityInfo>
+                  </Entities>
+                </ImportExportXml>
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("WRN-006", self.codes(report))
+
+    # --- WRN-007: FetchXML attribute doesn't exist on root entity ---
+
+    def test_wrn007_fetchxml_unknown_attribute_warns(self) -> None:
+        site = self.make_minimal_site()
+        wt = site / "web-templates"; wt.mkdir()
+        (wt / "report.webtemplate.source.html").write_text(
+            textwrap.dedent("""\
+                {% fetchxml results %}
+                <fetch>
+                  <entity name="acme_case">
+                    <attribute name="acme_publicname" />
+                    <attribute name="acme_ghostfield" />
+                  </entity>
+                </fetch>
+                {% endfetchxml %}
+                """),
+            encoding="utf-8",
+        )
+        sch = site.parent / "dataverse-schema" / "Sol" / "Entities" / "acme_case"
+        sch.mkdir(parents=True)
+        (sch / "Entity.xml").write_text(
+            textwrap.dedent("""\
+                <ImportExportXml>
+                  <Entities>
+                    <EntityInfo>
+                      <entity Name="acme_case">
+                        <attributes>
+                          <attribute PhysicalName="acme_publicname">
+                            <Type>nvarchar</Type>
+                          </attribute>
+                        </attributes>
+                      </entity>
+                    </EntityInfo>
+                  </Entities>
+                </ImportExportXml>
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("WRN-007", self.codes(report))
+
+    # --- WRN-008: Webapi/<entity>/Fields lists non-existent fields ---
+
+    def test_wrn008_fields_setting_lists_unknown_field_warns(self) -> None:
+        site = self.make_minimal_site()
+        ss = site / "site-settings"; ss.mkdir()
+        (ss / "fields.sitesetting.yml").write_text(
+            textwrap.dedent("""\
+                adx_name: Webapi/acme_case/Fields
+                adx_value: "acme_publicname,acme_typo,acme_anothermissing"
+                statecode: 0
+                """),
+            encoding="utf-8",
+        )
+        sch = site.parent / "dataverse-schema" / "Sol" / "Entities" / "acme_case"
+        sch.mkdir(parents=True)
+        (sch / "Entity.xml").write_text(
+            textwrap.dedent("""\
+                <ImportExportXml>
+                  <Entities>
+                    <EntityInfo>
+                      <entity Name="acme_case">
+                        <attributes>
+                          <attribute PhysicalName="acme_publicname">
+                            <Type>nvarchar</Type>
+                          </attribute>
+                        </attributes>
+                      </entity>
+                    </EntityInfo>
+                  </Entities>
+                </ImportExportXml>
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("WRN-008", self.codes(report))
+
+    # --- WRN-010: Content Snippet referenced but not defined ---
+
+    def test_wrn010_undefined_snippet_warns(self) -> None:
+        site = self.make_minimal_site()
+        # Need at least one content snippet defined — same short-circuit
+        # logic as WRN-003.
+        cs = site / "content-snippets"; cs.mkdir()
+        (cs / "header.contentsnippet.yml").write_text(
+            textwrap.dedent("""\
+                adx_name: Header Text
+                adx_value: "Welcome"
+                """),
+            encoding="utf-8",
+        )
+        wt = site / "web-templates"; wt.mkdir()
+        (wt / "footer.webtemplate.source.html").write_text(
+            "<footer>{{ snippets[\"FooterText\"] }}</footer>",
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("WRN-010", self.codes(report))
+
+    # --- INFO-001: Permission grants Read but Web API isn't enabled ---
+
+    def test_info001_permission_without_webapi(self) -> None:
+        site = self.make_minimal_site()
+        # Permission with read=true but no Webapi/<entity>/Enabled setting
+        tp = site / "table-permissions"; tp.mkdir()
+        (tp / "read-only.tablepermission.yml").write_text(
+            textwrap.dedent("""\
+                adx_entitylogicalname: acme_case
+                adx_entityname: Read Only
+                adx_scope: 1
+                adx_read: true
+                adx_entitypermission_webrole:
+                  - 11111111-1111-1111-1111-111111111111
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("INFO-001", self.codes(report))
+
+    # --- INFO-007: Unsafe DotLiquid JSON escape pattern ---
+
+    def test_info007_unsafe_dotliquid_json_escape(self) -> None:
+        site = self.make_minimal_site()
+        wt = site / "web-templates"; wt.mkdir()
+        # The unsafe pattern: replace: '"', '\\"' produces 3 chars in DotLiquid
+        (wt / "json.webtemplate.source.html").write_text(
+            "var data = '{ \"value\": \"{{ entity.field | replace: '\"', '\\\\\"' }}\" }';",
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("INFO-007", self.codes(report))
+
+    # --- INFO-008: N+1 query pattern in Liquid ---
+
+    def test_info008_n_plus_1_pattern(self) -> None:
+        site = self.make_minimal_site()
+        wt = site / "web-templates"; wt.mkdir()
+        (wt / "list.webtemplate.source.html").write_text(
+            textwrap.dedent("""\
+                {% for case in cases %}
+                  {% fetchxml details %}
+                  <fetch>
+                    <entity name="acme_detail">
+                      <filter><condition attribute="acme_caseid" operator="eq" value="{{ case.id }}" /></filter>
+                    </entity>
+                  </fetch>
+                  {% endfetchxml %}
+                  <li>{{ details.results.entities[0].name }}</li>
+                {% endfor %}
+                """),
+            encoding="utf-8",
+        )
+        report = self.run_audit(site)
+        self.assertIn("INFO-008", self.codes(report))
+
     def test_info003_auth_page_without_role_rule(self) -> None:
         site = self.make_minimal_site()
         page = site / "web-pages" / "secure-page"

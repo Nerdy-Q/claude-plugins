@@ -1,7 +1,7 @@
 {
     "name": "pp-permissions-audit",
     "description": "Audit a Power Pages classic portal's Web Roles, Table Permissions, Site Settings, and Web API configuration for misalignments — orphaned permissions, missing Webapi/<entity>/enabled site settings, exposed `fields = *` whitelists, broken polymorphic lookups in custom JS, anonymous-role exposure, and security gaps. Use when the user reports unexpected 401/403/404 from /_api/, missing data, role-specific access bugs, or wants a portal security review. NOT for code sites.",
-    "version": "1.5.3",
+    "version": "1.5.4",
     "author": {
         "name": "NerdyQ",
         "url": "https://github.com/Nerdy-Q"

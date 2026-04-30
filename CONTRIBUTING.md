@@ -104,6 +104,25 @@ claude plugin marketplace add /path/to/claude-power-pages-plugins
 claude plugin install pp-portal@nq-claude-power-pages-plugins
 ```
 
+## Adding an audit rule
+
+1. **Add a `check_*` function** to `plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py`. The function receives an `AuditState` and calls `state.add(severity, code, title, detail, location=...)`. Codes follow `ERR-NNN`, `WRN-NNN`, `INFO-NNN` numbering — pick the next free number in the relevant range.
+2. **Register it in `main()`** — look for the `check_*` invocations toward the bottom of `audit.py` and add yours.
+3. **Document the code in three places:**
+   - `plugins/pp-permissions-audit/skills/pp-permissions-audit/references/checks.md` (definition + trigger)
+   - `plugins/pp-permissions-audit/skills/pp-permissions-audit/references/interpreting.md` (likely-real?, what it means, false-positive cases)
+   - `plugins/pp-permissions-audit/skills/pp-permissions-audit/references/remediation.md` (concrete fix steps)
+4. **Update the count in `plugins/pp-permissions-audit/README.md`** ("All 25 checks shipped") and the root `README.md` ("25 checks including...").
+5. **Write a unit test** in `plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py`. The test must:
+   - Create a minimal site fixture (use `make_minimal_site()` helper)
+   - Trigger the rule
+   - Assert the code appears in `self.codes(report)`
+   - Where appropriate, also assert a negative case (clean fixture → code does NOT fire)
+6. Run `python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py` — all tests must still pass.
+7. CI's link checker validates references; `sync_versions.py --check` enforces version coherence; a marketplace.version bump is required if the rule meaningfully changes behavior of an existing check.
+
+Every audit rule shipped today has both positive coverage (rule fires on a fixture that should trigger it) and (where applicable) negative coverage (rule does NOT fire on a fixture that should be clean).
+
 ## Test suites
 
 The marketplace runs four test suites in CI. Run any of them locally:
