@@ -407,19 +407,11 @@ assert_contains "invalid explicit sync-pages direction rejected" "Invalid sync-p
 # --- Section 10: cmd_help ------------------------------------------------
 
 echo
-echo "Section 10b — cmd_setup detection phase"
+echo "Section 10b — cmd_setup detection + full registration flow"
 echo
 
 # Test the discovery / detection phases of `pp setup` — PAC profile
 # enumeration, candidate-folder scanning, and the confirmation prompt.
-# We DO NOT drive the full 8-prompt registration flow because that
-# requires non-trivial stdin orchestration; instead we verify setup
-# correctly reaches the candidate-walkthrough phase, then cleanly
-# aborts when the user declines.
-#
-# Full registration is exercised by test_register_atomic.sh via
-# `pp project add`, which uses the same identifier-validation and
-# atomic-write paths as setup.
 
 setup_tmp=$(mktemp -d); TMPDIRS+=( "$setup_tmp" )
 fake_home="$setup_tmp/home"
@@ -442,16 +434,59 @@ setup_out=$(printf 'n\n' | \
 assert_contains "setup detects PAC profile from mock" "myprof" "$setup_out"
 assert_contains "setup scans for Power Pages site folders" "Scanning" "$setup_out"
 assert_contains "setup discovers the candidate folder" "acme---acme" "$setup_out"
-# The "Walk through ..." prompt appears via read -p which writes to
-# stderr SYNCHRONOUSLY with the read syscall; in piped contexts the
-# prompt may be intermingled or pre-consumed. Instead assert on the
-# user-decline branch's output ("Aborted").
 assert_contains "setup respects user declining walkthrough" "Aborted" "$setup_out"
 
-# When user declines, NO projects should be registered
 project_count=$(find "$setup_tmp/pp/projects" -maxdepth 1 -name '*.conf' 2>/dev/null | wc -l | tr -d ' ')
 [ "${project_count:-0}" = "0" ] && assert_pass "setup respects 'n' to walkthrough (no confs created)" \
     || assert_fail "setup created a conf despite user declining" "found $project_count conf(s)"
+
+# Full registration via piped stdin. The fd-3 separation in cmd_setup
+# (v2.11.1+) lets inner read prompts consume stdin instead of the
+# candidates heredoc.
+#
+# Stdin sequence (8 prompts):
+#   y      → walk through candidates
+#   ""     → accept default project name (acmecorp)
+#   ""     → accept suggested alias
+#   myprof → PAC profile
+#   ""     → blank website ID
+#   ""     → no solutions
+#   ""     → no default branch
+#   n      → disable journaling (skips remaining 3 prompts)
+
+setup_tmp2=$(mktemp -d); TMPDIRS+=( "$setup_tmp2" )
+mkdir -p "$setup_tmp2/home/Projects/AcmeCorp/acme---acme/web-pages"
+echo "adx_name: Acme Site" > "$setup_tmp2/home/Projects/AcmeCorp/acme---acme/website.yml"
+mock_state2="$setup_tmp2/pac"
+mkdir -p "$mock_state2"
+echo "myprof=https://acme-dev.crm.dynamics.com/" > "$mock_state2/profiles"
+echo "myprof" > "$mock_state2/selected"
+
+setup_out2=$(printf 'y\n\n\nmyprof\n\n\n\nn\n' | \
+    HOME="$setup_tmp2/home" PATH="$mock_dir:$PATH" \
+    PP_CONFIG_DIR="$setup_tmp2/pp" \
+    PP_MOCK_PAC_STATE_DIR="$mock_state2" \
+    "$PP_BIN" setup 2>&1 || true)
+
+assert_contains "full-flow setup ran to completion" "Setup complete" "$setup_out2"
+assert_contains "full-flow setup registered acmecorp" "Registered acmecorp" "$setup_out2"
+
+conf_path="$setup_tmp2/pp/projects/acmecorp.conf"
+[ -f "$conf_path" ] && assert_pass "full-flow setup wrote conf at projects/acmecorp.conf" \
+    || assert_fail "full-flow setup didn't write conf" "out: $(printf '%s' "$setup_out2" | tail -20)"
+
+if [ -f "$conf_path" ]; then
+    conf_content=$(cat "$conf_path")
+    assert_contains "setup-conf has correct NAME" 'NAME="acmecorp"' "$conf_content"
+    assert_contains "setup-conf has correct PROFILE" 'PROFILE="myprof"' "$conf_content"
+    assert_contains "setup-conf pulled ENV_URL from pac org who" "acme-dev.crm.dynamics.com" "$conf_content"
+    assert_contains "setup-conf has SITE_DIR relative to repo" 'SITE_DIR="acme---acme"' "$conf_content"
+fi
+
+# Alias was suggested + accepted (default 5-char prefix of "acmecorp")
+[ -f "$setup_tmp2/pp/aliases" ] && grep -q "=acmecorp" "$setup_tmp2/pp/aliases" \
+    && assert_pass "full-flow setup wrote suggested alias" \
+    || assert_fail "no alias written" "aliases: $(cat "$setup_tmp2/pp/aliases" 2>/dev/null)"
 
 echo
 echo "Section 10 — cmd_help"
