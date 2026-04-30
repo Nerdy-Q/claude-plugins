@@ -4,8 +4,8 @@
 
 | Version | Status |
 |---|---|
-| 2.11.x | Active — security fixes shipped within days of disclosure |
-| Earlier than 2.11.x | **Unsupported** — upgrade to 2.11.x |
+| 2.12.x | Active — security fixes shipped within days of disclosure |
+| Earlier than 2.12.x | **Unsupported** — upgrade to 2.12.x |
 
 The 2.7.0 release (2026-04-29) closed a CVE-class arbitrary-code-execution sink in the `pp-sync` conf loader (`source` → strict parser). All earlier versions of `pp-sync` are vulnerable when run against a hand-edited or attacker-tampered project conf file. **Upgrade required.**
 
@@ -48,7 +48,7 @@ We will:
 
 ## Security-relevant test surfaces
 
-The marketplace ships **330 regression tests** across Python, bash, pac-mocked, journal-state, pac-contract, template-integration, and design-system-knowledge coverage, including:
+The marketplace ships **404 regression tests** across Python, bash, pac-mocked, journal-state, pac-contract, template-integration, design-system-knowledge, JSON-contract, performance-regression, metadata-consistency, and help-text-completeness coverage, including:
 - conf-parser attack-vector fixtures for `pp-sync` (`$(...)`, backticks, env-var poisoning, control characters, literal-metachar resolution)
 - URL-shape and same-repo enforcement tests for `pp journal note|close` (subdomain spoof, port injection, scheme downgrade, prefix confusion, path traversal)
 - page-name validation tests for `pp generate-page` (path traversal, injection, shell metacharacters)

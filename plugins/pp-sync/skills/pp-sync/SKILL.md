@@ -1,6 +1,6 @@
 ---
 name: pp-sync
-description: Run Power Pages classic portal sync workflows safely — pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards. Use when the user wants to sync a Power Pages portal, run acmedown/up, sync-down-dev, contosodoctor, deploy portal changes, pull schema, or recover from a hung portal cache. NOT for code sites (React/Vue/Astro SPAs).
+description: Run Power Pages classic portal sync + deployment workflows safely — pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards. Use when the user wants to sync a Power Pages portal, run acmedown/up, sync-down-dev, contosodoctor, deploy portal changes, ship a deployment to dev/UAT/prod, pull schema, or recover from a hung portal cache. NOT for code sites (React/Vue/Astro SPAs).
 ---
 
 # Power Pages Sync — action skill

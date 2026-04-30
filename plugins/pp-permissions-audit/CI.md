@@ -16,14 +16,14 @@ What it does:
 
 - Triggers on PRs that touch portal source files (web-pages, web-templates, site-settings, table-permissions, etc.)
 - Auto-detects the site folder (the first `<name>---<name>/` containing `website.yml` + `web-pages/`)
-- Fetches the audit script from a pinned tag (`v2.12.0` by default)
+- Fetches the audit script from a pinned tag (`v2.12.1` by default)
 - Runs `audit.py --severity ERROR --exit-code` to gate the PR
 - Uploads the **full report** (including WARN + INFO findings) as a build artifact, so reviewers can read all findings without re-running locally
 - Optional: commenting the summary on the PR (commented out by default — uncomment to enable, plus the `permissions:` block)
 
 ### Pinning to a version
 
-The template uses `AUDIT_REF: 'v2.12.0'` to pin to a released version. Bump this when you upgrade. Alternatives:
+The template uses `AUDIT_REF: 'v2.12.1'` to pin to a released version. Bump this when you upgrade. Alternatives:
 
 - `AUDIT_REF: 'main'` — always latest (convenient for early adopters; brittle for production)
 - `AUDIT_REF: '<commit-sha>'` — exact commit pin (most reproducible)
@@ -94,7 +94,7 @@ steps:
       versionSpec: '3.11'
 
   - bash: |
-      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.12.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.12.1/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
            -o /tmp/audit.py
     displayName: 'Fetch audit script'
 
@@ -157,7 +157,7 @@ If your CI is generic shell (Jenkins, CircleCI, GitLab, Buildkite):
 set -euo pipefail
 
 # 1. Fetch the audit script
-curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.12.0/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.12.1/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
      -o /tmp/audit.py
 
 # 2. Detect site folder
@@ -189,6 +189,35 @@ jq '.findings[] | select(.severity == "ERROR") | {code, title, location}' audit.
 # Slack-ready summary:
 jq -r '"*\(.findings | map(select(.severity == "ERROR")) | length)* errors, *\(.findings | map(select(.severity == "WARN")) | length)* warnings on `\(.site)`"' audit.json
 ```
+
+### JSON output schema (stable contract)
+
+External CI consumers depend on this shape. It is pinned in CI by `test_audit_json_contract.py` so any rename / restructure surfaces in code review:
+
+```json
+{
+  "site": "<absolute or relative path>",
+  "counts": {
+    "site_settings":     0,
+    "table_permissions": 0,
+    "web_roles":         0,
+    "web_pages":         0,
+    "custom_js":         0,
+    "schema_entities":   0
+  },
+  "findings": [
+    {
+      "severity": "ERROR",
+      "code":     "ERR-001",
+      "title":    "Web API enabled for `contact` but no Table Permission grants Read",
+      "detail":   "Site Setting `Webapi/contact/Enabled = true` is set, but no Table Permission ...",
+      "location": "site-settings/.../Webapi/contact/Enabled"
+    }
+  ]
+}
+```
+
+`severity` is always one of `ERROR | WARN | INFO`. `code` always matches the regex `^(ERR|WRN|INFO)-\d{3}$`. The `--severity` filter is **inclusive** (showing the chosen tier and higher); `--exit-code` returns 1 only if findings exist at the chosen severity threshold.
 
 ## Schema-aware checks in CI
 

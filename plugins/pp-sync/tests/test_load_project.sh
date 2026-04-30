@@ -290,6 +290,16 @@ run_test "legacy-home-prefix" "ok" '
     exit 0
 '
 
+# 20. v1-style conf (every assignment unquoted, shell-source-style — the
+#     pre-v2.0.0 format) MUST be rejected. The strict parser was added in
+#     v2.7.0 to close a CVE-class arbitrary-code-execution sink (`source
+#     "$conf"` evaluating attacker-controlled lines). v1 confs should
+#     produce a clean "missing NAME" failure rather than silently loading
+#     a partial conf or — worse — re-introducing shell evaluation.
+#
+#     This test pins the migration boundary: v1 → v2 is non-silent.
+run_test "v1-style-conf" "die" "true"
+
 # --- Summary ---------------------------------------------------------------
 
 echo

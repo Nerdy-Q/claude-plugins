@@ -53,11 +53,28 @@ def strip_fragment(target: str) -> str:
 
 def collect_doc_files() -> list[Path]:
     docs: list[Path] = []
+    # All markdown under each plugin's skills tree
     for plugin_dir in (ROOT / "plugins").glob("*/skills/*"):
         if not plugin_dir.is_dir():
             continue
         docs.extend(plugin_dir.rglob("*.md"))
-    return sorted(docs)
+    # Plus the top-level repo docs that link to per-plugin content. Add new
+    # files here when they accrue relative-link surface that should be
+    # protected from rot.
+    for top in ("README.md", "CHANGELOG.md", "CONTRIBUTING.md", "SECURITY.md"):
+        path = ROOT / top
+        if path.exists():
+            docs.append(path)
+    # Plus per-plugin top-level docs (README.md sits at the plugin root)
+    for plugin_top in (ROOT / "plugins").glob("*/README.md"):
+        if plugin_top.exists():
+            docs.append(plugin_top)
+    # Plus tests/ READMEs that document the test suite
+    for tests_doc in (ROOT / "plugins").glob("*/tests/README.md"):
+        if tests_doc.exists():
+            docs.append(tests_doc)
+    # De-duplicate and stable-order
+    return sorted(set(docs))
 
 
 def validate_file(md: Path) -> list[tuple[int, str, str]]:

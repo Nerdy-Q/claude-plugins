@@ -72,14 +72,16 @@ The skill loads `SKILL.md` first (router + critical gotchas). Detail lives in to
 
 ### Design systems + responsive composition
 
-- `references/design-systems/system-selection.md` — primary-system choice, safe crossover rules, portal-safe borrowing strategy
+- `references/design-systems/README.md` — index + routing logic; **start here**
+- `references/design-systems/system-selection.md` — primary-system choice, safe crossover rules, **special rule for "USWDS is web-only — ask user iOS or Android for mobile-app feel"**
+- `references/design-systems/crossover-recipes.md` — six concrete HTML/CSS/JS recipes: USWDS hero with Material 3 carousel, USWDS web with iOS-native feel, USWDS web with Android-native feel, Fluent 2 enterprise card with shadcn polish, shadcn product portal with USWDS form rigor, Apple HIG calm + USWDS civic seriousness
 - `references/design-systems/responsive-defaults.md` — mobile-first and tablet defaults for layouts, forms, tables, and motion
 - `references/design-systems/strict-csp.md` — strict-CSP-safe UI guidance for local JS/CSS, no runtime script injection, and low-dependency patterns
-- `references/design-systems/uswds-3.md` — USWDS 3 guidance for civic/compliance-heavy portals
-- `references/design-systems/material-3.md` — Material Design 3 guidance for mobile-first and richer state patterns
-- `references/design-systems/apple-hig.md` — Apple Human Interface Guidelines guidance for clarity and touch ergonomics
-- `references/design-systems/fluent-2.md` — Fluent 2 guidance for Microsoft-adjacent enterprise portals
-- `references/design-systems/shadcn-ui.md` — shadcn/ui guidance for composable modern web patterns
+- `references/design-systems/uswds-3.md` — USWDS 3: full component catalog + tokens; **web-only, no native-app nav**
+- `references/design-systems/material-3.md` — Material 3: full catalog (carousel was added in M3), tonal palette, type scale
+- `references/design-systems/apple-hig.md` — Apple HIG: components reference + **critical SF font / SF Symbols license trap**
+- `references/design-systems/fluent-2.md` — Fluent 2 React v9 catalog, alias tokens, Segoe UI fallback strategy
+- `references/design-systems/shadcn-ui.md` — shadcn/ui registry; **pattern source, not install target**
 
 ### Workflow + tooling
 

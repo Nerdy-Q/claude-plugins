@@ -1,21 +1,23 @@
 # pp-sync test suites
 
-Bash regression tests for `pp` CLI behavior. Ten suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
+Bash regression tests for `pp` CLI behavior. Twelve suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
 
 ## Suites
 
 | File | Tests | What it verifies |
 |---|---|---|
-| `test_load_project.sh` | 21 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts), literal-metachar project-resolution checks, parser edge cases (leading whitespace, only-comments, no-trailing-newline), and the `$HOME` backward-compat expansion path. |
-| `test_register_atomic.sh` | 6 | `pp project add` atomicity. Asserts that rejected runs (invalid project name / PAC profile / solution / alias) leave zero files behind in `$PP_CONFIG_DIR/projects/`. |
+| `test_load_project.sh` | 22 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts), literal-metachar project-resolution checks, parser edge cases (leading whitespace, only-comments, no-trailing-newline), the `$HOME` backward-compat expansion path, and v1-style conf migration rejection. |
+| `test_register_atomic.sh` | 9 | `pp project add` atomicity. Rejected runs leave zero files behind; concurrent invocations against the same name converge to a single coherent conf (race-safe). |
 | `test_journal_url_validation.sh` | 16 | `validate_issue_url_for_current_repo()` URL-shape regex + same-repo enforcement. Mocks `gh repo view` to test cross-repo hijack rejection without a real git checkout. Covers subdomain spoof, port injection, http downgrade, prefix confusion, path traversal, non-issue URLs, and 9 other attack vectors. |
 | `test_command_flows.sh` | 86 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page` (incl. content correctness + JS/CSS placeholders), `sync-pages`, `setup` detection phase + full piped-stdin registration, and help output. |
 | `test_subcommand_safety.sh` | 30 | Negative and edge-case coverage for subcommands beyond the parser: page-name traversal/injection rejection (incl. empty-slug rejection), solution-name CLI-arg validation, journal `Issue:` extraction invariants, solution-pick range validation, and doctor pipefail tolerance. |
-| `test_install_script.sh` | 13 | Installer UX and safety: fresh install, idempotent re-run, non-symlink backup behavior, PATH guidance, and installed `pp help` smoke check. |
+| `test_install_script.sh` | 17 | Installer UX and safety: fresh install, idempotent re-run, non-symlink backup behavior, PATH guidance, installed `pp help` smoke check, and the upgrade path (symlink retargets when re-run from a new checkout location). |
 | `test_pac_mocked.sh` | 23 | Mocked `pac` CLI flows in CI: doctor, switch/status, download/upload, solution export/import, validate-only upload, diff, and failure-injection paths without requiring a real tenant. |
 | `test_journal_state.sh` | 10 | Journal active-issue state tracking and concurrency: state lifecycle, stale-state clearing, JOURNAL.md fallback, atomic concurrent opens, and project-remove cleanup. |
 | `test_pac_contract.sh` | 10 | Contract assertions for what `pp` depends on from each `pac` subcommand. Runs in mock mode in CI and can run against real `pac` locally via `PP_PAC_REAL=1`. |
 | `test_templates.sh` | 60 | End-to-end template coverage for `down.sh`, `up.sh`, `doctor.sh`, `solution-down.sh`, `solution-up.sh`, and `commit.sh` using mock `pac` plus audited invocation logs. Includes the BULK_THRESHOLD warning surface (cache-hang protection). |
+| `test_help_completeness.sh` | 44 | Every command keyword dispatched in `bin/pp` must appear in `pp help`. Catches "added a command, forgot to document" — parses the case-statement dispatch table separating top-level from `project`/`alias` sub-dispatchers. Also verifies every `cmd_*` function is reachable (no dead code). |
+| `test_paths_with_spaces.sh` | 7 | `load_project`, `pp show`, `pp list`, and `pp doctor` correctly handle REPO/SITE_DIR paths containing spaces (e.g., `~/My Documents/portals/site---site`). Includes spaced filenames inside the site folder. |
 
 Run any suite locally:
 
@@ -78,12 +80,26 @@ What it checks (against the first registered project):
 - `pp up --validate-only` — pac validation without push
 - `pp audit` — Python audit dispatch + JSON output parses
 - `pp status` — active project + live env
+- `pp solution-down` — real pac solution export + unpack against a Dataverse tenant (opt-in, see below)
 
 The suite **auto-skips** if `pac` isn't installed or no projects are registered. To target a specific project:
 
 ```bash
 PP_INTEGRATION_PROJECT=anchor bash tests/integration/test_pac_dependent.sh
 ```
+
+### Live-tenant solution-down (opt-in)
+
+`pp solution-down` is the one read-only-against-the-tenant operation that's worth exercising end-to-end before a release — it verifies real pac produces a usable zipfile shape (mocked tests cover shell orchestration but not Microsoft's actual export format). Opt in by naming the solution:
+
+```bash
+PP_INTEGRATION_PROJECT=anchor PP_INTEGRATION_SOLUTION_NAME=AnchorCore \
+    bash tests/integration/test_pac_dependent.sh
+```
+
+Real export takes 60-120s and writes to the project's `$REPO/dataverse-schema/`. The test verifies `Other/Solution.xml` lands at the expected path and the zipfile is cleaned up after unpack.
+
+### Destructive ops
 
 Destructive operations (`pp down`, `pp up`, `pp solution-up`) are gated behind `PP_INTEGRATION_DESTRUCTIVE=1`. Even with that flag set, `pp solution-up` is permanently disabled by the suite — run it manually if you need to.
 
