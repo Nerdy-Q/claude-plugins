@@ -1217,6 +1217,11 @@ cmd_sync_pages() {
         ".webpage.summary.html"
     )
 
+    case "$direction" in
+        base-to-localized|localized-to-base) ;;
+        *) die "Invalid sync-pages direction: $direction (expected base-to-localized or localized-to-base)" ;;
+    esac
+
     for page_dir in "$SITE_DIR"/web-pages/*/; do
         [ -d "$page_dir" ] || continue
         local cp_dir="${page_dir}content-pages"
@@ -1312,7 +1317,7 @@ cmd_generate_page() {
     [ -d "$page_dir" ] && die "Page folder already exists: $page_dir"
 
     info "Generating page: $page_name ($slug)"
-    mkdir -p "$page_dir/content-pages"
+    mkdir -p "$page_dir/content-pages/en-US"
 
     # 1. Base Metadata (.webpage.yml)
     # We use some heuristics to guess valid references
@@ -1364,7 +1369,7 @@ EOF
 EOF
 
     # 5. Localized Content (en-US default)
-    local loc_prefix="$page_dir/content-pages/$page_name.en-US"
+    local loc_prefix="$page_dir/content-pages/en-US/$page_name.en-US"
     cp "$page_dir/$page_name.webpage.copy.html" "$loc_prefix.webpage.copy.html"
     cp "$page_dir/$page_name.webpage.custom_javascript.js" "$loc_prefix.webpage.custom_javascript.js"
 
@@ -1690,7 +1695,7 @@ EXAMPLES
     pp status
 
 CONFIG LOCATION
-    $HOME/.config/nq-pp-sync/projects/<name>.conf   per-project config (sourced bash)
+    $HOME/.config/nq-pp-sync/projects/<name>.conf   per-project config (parsed key=value file)
     $HOME/.config/nq-pp-sync/aliases                alias=target  one per line
     $HOME/.config/nq-pp-sync/active                 currently active project name
 EOF

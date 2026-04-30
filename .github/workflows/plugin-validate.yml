@@ -168,6 +168,11 @@ jobs:
           bash plugins/pp-sync/tests/test_command_flows.sh
           echo "OK    pp command-flow tests pass"
 
+      - name: Run pp install.sh tests
+        run: |
+          bash plugins/pp-sync/tests/test_install_script.sh
+          echo "OK    pp install.sh tests pass"
+
       - name: Bash syntax check
         run: |
           fail=0

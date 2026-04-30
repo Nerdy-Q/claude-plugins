@@ -2,6 +2,33 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.7.6] — 2026-04-29
+
+Edge-case + install + audit-rule coverage. Adds 25 more tests across three new areas:
+
+### Tests added (test count: 161, was 136)
+
+- **Parser edge cases (5 cases)** — added to `test_load_project.sh`. Leading whitespace rejected, only-comments-die, no-trailing-newline tolerated, unquoted-value skipped (warning), tab-in-value preserved.
+- **New suite `tests/test_install_script.sh` (13 cases)** — first-run UX:
+  - Fresh install creates symlink + config dir + aliases file
+  - Re-run with existing symlink: idempotent
+  - Existing non-symlink file: backed up to `pp.bak.<timestamp>`, content preserved, user warned
+  - Re-run after backup: no double-backup
+  - PATH guidance shown when `BIN_DIR` not in `$PATH`
+  - Installed `pp help` runs cleanly
+- **Audit rule coverage (7 new tests)** — added to `test_audit.py`. Covers ERR-001 (Web API enabled without permission), ERR-001 negative case (with permission), ERR-002 (orphaned table permission), ERR-003 (anonymous role with write), WRN-001 (polymorphic lookup without disambiguator), WRN-002 (orphan web role), INFO-003 (auth page without role rule). The 3 ERROR-class rules previously had zero coverage.
+
+CI now runs 7 test phases on every PR (was 6).
+
+### Fixed (pp-sync v2.0.5)
+
+- **`cmd_sync_pages` validates direction argument upfront** — invalid values like `pp sync-pages alpha foo` now die immediately rather than running the loop with no copies. Previously only the interactive prompt validated.
+- **`cmd_generate_page` writes localized files at the proper Power Pages layout** — `content-pages/en-US/<Page>.en-US.<suffix>` (with the `<lang>/` subdir) instead of the flat `content-pages/<Page>.en-US.<suffix>`. The flat layout was a real bug: Power Pages never sees those files at runtime, so generated pages would render the base content for every locale instead of the localized variant.
+
+### Fixed (pp-permissions-audit v1.5.3)
+
+- Test coverage extended from 10 to 17 unit tests covering the 3 ERROR-class rules and 4 additional WARN/INFO rules previously without explicit fixtures.
+
 ## [2.7.5] — 2026-04-29
 
 Deeper test coverage release. Added `tests/test_command_flows.sh` — 59 cases across 10 sections covering pp subcommand flows the previous suites didn't reach. Writing the tests surfaced **two more real bugs**, both fixed in this same release.
@@ -383,6 +410,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.7.6]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.6
 [2.7.5]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.5
 [2.7.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.4
 [2.7.3]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.3

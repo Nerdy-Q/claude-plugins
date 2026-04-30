@@ -1,14 +1,16 @@
 # pp-sync test suites
 
-Bash regression tests for `pp` CLI behavior. All three suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
+Bash regression tests for `pp` CLI behavior. Five suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
 
 ## Suites
 
 | File | Tests | What it verifies |
 |---|---|---|
-| `test_load_project.sh` | 12 | Strict key=value parser correctness. Includes 7 attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts) verifying that command-injection payloads are stored as literal strings, never executed. |
+| `test_load_project.sh` | 15 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts) plus literal-metachar project-resolution checks verifying that command-injection payloads are stored as literal strings, never executed. |
 | `test_register_atomic.sh` | 6 | `pp project add` atomicity. Asserts that rejected runs (invalid project name / PAC profile / solution / alias) leave zero files behind in `$PP_CONFIG_DIR/projects/`. |
 | `test_journal_url_validation.sh` | 16 | `validate_issue_url_for_current_repo()` URL-shape regex + same-repo enforcement. Mocks `gh repo view` to test cross-repo hijack rejection without a real git checkout. Covers subdomain spoof, port injection, http downgrade, prefix confusion, path traversal, non-issue URLs, and 9 other attack vectors. |
+| `test_command_flows.sh` | 66 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page`, `sync-pages`, and help output. |
+| `test_subcommand_safety.sh` | 23 | Negative and edge-case coverage for subcommands beyond the parser: page-name traversal/injection rejection, journal `Issue:` extraction invariants, solution-pick range validation, and doctor pipefail tolerance. |
 
 Run any suite locally:
 
@@ -42,7 +44,9 @@ When the file is sourced, `return` succeeds (we're inside a sourced script), so 
    - Parser invariant → `test_load_project.sh`
    - Registration / file-write atomicity → `test_register_atomic.sh`
    - URL or external-system contract → `test_journal_url_validation.sh`
-   - Brand-new behavior → consider a new suite + a new CI step
+   - General subcommand flow / state behavior → `test_command_flows.sh`
+   - Negative subcommand edge cases → `test_subcommand_safety.sh`
+   - Brand-new behavior class → consider a new suite + a new CI step
 2. **Add a fixture** (parser-style suites) or **inline stdin** (registration-style).
 3. **Make the assertion specific**. Don't just check "exit code != 0" for an attack — assert what *actually* happened (e.g. trap file does NOT exist, conf file does NOT exist, allowlisted variable was NOT mutated).
 4. Run locally, confirm it passes, push.
