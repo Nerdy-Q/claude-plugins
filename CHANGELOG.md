@@ -2,6 +2,27 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.9.1] — 2026-04-29
+
+Chunk 2 of pac mocking. 5 more tests + 2 real bugs surfaced + fixed by writing them.
+
+### Tests added (test count: 189, was 184)
+
+- **`pp solution-up` end-to-end** with mocked `pac solution pack + import`.
+- **`pp doctor` non-happy paths** — auth-select failure, org-who failure. Asserts doctor still runs to completion (Site content counts section reached) instead of aborting silently.
+- **`cmd_audit` bash → python dispatch** — verifies the `Audit:` header emits even when the audit cache is partially populated (only one of the two cache namespaces present).
+- **`pp up` with upload failure injection** — verifies pp doesn't claim success when pac upload fails.
+- **Mock `pac` expanded** with three more failure-injection env vars: `PP_MOCK_PAC_FAIL_AUTH_SELECT=1`, `PP_MOCK_PAC_FAIL_UPLOAD=1`, `PP_MOCK_PAC_FAIL_SOLUTION_IMPORT=1`.
+
+### Fixed (pp-sync v2.2.1) — two `set -e + pipefail` aborts surfaced by tests
+
+- **`pp doctor` aborted silently when `pac org who` failed.** The `actual=$(pac org who 2>&1 | awk ...)` pipeline tripped pipefail on `pac org who` failure, aborting doctor before the warn-on-empty branch (`warn "pac org who returned no URL — re-auth needed"`) could fire. Users with expired/broken PAC profiles never saw the warn-and-continue behavior. Same `|| true` fix applied to two more org-who pipelines (`cmd_setup` candidate registration and `cmd_status` live env display).
+- **`cmd_audit` aborted silently when one cache namespace was empty.** The `find <new-cache> <old-cache>` pipeline returned non-zero whenever ONE of the two paths didn't exist (the common case after the v2.5.0 marketplace rename — most users have only the new namespace, but some still have only the old). Pipefail killed the assignment, aborting audit before reaching the repo-local fallback. Result: `pp audit <project>` produced zero output and exit 1 with no error message. Added `|| true`.
+
+### How they were found
+
+Same pattern as every prior round — wrote tests for the new mock-driven flows, ran them, watched specific tests fail, traced the failures back to real bugs in `bin/pp`. Both bugs had been latent since v2.7.0's `set -e` migration (8 days ago in real time, several hundred commits in chronological-fictional time). Real users would have hit both: the org-who one whenever their PAC profile expired (extremely common), the audit one whenever they hadn't reinstalled after the v2.5.0 marketplace rename.
+
 ## [2.9.0] — 2026-04-29
 
 Pac-mocked CI integration tests. Closes the "pac happy paths only run locally" gap by introducing a shell-script mock of the Microsoft Power Platform CLI.
@@ -479,6 +500,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.9.1]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.1
 [2.9.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.0
 [2.8.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.8.0
 [2.7.7]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.7

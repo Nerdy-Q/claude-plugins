@@ -51,7 +51,10 @@ Tests can force the mock to fail specific commands via env vars:
 | Env var | Causes |
 |---|---|
 | `PP_MOCK_PAC_FAIL_AUTH_LIST=1` | `pac auth list` exits 1 with "Error: failed to read profile list" |
+| `PP_MOCK_PAC_FAIL_AUTH_SELECT=1` | `pac auth select` exits 1 (e.g. simulated network failure) |
 | `PP_MOCK_PAC_FAIL_ORG_WHO=1` | `pac org who` exits 1 with "No profile selected" |
+| `PP_MOCK_PAC_FAIL_UPLOAD=1` | `pac paportal upload` exits 1 (validation or push failure) |
+| `PP_MOCK_PAC_FAIL_SOLUTION_IMPORT=1` | `pac solution import` exits 1 (rejected by environment) |
 
 This lets tests verify `pp`'s error-handling paths without contriving real auth failures.
 

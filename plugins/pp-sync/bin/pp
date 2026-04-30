@@ -486,9 +486,11 @@ cmd_setup() {
         [ -z "$pac_profile" ] && { warn "Skipping (no profile given)"; continue; }
         validate_identifier "PAC profile" "$pac_profile" '^[A-Za-z0-9_.-]+$'
 
-        # Get env URL for that profile
+        # Get env URL for that profile (`|| true` to tolerate org-who
+        # failure — empty env_url is acceptable, the user can fill it
+        # in later via `pp project edit`).
         if pac auth select --name "$pac_profile" >/dev/null 2>&1; then
-            env_url=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}')
+            env_url=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}' || true)
         fi
 
         # Optional website id
@@ -657,7 +659,7 @@ cmd_status() {
     echo "  PAC profile: $PROFILE"
     if pac auth select --name "$PROFILE" >/dev/null 2>&1; then
         local actual
-        actual=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}')
+        actual=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}' || true)
         echo "  Live env:   ${actual:-(unreachable)}"
     fi
 }
@@ -973,7 +975,10 @@ cmd_doctor() {
         ok "Profile $PROFILE registered"
         if pac auth select --name "$PROFILE" >/dev/null 2>&1; then
             local actual
-            actual=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}')
+            # `|| true` on the pipeline: under `set -euo pipefail`, a
+            # failing `pac org who` would propagate via pipefail and
+            # abort doctor before the warn-on-empty branch could fire.
+            actual=$(pac org who 2>&1 | awk -F': ' '/Environment Url/{print $2; exit}' || true)
             if [ -n "$actual" ]; then
                 ok "Connected: $actual"
                 [ -n "$ENV_URL" ] && [ "$actual" != "$ENV_URL" ] \
@@ -1167,10 +1172,14 @@ cmd_audit() {
 
     # Find audit.py — prefer installed plugin cache, fall back to this repo checkout
     local audit_py
+    # `|| true` on the pipeline: find exits non-zero if any of the given
+    # paths doesn't exist (common — user may have only the new or only
+    # the old cache namespace). Pipefail would otherwise abort cmd_audit
+    # before reaching the repo-local fallback below.
     audit_py=$(find \
         "$HOME/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-permissions-audit" \
         "$HOME/.claude/plugins/cache/nq-claude-plugins/pp-permissions-audit" \
-        -name "audit.py" 2>/dev/null | sort -V | tail -1)
+        -name "audit.py" 2>/dev/null | sort -V | tail -1 || true)
     if [ -z "$audit_py" ] && [ -f "$REPO/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py" ]; then
         audit_py="$REPO/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py"
     fi

@@ -30,8 +30,11 @@ SELECTED_FILE="$STATE_DIR/selected"
 # Test failure injection: when set, pac fails with a configurable error.
 # Tests use this to exercise pp's error-handling paths.
 #
-#   PP_MOCK_PAC_FAIL_AUTH_LIST=1 pp doctor anchor   → pac auth list fails
-#   PP_MOCK_PAC_FAIL_ORG_WHO=1                       → pac org who returns no URL
+#   PP_MOCK_PAC_FAIL_AUTH_LIST=1     → pac auth list fails
+#   PP_MOCK_PAC_FAIL_AUTH_SELECT=1   → pac auth select fails
+#   PP_MOCK_PAC_FAIL_ORG_WHO=1       → pac org who returns no URL
+#   PP_MOCK_PAC_FAIL_UPLOAD=1        → pac paportal upload fails
+#   PP_MOCK_PAC_FAIL_SOLUTION_IMPORT=1 → pac solution import fails
 
 # --- helpers -------------------------------------------------------------
 
@@ -77,6 +80,10 @@ cmd_auth_list() {
 # --- subcommand: auth select ---------------------------------------------
 
 cmd_auth_select() {
+    if [ "${PP_MOCK_PAC_FAIL_AUTH_SELECT:-0}" = "1" ]; then
+        echo "Error: failed to select profile (mock injected failure)" >&2
+        return 1
+    fi
     local name=""
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -181,6 +188,10 @@ EOF
 # --- subcommand: paportal upload -----------------------------------------
 
 cmd_paportal_upload() {
+    if [ "${PP_MOCK_PAC_FAIL_UPLOAD:-0}" = "1" ]; then
+        echo "Error: upload failed (mock injected failure)" >&2
+        return 1
+    fi
     local validate=0
     while [ $# -gt 0 ]; do
         case "$1" in
@@ -254,6 +265,10 @@ cmd_solution_pack() {
 }
 
 cmd_solution_import() {
+    if [ "${PP_MOCK_PAC_FAIL_SOLUTION_IMPORT:-0}" = "1" ]; then
+        echo "Error: solution import failed (mock injected failure)" >&2
+        return 1
+    fi
     echo "Imported solution"
 }
 

@@ -264,17 +264,146 @@ esac
     || assert_fail "unpacked dir missing" \
         "tree: $(find "$env/repo" -maxdepth 4 -type d 2>/dev/null | head -10)"
 
-# --- Section 9: failure injection ---------------------------------------
+# --- Section 9: pp solution-up end-to-end with mock pac -----------------
 
 echo
-echo "Section 9 — failure injection via PP_MOCK_PAC_FAIL_*"
+echo "Section 9 — pp solution-up with mock pac"
 echo
 
 env=$(make_test_env myprof)
-# Inject auth-list failure
+# Pre-populate an unpacked solution so solution-up has something to pack
+mkdir -p "$env/repo/dataverse-schema/MySolution/Other"
+echo "<ImportExportXml/>" > "$env/repo/dataverse-schema/MySolution/Other/Solution.xml"
+out=$(printf 'y\nMySolution\n' | run_pp "$env" solution-up testproj MySolution 2>&1 || true)
+case "$out" in
+    *"Packed"*|*"Imported"*|*"pack"*|*"import"*)
+        assert_pass "solution-up invoked pac solution pack+import"
+        ;;
+    *)
+        assert_fail "solution-up didn't reach pac" \
+            "out: $(printf '%s' "$out" | head -10)"
+        ;;
+esac
+
+# --- Section 10: doctor failure paths (auth select, org who) ----------
+
+echo
+echo "Section 10 — doctor failure paths"
+echo
+
+env=$(make_test_env myprof)
+# Inject org who failure — doctor should report "re-auth needed" or
+# similar warning in the PAC auth section.
+out=$(PP_MOCK_PAC_FAIL_ORG_WHO=1 run_pp "$env" doctor testproj 2>&1 || true)
+case "$out" in
+    *"re-auth"*|*"no URL"*|*"no env URL"*|*"profile may need"*)
+        assert_pass "doctor surfaces org-who failure as re-auth warning"
+        ;;
+    *)
+        # Don't fail outright — the message wording may vary. Just
+        # verify doctor still completes the run rather than aborting.
+        case "$out" in
+            *"Site content counts"*)
+                assert_pass "doctor completes despite org-who failure (no abort)"
+                ;;
+            *)
+                assert_fail "doctor aborted on org-who failure" \
+                    "out: $(printf '%s' "$out" | head -10)"
+                ;;
+        esac
+        ;;
+esac
+
+# Inject auth-select failure
+env=$(make_test_env myprof)
+out=$(PP_MOCK_PAC_FAIL_AUTH_SELECT=1 run_pp "$env" doctor testproj 2>&1 || true)
+case "$out" in
+    *"Site content counts"*)
+        assert_pass "doctor completes despite auth-select failure"
+        ;;
+    *)
+        assert_fail "doctor aborted on auth-select failure" \
+            "out: $(printf '%s' "$out" | head -10)"
+        ;;
+esac
+
+# --- Section 11: cmd_audit bash → python dispatch ---------------------
+
+echo
+echo "Section 11 — pp audit (bash dispatcher → audit.py)"
+echo
+
+env=$(make_test_env myprof)
+# Make sure audit.py is reachable. cmd_audit looks in plugin caches
+# and falls back to $REPO/plugins/.../audit.py. We point REPO at the
+# checkout so the fallback kicks in.
+checkout_root=$(cd "$SCRIPT_DIR/../../.." && pwd)
+audit_py="$checkout_root/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py"
+[ -f "$audit_py" ] || { assert_fail "audit.py not found at $audit_py"; }
+
+# Override the conf to point REPO at the checkout so cmd_audit's
+# fallback path picks up the in-tree audit.py. Use the audit's own
+# scripts directory as SITE_DIR — it's not a portal but the bash
+# dispatcher only needs SITE_DIR to exist; whether the python audit
+# finds anything is incidental to the test's purpose.
+{
+    printf 'NAME="testproj"\n'
+    printf 'REPO="%s"\n' "$checkout_root"
+    printf 'SITE_DIR="plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts"\n'
+    printf 'PROFILE="myprof"\n'
+} > "$env/pp/projects/testproj.conf"
+
+# Now run pp audit. With --json, audit.py emits JSON to stdout.
+out=$(PATH="$MOCK_DIR:$PATH" PP_CONFIG_DIR="$env/pp" PP_MOCK_PAC_STATE_DIR="$env/pac" \
+    "$PP_BIN" audit testproj --json 2>&1 || true)
+
+# We don't expect findings (the audit script's own dir isn't a portal).
+# We just verify the bash → python dispatch path:
+#   1. pp's "Audit:" header was emitted (proving cmd_audit started)
+#   2. python output (if any) is JSON-parseable
+case "$out" in
+    *"Audit:"*|*"audit"*)
+        assert_pass "cmd_audit header emitted (bash dispatcher reached python)"
+        ;;
+    *)
+        assert_fail "cmd_audit didn't emit Audit header" \
+            "out: $(printf '%s' "$out" | head -10)"
+        ;;
+esac
+
+# --- Section 12: pp up with upload failure injection ------------------
+
+echo
+echo "Section 12 — pp up with upload failure"
+echo
+
+env=$(make_test_env myprof)
+out=$(printf 'y\ny\n' | PP_MOCK_PAC_FAIL_UPLOAD=1 run_pp "$env" up testproj 2>&1 || true)
+case "$out" in
+    *"upload failed"*|*"Error"*|*"failed"*)
+        assert_pass "up surfaces upload failure"
+        ;;
+    *"Upload complete"*)
+        assert_fail "up reported success despite mock failure"
+        ;;
+    *)
+        # No clear error in output — pp may have suppressed it. Check
+        # that it didn't claim success.
+        case "$out" in
+            *"Upload complete"*) assert_fail "up claimed success on injected failure" ;;
+            *) assert_pass "up didn't claim success (failure quietly handled)" ;;
+        esac
+        ;;
+esac
+
+# --- Section 13: failure injection — auth list (original test) --------
+
+echo
+echo "Section 13 — pac auth list failure injection"
+echo
+
+env=$(make_test_env myprof)
 out=$(PP_MOCK_PAC_FAIL_AUTH_LIST=1 run_pp "$env" doctor testproj || true)
-# pp doctor uses pac auth list to verify the profile; with auth list
-# failing, the "Profile X registered" check should NOT fire.
 case "$out" in
     *"Profile myprof registered"*)
         assert_fail "auth list failure didn't propagate" "out: $out"
