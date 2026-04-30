@@ -342,17 +342,16 @@ audit_py="$checkout_root/plugins/pp-permissions-audit/skills/pp-permissions-audi
 [ -f "$audit_py" ] || { assert_fail "audit.py not found at $audit_py"; }
 
 # Override the conf to point REPO at the checkout so cmd_audit's
-# fallback path works.
-sed -i.bak "s|^REPO=.*|REPO=\"$checkout_root\"|" "$env/pp/projects/testproj.conf"
-rm -f "$env/pp/projects/testproj.conf.bak"
-
-# Need a site dir under REPO. Symlink the test fixture's site dir.
-mkdir -p "$checkout_root/site---site"  # Will be cleaned by test exit
-ln -sfn "$env/repo/site---site" "$checkout_root/site---site" 2>/dev/null || true
-
-# Update SITE_DIR to point at a test fixture
-sed -i.bak "s|^SITE_DIR=.*|SITE_DIR=\"plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts\"|" "$env/pp/projects/testproj.conf"
-rm -f "$env/pp/projects/testproj.conf.bak"
+# fallback path picks up the in-tree audit.py. Use the audit's own
+# scripts directory as SITE_DIR — it's not a portal but the bash
+# dispatcher only needs SITE_DIR to exist; whether the python audit
+# finds anything is incidental to the test's purpose.
+{
+    printf 'NAME="testproj"\n'
+    printf 'REPO="%s"\n' "$checkout_root"
+    printf 'SITE_DIR="plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts"\n'
+    printf 'PROFILE="myprof"\n'
+} > "$env/pp/projects/testproj.conf"
 
 # Now run pp audit. With --json, audit.py emits JSON to stdout.
 out=$(PATH="$MOCK_DIR:$PATH" PP_CONFIG_DIR="$env/pp" PP_MOCK_PAC_STATE_DIR="$env/pac" \
