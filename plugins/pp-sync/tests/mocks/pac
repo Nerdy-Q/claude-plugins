@@ -35,6 +35,19 @@ SELECTED_FILE="$STATE_DIR/selected"
 #   PP_MOCK_PAC_FAIL_ORG_WHO=1       → pac org who returns no URL
 #   PP_MOCK_PAC_FAIL_UPLOAD=1        → pac paportal upload fails
 #   PP_MOCK_PAC_FAIL_SOLUTION_IMPORT=1 → pac solution import fails
+#
+# Invocation auditing: when PP_MOCK_PAC_AUDIT_LOG is set to a writable
+# path, every invocation is appended to that file as one record. Each
+# argv element is terminated with NUL, and the whole record ends with
+# a newline:
+#
+#     auth\0list\0\n
+#     paportal\0upload\0--path\0.\0--modelVersion\02\0\n
+#
+# Tests parse these records to verify which pac subcommand+args pp (or
+# a template) actually invoked. NUL separation is required because
+# pac args can contain spaces (file paths, validation messages) and
+# splitting by space would be ambiguous.
 
 # --- helpers -------------------------------------------------------------
 
@@ -275,6 +288,17 @@ cmd_solution_import() {
 # --- dispatcher ----------------------------------------------------------
 
 main() {
+    # Optional invocation audit. Append before any failure injection
+    # branches so attempted-but-failed calls are logged too — that's
+    # the property tests will actually want to check.
+    if [ -n "${PP_MOCK_PAC_AUDIT_LOG:-}" ]; then
+        # Single write: NUL-separated argv + trailing newline. POSIX
+        # guarantees write atomicity under PIPE_BUF for ordinary
+        # files, so concurrent template runs won't interleave records.
+        printf '%s\0' "$@" >> "$PP_MOCK_PAC_AUDIT_LOG"
+        printf '\n' >> "$PP_MOCK_PAC_AUDIT_LOG"
+    fi
+
     local sub="${1:-}"
     shift 2>/dev/null || true
     case "$sub" in

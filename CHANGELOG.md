@@ -2,6 +2,41 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.11.2] — 2026-04-30
+
+Closes the v2.10.0 "Templates as full scripts running pac" gap from the remaining-gaps list. New end-to-end test suite drives each project-drop-in template (down/up/doctor/solution-down/solution-up/commit) with the mock pac on PATH and asserts on both stdout shape and an audit log of pac invocations. Surfaced and fixed two latent pipefail bugs that crashed templates on clean working trees.
+
+### Added (mock pac, no plugin version bump)
+
+- **`PP_MOCK_PAC_AUDIT_LOG` capture in the mock pac** — when set to a writable path, every invocation is appended as one NUL-separated record (argv joined by `\0`, terminated by `\n`). Tests parse this to verify the exact pac subcommand+args each template runs, so future refactors that drop a step (e.g. removing `pac auth select` before `pac org who`) get caught at PR time. NUL separation avoids ambiguity when args contain spaces; the single-`printf`-per-record write keeps records atomic under POSIX PIPE_BUF guarantees, even with concurrent template invocations sharing one log.
+
+### Added (test_templates.sh — 54 assertions)
+
+- **`tests/test_templates.sh`** — first direct test coverage for the templates. Each template runs in a fresh temp git repo with mock pac on PATH and scoped state. Covers:
+  - `down.sh`: placeholder guard, happy path, audit-log of `auth select` + `org who` + `paportal download --path . --webSiteId X --modelVersion N`, abort-on-N
+  - `up.sh`: `--validate-only` (validates `--validateBeforeUpload` flag), full upload (validates flag is absent), prod confirmation gate (refuses on declined, proceeds on `yes`)
+  - `doctor.sh`: full pac path (`auth list` + `auth select` + `org who`), site-folder detection, placeholder guard
+  - `solution-down.sh`: export+unpack happy path, atomic-swap end state (no `.new` / `.bak` / `.zip` left over), abort-on-N, placeholder guard, **clean-tree regression**
+  - `solution-up.sh`: pack+import non-prod, prod confirmation by typed solution name (refuses wrong name, proceeds on correct), missing-unpack-dir refusal
+  - `commit.sh`: nothing-to-commit, stage-all-with-message-arg, abort-on-q, makes-no-pac-calls
+
+### Fixed (pp-sync v2.4.2)
+
+- **`up.sh` no longer aborts before uploading on a clean working tree.** The pipeline `printf | grep -v '^$' | sort -u | wc -l` exits 1 (grep finds zero matches) when both `git diff --name-only` and `git ls-files --others` produce empty output. With `set -euo pipefail`, that propagated through the pipeline and aborted the script silently between "Active env:" and the upload step. Replaced `grep -v '^$'` with `awk 'NF'` (matches non-empty lines, always exits 0). **Symptom**: running `up.sh --validate-only` on a freshly-cloned repo (or after a successful upload+commit cycle) silently exited with code 1, no upload attempted, no error message.
+- **`solution-down.sh` no longer aborts on a clean re-export.** `git status -s | grep "$SCHEMA_DIR" | head -10` exits 1 (grep finds nothing) when re-exporting an unchanged solution that's already committed, so pipefail aborted the script before "Done" printed. The unpacked dir was correct; only the final status summary was missed and exit code was wrong. Wrapped grep with `{ grep || true; }` to localize the exit-code suppression.
+
+### Tests added (test count: 300, was 246)
+
+- 54 new assertions in `tests/test_templates.sh` (17 sections). Both regression cases above are explicitly covered: section 5 / section 9b verify `Done.` is reached with `RC=0` after a clean-tree run.
+
+### CI
+
+- New "Run template integration tests" step. Total CI test count: **300** (was 246).
+
+### Why this closes the v2.10.0 gap
+
+v2.10.0's remaining-gaps table listed "Templates as full scripts running pac" as not-yet-covered. Test coverage of `bin/pp` was strong, but the templates — which users actually drop into their projects and run — had never been exercised end-to-end against pac. The two bugs fixed here would have hit any user with a clean working tree on day 1; they were latent because the test suite was structured around `pp` as the entry point, not the templates. Going forward, the audit-log pattern in the mock pac means any template change that alters pac invocation surface gets caught.
+
 ## [2.11.1] — 2026-04-30
 
 Closes the v2.10.0 "covered indirectly via `pp project add`" gap with an actual full-flow setup test. Surfaced and fixed a real bug that had made scripted `pp setup` invocation impossible since the function was first written.

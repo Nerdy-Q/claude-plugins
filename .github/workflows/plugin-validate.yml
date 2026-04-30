@@ -188,6 +188,11 @@ jobs:
           bash plugins/pp-sync/tests/test_pac_contract.sh
           echo "OK    pac contract tests pass against mock"
 
+      - name: Run template integration tests
+        run: |
+          bash plugins/pp-sync/tests/test_templates.sh
+          echo "OK    template integration tests pass"
+
       - name: Bash syntax check
         run: |
           fail=0

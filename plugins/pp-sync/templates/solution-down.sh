@@ -76,7 +76,10 @@ rm -f "$ZIPFILE"
 
 echo "→ Entity count: $(find "$UNPACK_DIR/Entities" -maxdepth 1 -type d 2>/dev/null | tail -n +2 | wc -l | tr -d ' ')"
 echo "→ Files changed:"
-git status -s | grep "$SCHEMA_DIR" | head -10
+# `{ grep || true; }` swallows grep's non-zero exit when it finds zero
+# matches (clean re-export); without this, set -euo pipefail aborts the
+# script before "Done" prints.
+git status -s | { grep "$SCHEMA_DIR" || true; } | head -10
 
 echo
 echo "Done. Review diffs and commit when ready."

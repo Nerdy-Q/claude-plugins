@@ -16,14 +16,14 @@ What it does:
 
 - Triggers on PRs that touch portal source files (web-pages, web-templates, site-settings, table-permissions, etc.)
 - Auto-detects the site folder (the first `<name>---<name>/` containing `website.yml` + `web-pages/`)
-- Fetches the audit script from a pinned tag (`v2.11.1` by default)
+- Fetches the audit script from a pinned tag (`v2.11.2` by default)
 - Runs `audit.py --severity ERROR --exit-code` to gate the PR
 - Uploads the **full report** (including WARN + INFO findings) as a build artifact, so reviewers can read all findings without re-running locally
 - Optional: commenting the summary on the PR (commented out by default — uncomment to enable, plus the `permissions:` block)
 
 ### Pinning to a version
 
-The template uses `AUDIT_REF: 'v2.11.1'` to pin to a released version. Bump this when you upgrade. Alternatives:
+The template uses `AUDIT_REF: 'v2.11.2'` to pin to a released version. Bump this when you upgrade. Alternatives:
 
 - `AUDIT_REF: 'main'` — always latest (convenient for early adopters; brittle for production)
 - `AUDIT_REF: '<commit-sha>'` — exact commit pin (most reproducible)
@@ -94,7 +94,7 @@ steps:
       versionSpec: '3.11'
 
   - bash: |
-      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.11.1/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+      curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.11.2/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
            -o /tmp/audit.py
     displayName: 'Fetch audit script'
 
@@ -157,7 +157,7 @@ If your CI is generic shell (Jenkins, CircleCI, GitLab, Buildkite):
 set -euo pipefail
 
 # 1. Fetch the audit script
-curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.11.1/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
+curl -fsSL https://raw.githubusercontent.com/Nerdy-Q/claude-power-pages-plugins/v2.11.2/plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py \
      -o /tmp/audit.py
 
 # 2. Detect site folder

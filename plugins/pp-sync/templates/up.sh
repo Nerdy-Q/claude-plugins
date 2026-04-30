@@ -65,7 +65,9 @@ esac
 # 3. Estimate change count by tracked + untracked files in SITE_DIR
 TRACKED=$(git diff --name-only HEAD -- "$SITE_DIR" 2>/dev/null || true)
 UNTRACKED=$(git ls-files --others --exclude-standard -- "$SITE_DIR" 2>/dev/null || true)
-CHANGED=$(printf '%s\n%s\n' "$TRACKED" "$UNTRACKED" | grep -v '^$' | sort -u | wc -l | tr -d ' ')
+# Use awk 'NF' (matches non-empty lines, always exits 0) instead of
+# `grep -v '^$'` (exits 1 with zero matches → trips pipefail on a clean tree).
+CHANGED=$(printf '%s\n%s\n' "$TRACKED" "$UNTRACKED" | awk 'NF' | sort -u | wc -l | tr -d ' ')
 echo "→ Estimated changed files in $SITE_DIR: $CHANGED"
 
 if [ "$CHANGED" -gt "$BULK_THRESHOLD" ] && [ "$FORCE_BULK" -eq 0 ]; then
