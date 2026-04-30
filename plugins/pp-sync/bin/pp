@@ -444,7 +444,15 @@ cmd_setup() {
     echo
     confirm_action "Walk through registering each candidate?"
 
-    while IFS= read -r candidate; do
+    # Read candidates from fd 3 (not stdin) so the inner `read -r -p`
+    # prompts inside the loop body still consume the user's terminal
+    # input. With `done <<< "$candidates"`, the heredoc would shadow
+    # stdin for the entire loop — every prompt's `read` would EOF on
+    # the candidates heredoc and silently abort under `set -e`.
+    # This is why driving `pp setup` via piped stdin was previously
+    # impossible; the prompt reads consumed candidates instead of
+    # answers.
+    while IFS= read -r -u 3 candidate; do
         [ -z "$candidate" ] && continue
         echo
         echo "${BOLD}Candidate:${RST} $candidate"
@@ -567,7 +575,7 @@ EOF
             fi
         fi
 
-    done <<< "$candidates"
+    done 3<<< "$candidates"
 
     echo
     ok "Setup complete."

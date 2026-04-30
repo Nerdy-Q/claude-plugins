@@ -2,6 +2,25 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.11.1] — 2026-04-30
+
+Closes the v2.10.0 "covered indirectly via `pp project add`" gap with an actual full-flow setup test. Surfaced and fixed a real bug that had made scripted `pp setup` invocation impossible since the function was first written.
+
+### Fixed (pp-sync v2.4.1)
+
+- **`cmd_setup` now correctly separates the candidate-list iteration from the user-prompt stdin.** The previous `while IFS= read -r candidate; ... done <<< "$candidates"` redirected stdin to the heredoc for the entire loop body — every inner `read -r -p "Project name [...]: " name` call read from the candidates list, not from the user's terminal/piped stdin. With one candidate in the list, the first inner read consumed the candidate path as the project name; with subsequent reads, the heredoc was exhausted and `read` returned EOF, triggering a silent `set -e` abort.
+  - **Symptom**: `printf '...inputs...' | pp setup` silently exited at the first per-candidate prompt with code 1, no projects registered. Anyone trying to script setup (CI bootstrap, dev-onboarding, etc.) hit this.
+  - **Manual interactive use was unaffected** — when stdin is a TTY, the inner reads see the TTY directly because the `<<<` redirect doesn't shadow it. That's why this bug had been latent since the function was written.
+  - **Fix**: read candidates from fd 3 (`while IFS= read -r -u 3 candidate; do ... done 3<<< "$candidates"`). Stdin (fd 0) flows through to the inner prompt reads as expected.
+
+### Tests added (test count: 246, was 238)
+
+- 8 new full-flow setup assertions in `test_command_flows.sh` Section 10b — drive the entire 8-prompt registration via piped stdin, verify the resulting conf has correct NAME / PROFILE / ENV_URL (pulled from `pac org who` via the mock) / SITE_DIR, and that the suggested alias was written. The previous 5 assertions still verify the detection-only / decline path. **The "covered indirectly via `pp project add`" caveat in v2.10.0's gap list is now resolved** — full setup is exercised directly.
+
+### Why this matters
+
+Two days of probing surfaced a bug that was invisible to interactive users for the function's entire history. The bug was only reachable via piped stdin — and pp-sync had never had a test that piped stdin to setup. The lesson is the same one the v2.7.x rounds taught: **untested code paths harbor bugs even when they look innocuous, and the bugs are often only reachable from contexts the original author didn't anticipate.**
+
 ## [2.11.0] — 2026-04-30
 
 Closes the "real-pac behavior diff the mock can't catch" gap from v2.10.0's "remaining gaps" list. New contract test suite — runnable against either the mock (default, CI) or real `pac` (release-prep) — defines what pp depends on from each pac subcommand and verifies the dependency holds.
@@ -648,6 +667,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.11.1]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.11.1
 [2.11.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.11.0
 [2.10.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.10.0
 [2.9.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.4
