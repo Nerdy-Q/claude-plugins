@@ -148,12 +148,34 @@ jobs:
           python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py
           echo "OK    audit.py regression tests pass"
 
+      - name: Run audit.py JSON contract test
+        run: |
+          # Pins the --json output schema so external CI consumers
+          # (the GitHub Action template, dashboards) don't break silently
+          # on rename/restructure.
+          python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit_json_contract.py
+          echo "OK    audit.py JSON contract tests pass"
+
+      - name: Run audit.py performance regression test
+        run: |
+          # 1000-file synthetic portal must audit in under 15s budget.
+          python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit_performance.py
+          echo "OK    audit.py performance regression tests pass"
+
       - name: Run pp-portal design-system regression tests
         run: |
           # File-path form (not dotted) because the plugin dir contains a
           # hyphen (`pp-portal`), which isn't a valid Python module name.
           python3 -m unittest plugins/pp-portal/tests/test_design_systems.py
           echo "OK    pp-portal design-system tests pass"
+
+      - name: Validate marketplace metadata consistency
+        run: |
+          # Every plugin's plugin.json keywords must appear in either the
+          # plugin description or its primary SKILL.md. Catches "added a
+          # keyword for SEO but never surfaced it in skill content."
+          python3 scripts/validate_metadata_consistency.py
+          echo "OK    plugin metadata stays consistent with skill content"
 
       - name: Run pp load_project regression tests
         run: |
@@ -204,6 +226,20 @@ jobs:
         run: |
           bash plugins/pp-sync/tests/test_templates.sh
           echo "OK    template integration tests pass"
+
+      - name: Run pp help-text completeness test
+        run: |
+          # Every command keyword dispatched in bin/pp must appear in
+          # `pp help` output. Catches "added a command, forgot to document."
+          bash plugins/pp-sync/tests/test_help_completeness.sh
+          echo "OK    pp help-text completeness verified"
+
+      - name: Run pp paths-with-spaces test
+        run: |
+          # Verifies pp + templates handle REPO/SITE_DIR paths containing
+          # spaces (e.g., ~/My Documents/portals/site---site).
+          bash plugins/pp-sync/tests/test_paths_with_spaces.sh
+          echo "OK    paths-with-spaces tests pass"
 
       - name: Bash syntax check
         run: |

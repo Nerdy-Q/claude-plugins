@@ -197,6 +197,74 @@ PATH="$tmp/bin:$PATH" "$tmp/bin/pp" help >/dev/null 2>&1 \
     && assert_pass "installed pp can run 'help'" \
     || assert_fail "installed pp failed to run"
 
+# --- Section 7: upgrade path — existing symlink + checkout move ---------
+#
+# Simulates a real upgrade: user has pp symlinked from a prior checkout at
+# /old/path/bin/pp, then pulls a new version of the marketplace (or moves
+# the checkout to a new location) and re-runs install. The symlink must
+# update to the new target without leaving a stale backup or broken link.
+
+echo
+echo "Section 7 — upgrade path (symlink retargets)"
+echo
+
+tmp=$(mktemp -d); TMPDIRS+=( "$tmp" )
+mkdir -p "$tmp/old-checkout/plugins/pp-sync/bin"
+mkdir -p "$tmp/new-checkout/plugins/pp-sync/bin"
+
+# Stub a synthetic "old pp" that prints a marker, sitting where the
+# install symlink currently points. Real installs would have the real pp
+# here; for the test we just need an executable target.
+cat > "$tmp/old-checkout/plugins/pp-sync/bin/pp" <<'OLDPP'
+#!/usr/bin/env bash
+echo "OLD-PP-MARKER"
+OLDPP
+chmod +x "$tmp/old-checkout/plugins/pp-sync/bin/pp"
+
+# Stub a "new pp" with a different marker
+cat > "$tmp/new-checkout/plugins/pp-sync/bin/pp" <<'NEWPP'
+#!/usr/bin/env bash
+echo "NEW-PP-MARKER"
+NEWPP
+chmod +x "$tmp/new-checkout/plugins/pp-sync/bin/pp"
+
+# Use the OLD checkout's install.sh first
+cp "$INSTALL_SH" "$tmp/old-checkout/plugins/pp-sync/install.sh"
+cp "$INSTALL_SH" "$tmp/new-checkout/plugins/pp-sync/install.sh"
+
+# First install: from old checkout
+BIN_DIR="$tmp/bin" PP_CONFIG_DIR="$tmp/config" \
+    bash "$tmp/old-checkout/plugins/pp-sync/install.sh" >/dev/null 2>&1 || true
+[ -L "$tmp/bin/pp" ] || { assert_fail "first install didn't create a symlink"; }
+
+first_run=$("$tmp/bin/pp" 2>/dev/null || true)
+case "$first_run" in
+    *OLD-PP-MARKER*) assert_pass "first install: symlink resolves to OLD checkout" ;;
+    *) assert_fail "first install: symlink doesn't resolve to OLD" "got: $first_run" ;;
+esac
+
+# Second install: from NEW checkout (simulating user pulled a new release
+# and ran install from that checkout). The symlink must retarget.
+BIN_DIR="$tmp/bin" PP_CONFIG_DIR="$tmp/config" \
+    bash "$tmp/new-checkout/plugins/pp-sync/install.sh" >/dev/null 2>&1 || true
+
+[ -L "$tmp/bin/pp" ] && assert_pass "after upgrade: still a symlink" \
+    || assert_fail "upgrade left non-symlink at $tmp/bin/pp"
+
+second_run=$("$tmp/bin/pp" 2>/dev/null || true)
+case "$second_run" in
+    *NEW-PP-MARKER*) assert_pass "after upgrade: symlink retargets to NEW checkout" ;;
+    *OLD-PP-MARKER*) assert_fail "upgrade did not retarget — still pointing at OLD" ;;
+    *) assert_fail "upgrade produced unexpected output: $second_run" ;;
+esac
+
+# No backup should be created when going symlink → symlink (the "non-symlink
+# backup" rule from Section 3 only fires when the existing entry is a
+# regular file, not when it's already a managed symlink).
+backup_count=$(find "$tmp/bin" -maxdepth 1 -name 'pp.bak.*' -type f 2>/dev/null | wc -l | tr -d ' ')
+[ "$backup_count" = "0" ] && assert_pass "symlink→symlink upgrade leaves no backup" \
+    || assert_fail "upgrade created an unwanted backup (count=$backup_count)"
+
 # --- Summary -------------------------------------------------------------
 
 echo

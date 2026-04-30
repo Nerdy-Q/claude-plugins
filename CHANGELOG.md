@@ -2,6 +2,87 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.12.1] — 2026-04-30
+
+Eight quality enhancements that close the remaining "if-we-kept-going" testing gaps surfaced after v2.12.0. **Test count: 330 → 404 (+74)**. Two real metadata bugs surfaced and fixed by writing the tests.
+
+### Added — JSON output contract test (pp-permissions-audit)
+
+- **`test_audit_json_contract.py`** — 13 assertions pinning the schema of `audit.py --json` output. External CI integrations (the GitHub Action template, custom dashboards, pre-commit hooks) consume this JSON via `jq` selectors; a rename or restructure breaks them silently. The contract pins:
+  - top-level keys: `site`, `counts`, `findings`
+  - `counts` keys: `site_settings`, `table_permissions`, `web_roles`, `web_pages`, `custom_js`, `schema_entities` — including a "no unexpected keys" check that fails by design when a new count is added (forces conscious update of external consumers)
+  - finding record shape: `severity` (enum: ERROR/WARN/INFO), `code` (regex `^(ERR|WRN|INFO)-\d{3}$`), `title`, `detail`, `location` — all required strings
+  - `--severity` filter inclusiveness (INFO ≥ WARN ≥ ERROR finding counts)
+  - `--exit-code` semantics (without flag: always exit 0; with flag + matching findings: exit 1)
+- The contract is also documented as a comment block at the bottom of the test file so external consumers don't have to read the test source
+
+### Added — pp help-text completeness test
+
+- **`test_help_completeness.sh`** — 44 assertions that parse `bin/pp`'s case-statement dispatch table, separate top-level commands from `project` / `alias` sub-dispatchers via awk depth tracking, and verify each keyword appears in `pp help` output. Catches the "added a new dispatch entry but forgot to update the help heredoc" regression — common in plugin development. Verified the test catches deletions of help lines (regression-tested by removing a `pp doctor <project>` line and confirming `doctor missing from pp help` failure surfaces).
+
+### Added — marketplace metadata consistency validator
+
+- **`scripts/validate_metadata_consistency.py`** — verifies each plugin's `plugin.json` keywords appear (via word-boundary regex with normalization for hyphens and underscores) in either the plugin description, the SKILL.md frontmatter description, or the SKILL.md body. Catches "added a keyword for SEO/discovery but never surfaced it in skill content" — dead metadata that confuses the skill matcher.
+- **Real bug surfaced**: `pp-sync` had `deployment` in keywords but the term appeared nowhere in the skill content. Added "deployment" to the SKILL.md description (covers both "deploy portal changes" → "deployment to dev/UAT/prod" — addresses real user search terms).
+- Also enforces: plugin.json `name` matches folder, SKILL.md frontmatter `name` matches plugin, plugin.json description and SKILL.md description share at least 3 content words (catches divergent rewording).
+
+### Added — top-level doc-link validation
+
+- Extended `scripts/validate_doc_links.py` to scan beyond `plugins/*/skills/*/`. Now also validates: top-level `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `SECURITY.md`, per-plugin `README.md`, and per-plugin `tests/README.md`.
+- **Pre-extension**: 213 links / 48 files. **Post-extension**: 222 links / 56 files. All resolve.
+
+### Added — v1 conf migration rejection test
+
+- **New fixture `v1-style-conf.conf`** + **case 20 in `test_load_project.sh`** — pins the migration boundary between pre-v2.0.0 (`source "$conf"` shell-eval) and v2.7.0+ (strict `KEY="value"` parser). A v1-shape conf with bare unquoted assignments must be rejected cleanly (load_project dies with "missing NAME") rather than silently loading a partial config or — worse — re-introducing shell evaluation.
+
+### Added — install.sh upgrade path test
+
+- **Section 7 in `test_install_script.sh`** (4 new assertions): simulates a real upgrade flow. User has the marketplace checked out at `/old/path`; pp is symlinked to `/old/path/.../bin/pp`. User pulls a new version at `/new/path` and re-runs install. Verifies:
+  - The symlink retargets to the new checkout (not stale)
+  - It remains a symlink (not replaced with a regular file)
+  - Calling `pp` produces the new behavior, not the old
+  - No backup file is created on a clean symlink → symlink upgrade
+
+### Added — concurrent project-add race test
+
+- **New section in `test_register_atomic.sh`** (3 new assertions): spawns 5 parallel `pp project add` invocations against the same project name, then verifies the post-race state is sane:
+  - Exactly one conf file exists (no orphans, no duplicates)
+  - At least one process succeeded (a winner exists)
+  - The conf file is parseable by `load_project` with all required fields set (no half-written or interleaved content)
+- Pins the observed race-converging behavior so any regression that loosens the guarantees (e.g., introducing partial-write windows) is caught.
+
+### Added — paths-with-spaces handling test
+
+- **`test_paths_with_spaces.sh`** — 7 assertions verifying pp's read-only command surface handles paths like `~/My Documents/portals/site---site` correctly. Tests:
+  - `load_project` preserves spaces in REPO and SITE_DIR
+  - `pp show` and `pp list` print spaced paths intact
+  - `pp doctor` finds the site folder under a spaced REPO and reaches the counts section without aborting
+  - Site content with spaced filenames (e.g., `About Us.webpage.yml`) gets counted correctly
+
+### Added — audit.py performance regression test
+
+- **`test_audit_performance.py`** — generates a 1000-file synthetic portal (200 web pages × 200 web templates × 200 content snippets × 200 site settings × 200 table permissions) and asserts audit completes in under 15 seconds. Real performance on modern hardware is typically <1s; the budget is generous to absorb CI runner variance, but a 10x algorithmic regression (e.g., O(n²) introduced by accidental nested scans) will trip it.
+
+### Tests added (test count: 404, was 330)
+
+| Suite | Before | After | Notes |
+|---|---:|---:|---|
+| `test_load_project.sh` | 21 | **22** | + v1 conf migration rejection |
+| `test_register_atomic.sh` | 6 | **9** | + concurrent race (3 assertions) |
+| `test_install_script.sh` | 13 | **17** | + upgrade path (4 assertions) |
+| `test_help_completeness.sh` | — | **44** | new |
+| `test_paths_with_spaces.sh` | — | **7** | new |
+| `test_audit_json_contract.py` | — | **13** | new |
+| `test_audit_performance.py` | — | **2** | new |
+| (others unchanged) | 290 | 290 | — |
+| **Total** | **330** | **404** | **+74** |
+
+### CI
+
+- Five new test steps in `plugin-validate.yml`: audit JSON contract, audit performance, marketplace metadata consistency, pp help completeness, paths-with-spaces.
+- Doc-link validator now covers 222 links across 56 files (was 213/48).
+- Total CI test count: **404** (was 330).
+
 ## [2.12.0] — 2026-04-30
 
 `pp-portal` becomes a deep expert in five major design systems with intuitive crossovers, full component catalogs, token theory, and concrete recipes. Minor version bump on the marketplace + minor on `pp-portal` because this is a substantial new capability layer.
