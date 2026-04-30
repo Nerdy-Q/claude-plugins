@@ -75,7 +75,7 @@ These are the logical names of common Power Pages-relevant entities. For your cu
 | Note | (alias for annotation) | Don't confuse with the deprecated note entity |
 | Activity File Attachment | `activityfileattachment` | Used for richer attachments; rare |
 | Activity MIME Attachment | `activitymimeattachment` | Email attachments; rare for portals |
-| System User | `systemuser` | Internal user accounts — almost never needed in portals |
+| System User | `systemuser` | Internal user accounts, almost never needed in portals |
 
 ## State and statuscode for site settings
 
@@ -99,13 +99,13 @@ The audit treats `statecode == 0` (or missing) as active. To disable a setting w
 | 400 with field error | The field isn't in `Webapi/<entity>/fields` whitelist |
 | 400 `"No fields defined for this entity."` | `Webapi/<entity>/enabled` is `true` but the corresponding `Webapi/<entity>/fields` site setting is missing. |
 | 400 "no such navigation property" | Wrong navigation property name in `@odata.bind` (often case-sensitivity or polymorphic suffix) |
-| 500 from a custom plugin | Server-side plugin rejected the request — check error.message in the response body |
+| 500 from a custom plugin | Server-side plugin rejected the request, check error.message in the response body |
 
 ## CSP and Web API
 
 Power Pages' Content Security Policy (Site Setting `HTTP/Content-Security-Policy`) must allow XHR to `/_api/`. The default policy includes `'self'` for `connect-src`, which covers same-origin Web API calls.
 
-If you tighten CSP, **don't accidentally remove `'self'`** from `connect-src` — that breaks all Web API.
+If you tighten CSP, **don't accidentally remove `'self'`** from `connect-src`, that breaks all Web API.
 
 ## Web API metadata endpoint
 
@@ -130,7 +130,7 @@ Most portals use `/_api/` exclusively. This audit only checks `/_api/` configura
 
 ## Tables that CANNOT use Web API
 
-Even with `Webapi/<entity>/enabled` set to `true` and a `fields` whitelist in place, a set of ~50 `adx_*` configuration tables are **explicitly blocked** from the Power Pages Web API surface. These are internal Power Pages configuration tables (web roles, web pages, content snippets, entity forms, sitemap markers, etc.) — exposing them via Web API would let portal users read or alter the portal's own configuration, so Microsoft excludes them by design.
+Even with `Webapi/<entity>/enabled` set to `true` and a `fields` whitelist in place, a set of ~50 `adx_*` configuration tables are **explicitly blocked** from the Power Pages Web API surface. These are internal Power Pages configuration tables (web roles, web pages, content snippets, entity forms, sitemap markers, etc.), exposing them via Web API would let portal users read or alter the portal's own configuration, so Microsoft excludes them by design.
 
 Common ones worth knowing by name:
 
@@ -149,6 +149,6 @@ Common ones worth knowing by name:
 
 For the full unsupported list, see the official reference: <https://learn.microsoft.com/en-us/power-pages/configure/web-api-overview#unsupported-configuration-tables>.
 
-If your audit reports `Webapi/adx_<x>/enabled = true` for any of these, the setting is **silently ignored** by the runtime — but it should still be removed to keep the configuration surface honest and minimize drift.
+If your audit reports `Webapi/adx_<x>/enabled = true` for any of these, the setting is **silently ignored** by the runtime, but it should still be removed to keep the configuration surface honest and minimize drift.
 
 > Verified against Microsoft Learn 2026-04-29.

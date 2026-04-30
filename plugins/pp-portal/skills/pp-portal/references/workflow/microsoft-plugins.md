@@ -1,6 +1,6 @@
-# Microsoft's Power Platform Plugins — When to Defer
+# Microsoft's Power Platform Plugins: When to Defer
 
-`pp-portal` is the **hybrid classic-portal skill**. Microsoft maintains a fleet of official Claude Code plugins covering the rest of the Power Platform surface. When a request is in their wheelhouse, install and use **theirs** — don't rebuild it inside `pp-portal`.
+`pp-portal` is the **hybrid classic-portal skill**. Microsoft maintains a fleet of official Claude Code plugins covering the rest of the Power Platform surface. When a request is in their wheelhouse, install and use **theirs**, don't rebuild it inside `pp-portal`.
 
 This file is the routing map.
 
@@ -17,7 +17,7 @@ claude plugin marketplace add https://github.com/microsoft/power-platform-skills
 
 ## Plugin inventory
 
-### `dataverse` — platform-side data and schema
+### `dataverse`, platform-side data and schema
 
 The most common companion to `pp-portal`. Eight skills, all `dv-` prefixed:
 
@@ -26,15 +26,15 @@ The most common companion to `pp-portal`. Eight skills, all `dv-` prefixed:
 | `dv-overview` | Router/decision-tree skill that picks among the others |
 | `dv-connect` | One-step env setup, MCP server registration, `.env` writing, PAC CLI auth bootstrap |
 | `dv-data` | CRUD records, bulk import, CSV, multi-table FK loads, AI-generated sample data (Python SDK) |
-| `dv-metadata` | Schema authoring — tables, columns, relationships, forms, views (Python SDK + Web API) |
+| `dv-metadata` | Schema authoring, tables, columns, relationships, forms, views (Python SDK + Web API) |
 | `dv-query` | Bulk reads, multi-page iteration, analytics, pandas DataFrame workflows |
-| `dv-solution` | Solution lifecycle — create, export, import, promote across envs |
-| `dv-admin` | Env-level admin — bulk delete, retention, audit, OrgDB settings, recycle bin, 37 PPAC toggles |
+| `dv-solution` | Solution lifecycle, create, export, import, promote across envs |
+| `dv-admin` | Env-level admin, bulk delete, retention, audit, OrgDB settings, recycle bin, 37 PPAC toggles |
 | `dv-security` | Security roles, user access, application users, business units, admin elevation |
 
-### `power-pages` — Microsoft's, **for code sites only**
+### `power-pages`, Microsoft's, **for code sites only**
 
-Built for **Power Pages code sites** — React/Vue/Angular/Astro SPAs that call the Web API directly. **NOT** for classic Liquid portals (that's `pp-portal`'s job).
+Built for **Power Pages code sites**, React/Vue/Angular/Astro SPAs that call the Web API directly. **NOT** for classic Liquid portals (that's `pp-portal`'s job).
 
 15 skills + 4 specialized agents (data-model-architect, table-permissions-architect, webapi-settings-architect, webapi-integration).
 
@@ -48,7 +48,7 @@ Build and deploy generative pages for Power Apps model-driven apps. For genux + 
 
 ### `code-apps-preview`
 
-Power Apps **Code Apps** — React + Vite + Power Platform connectors. Different surface from Power Pages code sites.
+Power Apps **Code Apps**, React + Vite + Power Platform connectors. Different surface from Power Pages code sites.
 
 ### `mcp-apps`
 
@@ -98,7 +98,7 @@ Generate MCP App widgets for MCP tools.
 
 ## Recognition triggers
 
-When the user's request lands in another plugin's wheelhouse, recognize the mismatch and recommend — don't silently rebuild.
+When the user's request lands in another plugin's wheelhouse, recognize the mismatch and recommend, don't silently rebuild.
 
 | User request | Recognize as | Recommend |
 |---|---|---|
@@ -136,7 +136,7 @@ When the user's request lands in another plugin's wheelhouse:
 
 Example response when the user says "I need to add a new column to the Contact table":
 
-> That's Dataverse schema work, not portal work. Microsoft's `dataverse` plugin has a `dv-metadata` skill purpose-built for that — it uses the Python SDK + Web API and handles forms and views in one go.
+> That's Dataverse schema work, not portal work. Microsoft's `dataverse` plugin has a `dv-metadata` skill purpose-built for that, it uses the Python SDK + Web API and handles forms and views in one go.
 >
 > Want me to add Microsoft's `power-platform-skills` marketplace and install `dataverse`? Then I'll hand off to `dv-metadata`.
 
@@ -144,8 +144,8 @@ Example response when the user says "I need to add a new column to the Contact t
 
 Microsoft's plugins are:
 
-- **Maintained by Microsoft** — first-party source of truth
-- **Version-pinned to PAC CLI updates** — they track tool churn so we don't have to
+- **Maintained by Microsoft**, first-party source of truth
+- **Version-pinned to PAC CLI updates**, they track tool churn so we don't have to
 - **Get security fixes** through the official release pipeline
 - **Tested across environment versions** (Commercial, GCC, GCC High)
 

@@ -5,13 +5,13 @@
         "url": "https://github.com/Nerdy-Q"
     },
     "metadata": {
-        "description": "Open-source Claude Code plugins from NerdyQ for Microsoft Power Pages classic portals — optimized for the current enhanced-model workflow around native Power Pages Studio's hybrid Liquid + Web API pattern, plus safe pac paportal sync workflows and static-analysis security audit."
+        "description": "Open-source Claude Code plugins from NerdyQ for Microsoft Power Pages classic portals, optimized for the current enhanced-model workflow around native Power Pages Studio's hybrid Liquid + Web API pattern, plus safe pac paportal sync workflows and static-analysis security audit."
     },
     "plugins": [
         {
             "name": "pp-portal",
             "source": "./plugins/pp-portal",
-            "description": "Microsoft Power Pages classic portals — the hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use for *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, fetchxml, entitylist/entityform/webform, web roles, table permissions, and pac paportal. NOT for code sites (use Microsoft's power-pages plugin); for Dataverse-side work, defer to Microsoft's dataverse plugin.",
+            "description": "Microsoft Power Pages classic portals, the hybrid Liquid + Web API pattern. Server-rendered Liquid templates with client-side Web API calls in custom JS. Use for *.webpage.copy.html, *.webtemplate.source.html, *.webpage.custom_javascript.js, fetchxml, entitylist/entityform/webform, web roles, table permissions, and pac paportal. NOT for code sites (use Microsoft's power-pages plugin); for Dataverse-side work, defer to Microsoft's dataverse plugin.",
             "category": "development",
             "tags": [
                 "power-pages",
@@ -29,7 +29,7 @@
         {
             "name": "pp-sync",
             "source": "./plugins/pp-sync",
-            "description": "Run Power Pages classic portal sync workflows safely — pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards.",
+            "description": "Run Power Pages classic portal sync workflows safely: pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards.",
             "category": "development",
             "tags": [
                 "power-pages",
@@ -43,7 +43,7 @@
         {
             "name": "pp-permissions-audit",
             "source": "./plugins/pp-permissions-audit",
-            "description": "Audit a Power Pages classic portal's Web Roles, Table Permissions, Site Settings, and Web API configuration for misalignments — orphaned permissions, missing site settings, exposed fields, broken polymorphic lookups, and security gaps.",
+            "description": "Audit a Power Pages classic portal's Web Roles, Table Permissions, Site Settings, and Web API configuration for misalignments, orphaned permissions, missing site settings, exposed fields, broken polymorphic lookups, and security gaps.",
             "category": "security",
             "tags": [
                 "power-pages",

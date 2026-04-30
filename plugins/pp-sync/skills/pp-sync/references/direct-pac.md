@@ -1,6 +1,6 @@
 # Direct `pac` Commands (Fallback When No Wrapper Exists)
 
-When a project has no wrapper scripts, fall back to bare `pac` commands. These are the "manual" sync flows — every step explicit, every safety check is on you.
+When a project has no wrapper scripts, fall back to bare `pac` commands. These are the "manual" sync flows, every step explicit, every safety check is on you.
 
 ## Prerequisites
 
@@ -90,7 +90,7 @@ pac paportal upload \
   --modelVersion 2
 ```
 
-`pac paportal upload` is **incremental** — it uploads only files changed since the last sync. The local manifest tracks state.
+`pac paportal upload` is **incremental**, it uploads only files changed since the last sync. The local manifest tracks state.
 
 For safety, always preview first:
 
@@ -103,7 +103,7 @@ pac paportal upload \
 
 This validates without committing, so you can catch reference errors before they hit the server.
 
-For projects with **>50 changed files** about to upload, do it incrementally to avoid hanging the portal cache. There's no built-in `--batch-size` flag — use git or directory-level batching:
+For projects with **>50 changed files** about to upload, do it incrementally to avoid hanging the portal cache. There's no built-in `--batch-size` flag, use git or directory-level batching:
 
 ```bash
 # Example: upload one entity set at a time
@@ -162,7 +162,7 @@ After unpack, the folder contains:
 └── solution.xml
 ```
 
-Commit this. The `.zip` file should be `.gitignore`'d — it's reproducible from the unpacked folder.
+Commit this. The `.zip` file should be `.gitignore`'d, it's reproducible from the unpacked folder.
 
 ## Solution pack and import
 
@@ -173,7 +173,7 @@ pac solution pack \
   --zipfile ./dataverse-schema/<Solution>.zip \
   --packagetype Unmanaged
 
-# 2. Import (destructive — overwrites in-env)
+# 2. Import (destructive, overwrites in-env)
 pac solution import \
   --path ./dataverse-schema/<Solution>.zip \
   --publish-changes \
@@ -193,8 +193,8 @@ Recommend importing to a non-prod env first, testing, then promoting.
 
 After a successful download:
 
-- `git status` — review changes
-- `git diff` — read meaningful diffs
+- `git status`, review changes
+- `git diff`, read meaningful diffs
 - Discard noise (PAC reordering, whitespace) before commit
 - Commit only when changes reflect intent
 
@@ -215,7 +215,7 @@ pac org who                                         # confirm URL
 pac auth create --name <name> --environment <env-url>
 ```
 
-For service principal auth (CI/CD only — not for daily dev):
+For service principal auth (CI/CD only, not for daily dev):
 
 ```bash
 pac auth create \
@@ -226,4 +226,4 @@ pac auth create \
   --environment <env-url>
 ```
 
-Service principal auth doesn't work for `pac paportal upload` to portals — the portal layer requires interactive user auth. Use SP auth only for `pac solution import` and Dataverse Web API.
+Service principal auth doesn't work for `pac paportal upload` to portals, the portal layer requires interactive user auth. Use SP auth only for `pac solution import` and Dataverse Web API.

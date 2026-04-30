@@ -1,8 +1,8 @@
-# Recipe — File Upload via /_api/annotations
+# Recipe: File Upload via /_api/annotations
 
 ## What you'll build
 
-An "Attach files" page where users select one or more files, the JS reads each as base64, and POSTs an annotation (note) to Power Pages, linking it to a parent record. Annotations are how the platform stores file attachments — they live on the `annotation` (notes) table with a polymorphic lookup back to whatever record they belong to.
+An "Attach files" page where users select one or more files, the JS reads each as base64, and POSTs an annotation (note) to Power Pages, linking it to a parent record. Annotations are how the platform stores file attachments, they live on the `annotation` (notes) table with a polymorphic lookup back to whatever record they belong to.
 
 The flow:
 
@@ -19,11 +19,11 @@ The flow:
 | `Webapi/annotation/fields` site setting | site-settings YAML | `subject,filename,mimetype,documentbody,notetext,objectid` (whitelist; never `*`) |
 | Table Permission allowing Create on `annotation` | table-permissions YAML | Scope = Parent, parent permission = the parent entity's permission |
 | Web Role on the parent record's Table Permission | Studio | The user must own the parent record (or have access via Account scope) |
-| Parent entity already has a record | — | You can't attach to a record that does not exist; create the parent first |
+| Parent entity already has a record |, | You can't attach to a record that does not exist; create the parent first |
 
-The `Parent` scope on the annotation Table Permission cascades from the parent entity's permission — the user can attach to a parent record if they can read the parent. If you set the annotation permission to `Global`, **any user can attach to any record** — security hole.
+The `Parent` scope on the annotation Table Permission cascades from the parent entity's permission, the user can attach to a parent record if they can read the parent. If you set the annotation permission to `Global`, **any user can attach to any record**, security hole.
 
-> Annotations are also where SharePoint integration kicks in. If your environment has SharePoint document management enabled on the parent entity, files over a configurable size threshold get auto-redirected to SharePoint and the annotation only stores metadata. **No code change needed** — but the user-visible URL changes.
+> Annotations are also where SharePoint integration kicks in. If your environment has SharePoint document management enabled on the parent entity, files over a configurable size threshold get auto-redirected to SharePoint and the annotation only stores metadata. **No code change needed**, but the user-visible URL changes.
 
 ## Page setup
 
@@ -38,7 +38,7 @@ web-pages/attach-files/
     AttachFiles.en-US.webpage.copy.html
 ```
 
-## Step 1 — HTML file input + drop zone + progress UI
+## Step 1: HTML file input + drop zone + progress UI
 
 ```liquid
 {% assign parent_id   = request.params['id'] | escape %}
@@ -84,12 +84,12 @@ web-pages/attach-files/
 
 Notes:
 
-- The hidden inputs hold the parent record context — easier than re-parsing querystring in JS
+- The hidden inputs hold the parent record context, easier than re-parsing querystring in JS
 - `accept=".pdf,..."` is a UX hint, not security; server still must enforce
 - `tabindex="0"` + `role="button"` makes the drop zone keyboard-actionable
 - Two lists: `#uploadList` for in-progress uploads, `#existingList` for already-attached files
 
-## Step 2 — JS reads files as base64
+## Step 2: JS reads files as base64
 
 ```javascript
 // AttachFiles.webpage.custom_javascript.js
@@ -141,9 +141,9 @@ function fileToBase64(file) {
 }
 ```
 
-The `.split(',')[1]` is the entire reason this trips people up. `readAsDataURL` returns `data:application/pdf;base64,JVBERi0xL...`. `documentbody` wants just `JVBERi0xL...`. Forgetting the split sends the prefix as part of the body, which corrupts the file silently — Power Pages saves the annotation, the download works, but the file doesn't open.
+The `.split(',')[1]` is the entire reason this trips people up. `readAsDataURL` returns `data:application/pdf;base64,JVBERi0xL...`. `documentbody` wants just `JVBERi0xL...`. Forgetting the split sends the prefix as part of the body, which corrupts the file silently, Power Pages saves the annotation, the download works, but the file doesn't open.
 
-## Step 3 — POST to /_api/annotations
+## Step 3: POST to /_api/annotations
 
 ```javascript
 function uploadFile(file, parentId, parentType) {
@@ -198,14 +198,14 @@ Three field-naming traps in this payload:
 | Field | Form | Common mistake |
 |---|---|---|
 | `documentbody` | base64 string, no `data:...` prefix | Sending the full data URL |
-| `mimetype` | string | Falling back to empty when `file.type` is empty (older browsers) — pass `application/octet-stream` |
-| `objectid_<entity>@odata.bind` | **lowercase entity logical name** suffix | Using `objectid_Contact` (PascalCase) — the polymorphic suffix is logical name (lowercase) |
+| `mimetype` | string | Falling back to empty when `file.type` is empty (older browsers), pass `application/octet-stream` |
+| `objectid_<entity>@odata.bind` | **lowercase entity logical name** suffix | Using `objectid_Contact` (PascalCase), the polymorphic suffix is logical name (lowercase) |
 
-## Step 4 — Multi-file uploads
+## Step 4: Multi-file uploads
 
 Two strategies:
 
-**Serial** — simpler, friendlier on the server, predictable progress:
+**Serial**, simpler, friendlier on the server, predictable progress:
 
 ```javascript
 function uploadAll(files) {
@@ -218,7 +218,7 @@ function uploadAll(files) {
 }
 ```
 
-**Parallel with concurrency cap** — faster on small files:
+**Parallel with concurrency cap**, faster on small files:
 
 ```javascript
 function uploadAll(files, concurrency) {
@@ -242,7 +242,7 @@ function uploadAll(files, concurrency) {
 }
 ```
 
-Stick with serial for files larger than ~1 MB — base64 encoding doubles the wire size, and parallel uploads of large files saturate the user's uplink without finishing faster.
+Stick with serial for files larger than ~1 MB, base64 encoding doubles the wire size, and parallel uploads of large files saturate the user's uplink without finishing faster.
 
 Wire it up:
 
@@ -285,11 +285,11 @@ function handleFiles(files) {
 }
 ```
 
-## Step 5 — Display attached files
+## Step 5: Display attached files
 
 Two approaches; choose by where the page is rendered:
 
-**Server-side (initial render via Liquid + FetchXML)** — preferred when the list is the primary content:
+**Server-side (initial render via Liquid + FetchXML)**, preferred when the list is the primary content:
 
 ```liquid
 {% fetchxml notes_query %}
@@ -320,7 +320,7 @@ Two approaches; choose by where the page is rendered:
 </ul>
 ```
 
-**Client-side (Web API GET)** — when you need to refresh after an upload without reloading:
+**Client-side (Web API GET)**, when you need to refresh after an upload without reloading:
 
 ```javascript
 function loadExisting() {
@@ -353,7 +353,7 @@ function loadExisting() {
 
 ### SharePoint integration auto-redirect
 
-If SharePoint document management is enabled on the parent entity (set up at the Dataverse level — see [Manage SharePoint documents](https://learn.microsoft.com/power-pages/configure/manage-sharepoint-documents)), Dataverse routes attachment storage to SharePoint instead of into the annotation `documentbody`. The annotation itself is created as a metadata stub. **No client-side code change** — but the download URL is now SharePoint-hosted, and behavior depends on the user's SharePoint permissions, not their portal Web Role.
+If SharePoint document management is enabled on the parent entity (set up at the Dataverse level, see [Manage SharePoint documents](https://learn.microsoft.com/power-pages/configure/manage-sharepoint-documents)), Dataverse routes attachment storage to SharePoint instead of into the annotation `documentbody`. The annotation itself is created as a metadata stub. **No client-side code change**, but the download URL is now SharePoint-hosted, and behavior depends on the user's SharePoint permissions, not their portal Web Role.
 
 The Power Pages site settings that govern the SharePoint upload path are `SharePoint/MaxUploadSize` (per-file, default 10 MB, max 50 MB) and `SharePoint/MaxTotalUploadSize` (combined). There is no per-entity threshold setting; routing is controlled by whether SharePoint document management is turned on for the table.
 
@@ -363,18 +363,18 @@ Client-side checks (Step 4 `ALLOWED_MIMES`) are UX, not security. Add a Datavers
 
 ### Max size enforcement
 
-Three layers must agree. **There is no Power Pages site setting named `Documents/MaxFileSize`** — that name is a long-standing misremembering (likely a mash-up of the SharePoint/Azure Blob settings below). The actual layers and their canonical setting names are:
+Three layers must agree. **There is no Power Pages site setting named `Documents/MaxFileSize`**, that name is a long-standing misremembering (likely a mash-up of the SharePoint/Azure Blob settings below). The actual layers and their canonical setting names are:
 
 | Layer | Setting | Default | Where |
 |---|---|---|---|
 | Client-side (UX) | `MAX_BYTES` constant in JS | author-set | Recipe code |
 | **Per-form upload limit (Studio)** | "Upload size limit per file (in KB)" on the form's Attachments panel | author-set | Power Pages design studio → Form → Attachments |
-| **Notes storage (annotations)** | `Organization.MaxUploadFileSize` (Dataverse, env-level — **not** a Power Pages site setting) | 5 MB | Power Platform admin center → Environment → Settings → Email → Maximum file size; max 128 MB |
+| **Notes storage (annotations)** | `Organization.MaxUploadFileSize` (Dataverse, env-level, **not** a Power Pages site setting) | 5 MB | Power Platform admin center → Environment → Settings → Email → Maximum file size; max 128 MB |
 | **SharePoint integration** | `SharePoint/MaxUploadSize` site setting | 10 MB | Power Pages site setting; max 50 MB. Pair with `SharePoint/MaxTotalUploadSize` for combined cap. |
-| **Azure Blob Storage Web API** | `Site/FileManagement/MaxFileSize` site setting (in KB) | 1 GB (`1048576`) | Power Pages site setting — only when using the Azure Blob Storage upload path |
+| **Azure Blob Storage Web API** | `Site/FileManagement/MaxFileSize` site setting (in KB) | 1 GB (`1048576`) | Power Pages site setting, only when using the Azure Blob Storage upload path |
 | Enhanced upload UX toggle | `EnhancedFileUpload` site setting | new sites: on | Power Pages site setting; opt-in for older sites. Doesn't change size limits. |
 
-When any one layer rejects, the user sees a different error per layer — match all layers to a consistent number. For Notes-storage uploads (the path this recipe uses), the **Dataverse `Organization.MaxUploadFileSize`** is the binding ceiling; the per-form Studio value clamps it lower for that specific form.
+When any one layer rejects, the user sees a different error per layer, match all layers to a consistent number. For Notes-storage uploads (the path this recipe uses), the **Dataverse `Organization.MaxUploadFileSize`** is the binding ceiling; the per-form Studio value clamps it lower for that specific form.
 
 See [../data/site-settings.md](../data/site-settings.md#documents--file-upload-limits) for the canonical site-setting reference.
 
@@ -394,10 +394,10 @@ See [../data/site-settings.md](../data/site-settings.md#documents--file-upload-l
 
 ## See also
 
-- [../data/webapi-patterns.md](../data/webapi-patterns.md) — `safeAjax`, file upload pattern, polymorphic `@odata.bind`
-- [../data/site-settings.md](../data/site-settings.md) — `Webapi/annotation/enabled`, `Webapi/annotation/fields`, `EnhancedFileUpload`, `SharePoint/MaxUploadSize`, `Site/FileManagement/MaxFileSize` (and the Dataverse env-level `Organization.MaxUploadFileSize` cap)
-- [../data/permissions-and-roles.md](../data/permissions-and-roles.md) — Parent-scope cascading, why annotation perms must inherit from parent
-- [../data/dataverse-naming.md](../data/dataverse-naming.md) — entity-set name vs logical name (relevant for `entitySetFor` lookups)
-- [hybrid-form-with-safeajax.md](hybrid-form-with-safeajax.md) — chaining a file upload after a record create
+- [../data/webapi-patterns.md](../data/webapi-patterns.md), `safeAjax`, file upload pattern, polymorphic `@odata.bind`
+- [../data/site-settings.md](../data/site-settings.md), `Webapi/annotation/enabled`, `Webapi/annotation/fields`, `EnhancedFileUpload`, `SharePoint/MaxUploadSize`, `Site/FileManagement/MaxFileSize` (and the Dataverse env-level `Organization.MaxUploadFileSize` cap)
+- [../data/permissions-and-roles.md](../data/permissions-and-roles.md), Parent-scope cascading, why annotation perms must inherit from parent
+- [../data/dataverse-naming.md](../data/dataverse-naming.md), entity-set name vs logical name (relevant for `entitySetFor` lookups)
+- [hybrid-form-with-safeajax.md](hybrid-form-with-safeajax.md), chaining a file upload after a record create
 
 > Verified against Microsoft Learn 2026-04-29.

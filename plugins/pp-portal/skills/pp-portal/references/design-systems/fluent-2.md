@@ -1,6 +1,6 @@
 # Fluent 2 for Power Pages
 
-Microsoft's Fluent design system, second major version. The natural primary system for Power Pages portals because Power Pages itself is a Microsoft product — Fluent 2 gives the portal **visual affinity with Microsoft 365, Teams, and the broader Microsoft business ecosystem**. Strongest fit for enterprise self-service, partner/vendor portals, internal-facing workflows exposed externally, and dense data/filter-heavy experiences.
+Microsoft's Fluent design system, second major version. The natural primary system for Power Pages portals because Power Pages itself is a Microsoft product, Fluent 2 gives the portal **visual affinity with Microsoft 365, Teams, and the broader Microsoft business ecosystem**. Strongest fit for enterprise self-service, partner/vendor portals, internal-facing workflows exposed externally, and dense data/filter-heavy experiences.
 
 ## Canonical sources
 
@@ -17,7 +17,7 @@ Microsoft's Fluent design system, second major version. The natural primary syst
 
 ## Component catalog
 
-Fluent 2 React v9 ships ~50 components. The Power Pages relevance varies — many Fluent components assume an SPA shell, but their **visual language and token system** are highly portable.
+Fluent 2 React v9 ships ~50 components. The Power Pages relevance varies, many Fluent components assume an SPA shell, but their **visual language and token system** are highly portable.
 
 | Component | In Fluent 2? | Power Pages note |
 |---|---|---|
@@ -25,9 +25,9 @@ Fluent 2 React v9 ships ~50 components. The Power Pages relevance varies — man
 | Avatar / AvatarGroup | ✓ | Initials, image, or icon |
 | Badge | ✓ | Numeric / dot / icon variants; counter color tokens |
 | Breadcrumb | ✓ | With overflow menu |
-| Button | ✓ | Primary / Secondary / Outline / Subtle / Transparent — five emphasis tiers (similar to Material 3 in count) |
+| Button | ✓ | Primary / Secondary / Outline / Subtle / Transparent, five emphasis tiers (similar to Material 3 in count) |
 | Card | ✓ | Filled / FilledAlternative / Outline / Subtle |
-| Carousel | ✓ | **Added in recent Fluent 2 (v9)** — was not in v8 |
+| Carousel | ✓ | **Added in recent Fluent 2 (v9)**, was not in v8 |
 | Checkbox | ✓ | With error state |
 | Combobox | ✓ | Free-form + listbox |
 | Dialog | ✓ | Modal + non-modal |
@@ -35,13 +35,13 @@ Fluent 2 React v9 ships ~50 components. The Power Pages relevance varies — man
 | Drawer | ✓ | Inline + overlay; left / right / top / bottom |
 | Dropdown | ✓ | Native-feeling but custom rendering |
 | Field | ✓ | Composable wrapper for label + control + validation message |
-| InfoButton / InfoLabel | ✓ | Inline help affordance — Fluent-distinctive |
+| InfoButton / InfoLabel | ✓ | Inline help affordance, Fluent-distinctive |
 | Input | ✓ | Outline / Filled / FilledLighter |
 | Label | ✓ | Required asterisk + weight variants |
 | Link | ✓ | Subtle + Default; visited treatment |
 | Menu / MenuList | ✓ | Cascading + checkable items |
 | MessageBar | ✓ | Info / Warning / Error / Success / Severe |
-| Persona | ✓ | Avatar + name + secondary text — Microsoft-iconic |
+| Persona | ✓ | Avatar + name + secondary text, Microsoft-iconic |
 | Popover | ✓ | With arrow; positioned |
 | ProgressBar | ✓ | Determinate + indeterminate |
 | Radio | ✓ | With error state |
@@ -64,26 +64,26 @@ Fluent 2 React v9 ships ~50 components. The Power Pages relevance varies — man
 | Virtualizer | ✓ | Large-list rendering helper |
 
 Notable holes:
-- **No native data-grid component** — Table is the closest; for richer enterprise grid (column resize, filter row, group-by), look at react-data-grid + Fluent token theming, or borrow grid pattern from shadcn/ui's data-table
-- **No carousel before v9.x** — older Fluent code may need refactoring
-- **No native stepper/wizard** — use Tabs with controlled state, or borrow from Material 3
+- **No native data-grid component**, Table is the closest; for richer enterprise grid (column resize, filter row, group-by), look at react-data-grid + Fluent token theming, or borrow grid pattern from shadcn/ui's data-table
+- **No carousel before v9.x**, older Fluent code may need refactoring
+- **No native stepper/wizard**, use Tabs with controlled state, or borrow from Material 3
 
 ## Token theory
 
-Fluent 2 has the most **enterprise-realistic** token system among the five — built around themes (Web Light, Web Dark, Teams Light, Teams Dark, Teams High Contrast) with semantic role tokens.
+Fluent 2 has the most **enterprise-realistic** token system among the five, built around themes (Web Light, Web Dark, Teams Light, Teams Dark, Teams High Contrast) with semantic role tokens.
 
 ### Color tokens
 
 Token naming: `colorNeutral*`, `colorBrand*`, `colorPalette*Background*`, etc. Examples:
-- `colorNeutralBackground1`, `colorNeutralBackground2`, `colorNeutralBackground3` — increasing emphasis
-- `colorNeutralForeground1`, `colorNeutralForeground2`, `colorNeutralForeground3` — decreasing emphasis
-- `colorNeutralStroke1`, `colorNeutralStroke2`, `colorNeutralStrokeAccessible` — subtle to AA-compliant
+- `colorNeutralBackground1`, `colorNeutralBackground2`, `colorNeutralBackground3`, increasing emphasis
+- `colorNeutralForeground1`, `colorNeutralForeground2`, `colorNeutralForeground3`, decreasing emphasis
+- `colorNeutralStroke1`, `colorNeutralStroke2`, `colorNeutralStrokeAccessible`, subtle to AA-compliant
 - `colorBrandBackground`, `colorBrandForeground1`, `colorBrandForeground2`
 - `colorPaletteRedBackground1` … `colorPaletteRedForeground1` (same for green / yellow / blue / purple / etc.)
 
 CSS custom-property convention: `--colorNeutralBackground1`, etc.
 
-The system uses **alias tokens** layered over **global tokens** — alias tokens have semantic meaning ("colorBrandBackground"), global tokens have raw values ("#0F6CBD"). Always use alias tokens; only override globals during theme creation.
+The system uses **alias tokens** layered over **global tokens**, alias tokens have semantic meaning ("colorBrandBackground"), global tokens have raw values ("#0F6CBD"). Always use alias tokens; only override globals during theme creation.
 
 ### Typography
 
@@ -103,7 +103,7 @@ Fluent uses an **8-point grid** with horizontal/vertical naming:
 
 `borderRadiusNone` (0), `borderRadiusSmall` (2), `borderRadiusMedium` (4), `borderRadiusLarge` (6), `borderRadiusXLarge` (8), `borderRadiusCircular` (50%)
 
-Notice Fluent's radii are **smaller than Material 3's** — that's a deliberate enterprise restraint signal.
+Notice Fluent's radii are **smaller than Material 3's**, that's a deliberate enterprise restraint signal.
 
 ### Shadows
 
@@ -115,8 +115,8 @@ Duration tokens: `durationUltraFast` (50ms), `durationFaster` (100ms), `duration
 
 ## Power Pages implementation bias
 
-- Fluent 2 is **the closest fit to Power Pages out of the box** — Power Pages Studio, the maker portal, and the platform admin center all use Fluent 2 visually. A Fluent 2 portal feels native to Microsoft customers.
-- **Do not pull in `@fluentui/react-components`** — it's an SPA-oriented React component library that conflicts with Power Pages' server-rendered Liquid + Bootstrap + jQuery foundation. Re-implement the components you need with HTML + Fluent tokens.
+- Fluent 2 is **the closest fit to Power Pages out of the box**, Power Pages Studio, the maker portal, and the platform admin center all use Fluent 2 visually. A Fluent 2 portal feels native to Microsoft customers.
+- **Do not pull in `@fluentui/react-components`**, it's an SPA-oriented React component library that conflicts with Power Pages' server-rendered Liquid + Bootstrap + jQuery foundation. Re-implement the components you need with HTML + Fluent tokens.
 - Power Pages already includes Bootstrap; layer Fluent **tokens** on top, keeping Bootstrap layout primitives.
 - Web Components variant (`@fluentui/web-components`) is more amenable to non-React contexts but still adds bundle weight; preferred only for greenfield SPA-style code sites, not classic portals.
 - For typography: use the system font stack with Segoe UI first, since most users are on Windows already:
@@ -126,25 +126,25 @@ Duration tokens: `durationUltraFast` (50ms), `durationFaster` (100ms), `duration
 
 ## License + foot-guns
 
-- **Code: MIT** — safe commercial use.
-- **Segoe UI is licensed for Microsoft Windows** — do not host the Segoe UI font files yourself for non-Windows users. Use the system font stack pattern above; non-Windows users get a graceful fallback.
-- **Fluent UI System Icons: MIT** — bundle them locally; they have ~3000 icons in 20px and 24px sizes, regular and filled variants.
-- **Don't confuse Fluent v8 (Office UI Fabric era) with Fluent 2 v9.** v8 used `@fluentui/react`; v9 uses `@fluentui/react-components`. Token names changed substantially — `theme.palette.themePrimary` (v8) is roughly `colorBrandBackground` (v9), but mapping is not 1:1.
+- **Code: MIT**, safe commercial use.
+- **Segoe UI is licensed for Microsoft Windows**, do not host the Segoe UI font files yourself for non-Windows users. Use the system font stack pattern above; non-Windows users get a graceful fallback.
+- **Fluent UI System Icons: MIT**, bundle them locally; they have ~3000 icons in 20px and 24px sizes, regular and filled variants.
+- **Don't confuse Fluent v8 (Office UI Fabric era) with Fluent 2 v9.** v8 used `@fluentui/react`; v9 uses `@fluentui/react-components`. Token names changed substantially, `theme.palette.themePrimary` (v8) is roughly `colorBrandBackground` (v9), but mapping is not 1:1.
 - **Don't skin Power Pages Studio chrome.** The maker portal already uses Fluent; users moving between Studio and the rendered portal benefit from visual consistency, not from a custom-rebranded Fluent variant that looks "almost like" Studio but subtly different.
 
 ## Component-level guidance
 
 ### Persona
 
-Fluent's signature component — avatar + name + secondary line. Use for any "user identity" surface (record owners, comment authors, contact cards). Prefer `Persona` over a generic avatar+text combination because the spacing/alignment is tuned.
+Fluent's signature component, avatar + name + secondary line. Use for any "user identity" surface (record owners, comment authors, contact cards). Prefer `Persona` over a generic avatar+text combination because the spacing/alignment is tuned.
 
 ### MessageBar (alerts)
 
-Five severities: Info / Warning / Error / Success / Severe. Severe is Fluent's "this needs immediate attention" tier — distinct from Error (which means "the operation failed"). Use Severe sparingly.
+Five severities: Info / Warning / Error / Success / Severe. Severe is Fluent's "this needs immediate attention" tier, distinct from Error (which means "the operation failed"). Use Severe sparingly.
 
 ### Field (form composition)
 
-Field wraps a control with label + required marker + hint + validation message in a single tuned vertical rhythm. Always use Field instead of a hand-composed `<label>` + `<input>` + `<span class="error">` block — the spacing is non-trivial.
+Field wraps a control with label + required marker + hint + validation message in a single tuned vertical rhythm. Always use Field instead of a hand-composed `<label>` + `<input>` + `<span class="error">` block, the spacing is non-trivial.
 
 ### Tables
 
@@ -165,9 +165,9 @@ See [responsive-defaults.md](responsive-defaults.md) for cross-system responsive
 
 ## Pairing with other systems
 
-- **Material 3** — for mobile nav, stepper, richer responsive transitions; see [material-3.md](material-3.md)
-- **USWDS 3** — for public-service clarity and form seriousness when the audience includes citizens; see [uswds-3.md](uswds-3.md)
-- **shadcn/ui** — for simplified card/dialog patterns in lighter-weight portals; see [shadcn-ui.md](shadcn-ui.md)
-- **Apple HIG** — for touch ergonomics and calmer spacing on mobile; see [apple-hig.md](apple-hig.md)
+- **Material 3**, for mobile nav, stepper, richer responsive transitions; see [material-3.md](material-3.md)
+- **USWDS 3**, for public-service clarity and form seriousness when the audience includes citizens; see [uswds-3.md](uswds-3.md)
+- **shadcn/ui**, for simplified card/dialog patterns in lighter-weight portals; see [shadcn-ui.md](shadcn-ui.md)
+- **Apple HIG**, for touch ergonomics and calmer spacing on mobile; see [apple-hig.md](apple-hig.md)
 
 See [system-selection.md](system-selection.md) for selection logic and [crossover-recipes.md](crossover-recipes.md) for concrete patterns.

@@ -1,4 +1,4 @@
-# Power Pages permissions audit — GitHub Action template
+# Power Pages permissions audit: GitHub Action template
 #
 # Drop this into your Power Pages project's repo at:
 #   .github/workflows/power-pages-audit.yml
@@ -8,8 +8,8 @@
 # findings, and uploads the full report (incl. WARN / INFO) as a build artifact.
 #
 # Pin the audit script to a release tag for stability:
-#   AUDIT_REF:  'v2.12.1'   (recommended for production projects)
-#   AUDIT_REF: 'main'     (always latest — convenient for early adopters)
+#   AUDIT_REF:  'v2.12.2'   (recommended for production projects)
+#   AUDIT_REF: 'main'     (always latest: convenient for early adopters)
 #
 # Customize the SITE_DIR_PATTERN if your site folder doesn't match the canonical
 # `<name>---<name>/` convention.
@@ -19,7 +19,7 @@ name: Power Pages permissions audit
 on:
   pull_request:
     paths:
-      # Common portal-source paths — adjust if your site folder is in a subdirectory
+      # Common portal-source paths: adjust if your site folder is in a subdirectory
       - '**/web-pages/**'
       - '**/web-templates/**'
       - '**/web-files/**'
@@ -42,7 +42,7 @@ on:
 env:
   # Pin to a released version of the audit script. Update when you upgrade.
   AUDIT_REPO: 'Nerdy-Q/claude-power-pages-plugins'
-  AUDIT_REF:  'v2.12.1'
+  AUDIT_REF:  'v2.12.2'
   AUDIT_PATH: 'plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py'
 
 jobs:
@@ -72,7 +72,7 @@ jobs:
         run: |
           # Find the first directory matching <name>---<name>/ that contains
           # website.yml + web-pages/. If multiple sites exist (multi-division
-          # repo), the workflow audits the first match — adjust SITE_DIR
+          # repo), the workflow audits the first match: adjust SITE_DIR
           # explicitly to audit a specific one.
           SITE_DIR=$(find . -maxdepth 6 -type d -name '*---*' 2>/dev/null | while read d; do
             if [ -f "$d/website.yml" ] && [ -d "$d/web-pages" ]; then
@@ -87,7 +87,7 @@ jobs:
           echo "Detected site: $SITE_DIR"
           echo "site_dir=$SITE_DIR" >> "$GITHUB_OUTPUT"
 
-      - name: Run audit (PR gate — ERROR-class only)
+      - name: Run audit (PR gate, ERROR-class only)
         id: gate
         run: |
           python3 /tmp/pp-audit/audit.py "${{ steps.site.outputs.site_dir }}" \

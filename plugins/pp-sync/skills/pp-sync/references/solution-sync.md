@@ -1,8 +1,8 @@
 # Dataverse Solution Sync
 
 Power Pages portals consist of two parts:
-1. **Portal source** (web-pages, templates, files) — synced via `pac paportal download/upload`
-2. **Dataverse schema** (entities, columns, plugins, optionsets) — synced via `pac solution export/unpack`
+1. **Portal source** (web-pages, templates, files), synced via `pac paportal download/upload`
+2. **Dataverse schema** (entities, columns, plugins, optionsets), synced via `pac solution export/unpack`
 
 This file covers part 2. For part 1 see [direct-pac.md](direct-pac.md) and [wrapper-scripts.md](wrapper-scripts.md).
 
@@ -16,9 +16,9 @@ Solution sync is **separate from portal sync**. You generally need to sync the s
 - A new env is being set up and needs to mirror an existing one's schema
 
 Solution sync is **NOT needed** for:
-- Pure Liquid / CSS / JS edits — those are portal source, not schema
-- Adding a new web page in Studio — that's portal source
-- Adding a Site Setting — those usually live in portal source (`site-settings/` in the site folder)
+- Pure Liquid / CSS / JS edits, those are portal source, not schema
+- Adding a new web page in Studio, that's portal source
+- Adding a Site Setting, those usually live in portal source (`site-settings/` in the site folder)
 
 ## Export → Unpack (download direction)
 
@@ -38,7 +38,7 @@ pac solution export \
 Common gotchas:
 
 - **`--name` takes the unique name**, not the friendly name. `ContosoPrograms` not `"Contoso Programs Table"`.
-- **Export takes 30-120 seconds** for non-trivial solutions. PAC will appear stuck — it's not.
+- **Export takes 30-120 seconds** for non-trivial solutions. PAC will appear stuck, it's not.
 - **Activity entities (Email, Phone Call, Task, Appointment) sometimes break export**. If export fails with activity errors, exclude activities by exporting a **slimmed solution**: create a new solution in Studio that contains only the entities you want, then export that.
 
 ```bash
@@ -70,7 +70,7 @@ dataverse-schema/<Solution>/
 └── solution.xml                                    # solution-level metadata
 ```
 
-`<Solution>.zip` should be `.gitignore`'d — it's reproducible from the unpacked folder.
+`<Solution>.zip` should be `.gitignore`'d, it's reproducible from the unpacked folder.
 
 ## Pack → Import (upload direction)
 
@@ -103,9 +103,9 @@ There's no transaction wrapper. If import fails partway, the env is left half-im
 
 **Before solution import**:
 
-1. **Confirm the env URL** — `pac org who`. Wrong env = schema corruption in someone else's portal.
-2. **Confirm the user wants this** — explicit confirmation, not implicit.
-3. **For prod environments** — confirm twice. Suggest backing up first via Admin Center → Backups → Create.
+1. **Confirm the env URL**, `pac org who`. Wrong env = schema corruption in someone else's portal.
+2. **Confirm the user wants this**, explicit confirmation, not implicit.
+3. **For prod environments**, confirm twice. Suggest backing up first via Admin Center → Backups → Create.
 4. **Have a rollback plan**:
    - For schema changes: restore from backup
    - For plugin changes: keep the previous solution version handy
@@ -151,7 +151,7 @@ For projects deployed to both NQ Commercial and a State GCC client environment, 
 Document divergence in a `SCHEMA_DIVERGENCE.md` file in `dataverse-schema/`. When promoting NQ → GCC:
 
 1. Pack the NQ source
-2. **Don't import directly** — review for any GCC-specific renames first
+2. **Don't import directly**, review for any GCC-specific renames first
 3. If GCC has different field names, you'll need to either:
    - Migrate GCC field names to match NQ (preferred for new fields)
    - Maintain a translation layer in your portal Liquid (acceptable for legacy fields you can't easily rename)
@@ -159,9 +159,9 @@ Document divergence in a `SCHEMA_DIVERGENCE.md` file in `dataverse-schema/`. Whe
 ## Plugins (server-side C#) deployment
 
 Plugins live in:
-- `plugins/<PluginsProject>/` — your C# source
-- `dataverse-schema/<Solution>/PluginAssemblies/` — the compiled binary metadata
-- `dataverse-schema/<Solution>/SdkMessageProcessingSteps/` — when each plugin runs
+- `plugins/<PluginsProject>/`, your C# source
+- `dataverse-schema/<Solution>/PluginAssemblies/`, the compiled binary metadata
+- `dataverse-schema/<Solution>/SdkMessageProcessingSteps/`, when each plugin runs
 
 Workflow:
 
@@ -195,7 +195,7 @@ After a solution import, smoke-test:
 # List entities to confirm they imported
 pac solution list
 
-# Export back and diff against source — should be near-empty diff
+# Export back and diff against source, should be near-empty diff
 pac solution export --name <Solution> --path /tmp/verify.zip --managed false
 pac solution unpack --zipfile /tmp/verify.zip --folder /tmp/verify --packagetype Unmanaged
 diff -r dataverse-schema/<Solution>/ /tmp/verify/ | head -50
@@ -209,11 +209,11 @@ For mature projects, consider **solution layering**: a base solution containing 
 
 ```
 Contoso ProgramsCore               (base, unchanged for months)
-  ├─ Contoso ProgramsExtension_v1  (patch — added a few fields)
-  └─ Contoso ProgramsExtension_v2  (patch — added a few more)
+  ├─ Contoso ProgramsExtension_v1  (patch, added a few fields)
+  └─ Contoso ProgramsExtension_v2  (patch, added a few more)
 ```
 
-Patches import faster and are less destructive. But they add complexity — for small projects, a single solution is simpler.
+Patches import faster and are less destructive. But they add complexity, for small projects, a single solution is simpler.
 
 ## Icons and assets in solutions
 

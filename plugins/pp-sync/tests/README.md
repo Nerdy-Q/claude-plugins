@@ -16,7 +16,7 @@ Bash regression tests for `pp` CLI behavior. Twelve suites run in CI on every PR
 | `test_journal_state.sh` | 10 | Journal active-issue state tracking and concurrency: state lifecycle, stale-state clearing, JOURNAL.md fallback, atomic concurrent opens, and project-remove cleanup. |
 | `test_pac_contract.sh` | 10 | Contract assertions for what `pp` depends on from each `pac` subcommand. Runs in mock mode in CI and can run against real `pac` locally via `PP_PAC_REAL=1`. |
 | `test_templates.sh` | 60 | End-to-end template coverage for `down.sh`, `up.sh`, `doctor.sh`, `solution-down.sh`, `solution-up.sh`, and `commit.sh` using mock `pac` plus audited invocation logs. Includes the BULK_THRESHOLD warning surface (cache-hang protection). |
-| `test_help_completeness.sh` | 44 | Every command keyword dispatched in `bin/pp` must appear in `pp help`. Catches "added a command, forgot to document" — parses the case-statement dispatch table separating top-level from `project`/`alias` sub-dispatchers. Also verifies every `cmd_*` function is reachable (no dead code). |
+| `test_help_completeness.sh` | 44 | Every command keyword dispatched in `bin/pp` must appear in `pp help`. Catches "added a command, forgot to document", parses the case-statement dispatch table separating top-level from `project`/`alias` sub-dispatchers. Also verifies every `cmd_*` function is reachable (no dead code). |
 | `test_paths_with_spaces.sh` | 7 | `load_project`, `pp show`, `pp list`, and `pp doctor` correctly handle REPO/SITE_DIR paths containing spaces (e.g., `~/My Documents/portals/site---site`). Includes spaced filenames inside the site folder. |
 
 Run any suite locally:
@@ -55,12 +55,12 @@ When the file is sourced, `return` succeeds (we're inside a sourced script), so 
    - Negative subcommand edge cases → `test_subcommand_safety.sh`
    - Brand-new behavior class → consider a new suite + a new CI step
 2. **Add a fixture** (parser-style suites) or **inline stdin** (registration-style).
-3. **Make the assertion specific**. Don't just check "exit code != 0" for an attack — assert what *actually* happened (e.g. trap file does NOT exist, conf file does NOT exist, allowlisted variable was NOT mutated).
+3. **Make the assertion specific**. Don't just check "exit code != 0" for an attack, assert what *actually* happened (e.g. trap file does NOT exist, conf file does NOT exist, allowlisted variable was NOT mutated).
 4. Run locally, confirm it passes, push.
 
 ## Why bash and not pytest
 
-The system under test is `bin/pp`, a ~1800-line bash script. Sourcing it from bash gives direct access to its functions and variables. Re-implementing the same harness in Python would need a subprocess shim that hides the very behavior we want to verify (function-table state, IFS handling, dynamic scoping) — exactly the things that surface real bugs in shell code.
+The system under test is `bin/pp`, a ~1800-line bash script. Sourcing it from bash gives direct access to its functions and variables. Re-implementing the same harness in Python would need a subprocess shim that hides the very behavior we want to verify (function-table state, IFS handling, dynamic scoping), exactly the things that surface real bugs in shell code.
 
 The Python suite (`audit.py`) tests Python code; the bash suites test bash code.
 
@@ -75,12 +75,12 @@ bash plugins/pp-sync/tests/integration/test_pac_dependent.sh
 ```
 
 What it checks (against the first registered project):
-- `pp doctor` — full pac auth path; asserts every section runs to completion
-- `pp diff` — git diff against site dir
-- `pp up --validate-only` — pac validation without push
-- `pp audit` — Python audit dispatch + JSON output parses
-- `pp status` — active project + live env
-- `pp solution-down` — real pac solution export + unpack against a Dataverse tenant (opt-in, see below)
+- `pp doctor`, full pac auth path; asserts every section runs to completion
+- `pp diff`, git diff against site dir
+- `pp up --validate-only`, pac validation without push
+- `pp audit`, Python audit dispatch + JSON output parses
+- `pp status`, active project + live env
+- `pp solution-down`, real pac solution export + unpack against a Dataverse tenant (opt-in, see below)
 
 The suite **auto-skips** if `pac` isn't installed or no projects are registered. To target a specific project:
 
@@ -90,7 +90,7 @@ PP_INTEGRATION_PROJECT=anchor bash tests/integration/test_pac_dependent.sh
 
 ### Live-tenant solution-down (opt-in)
 
-`pp solution-down` is the one read-only-against-the-tenant operation that's worth exercising end-to-end before a release — it verifies real pac produces a usable zipfile shape (mocked tests cover shell orchestration but not Microsoft's actual export format). Opt in by naming the solution:
+`pp solution-down` is the one read-only-against-the-tenant operation that's worth exercising end-to-end before a release, it verifies real pac produces a usable zipfile shape (mocked tests cover shell orchestration but not Microsoft's actual export format). Opt in by naming the solution:
 
 ```bash
 PP_INTEGRATION_PROJECT=anchor PP_INTEGRATION_SOLUTION_NAME=AnchorCore \
@@ -101,6 +101,6 @@ Real export takes 60-120s and writes to the project's `$REPO/dataverse-schema/`.
 
 ### Destructive ops
 
-Destructive operations (`pp down`, `pp up`, `pp solution-up`) are gated behind `PP_INTEGRATION_DESTRUCTIVE=1`. Even with that flag set, `pp solution-up` is permanently disabled by the suite — run it manually if you need to.
+Destructive operations (`pp down`, `pp up`, `pp solution-up`) are gated behind `PP_INTEGRATION_DESTRUCTIVE=1`. Even with that flag set, `pp solution-up` is permanently disabled by the suite, run it manually if you need to.
 
 These integration tests are a smoke gate before each release. They prove the bash → pac → portal hand-off still works in practice; the in-CI unit tests prove the bash code is correct in isolation.

@@ -6,15 +6,15 @@
 
 Open-source Claude Code plugins from [NerdyQ](https://github.com/Nerdy-Q) for **Microsoft Power Pages classic portals**: optimized for the current enhanced-model workflow around native Power Pages Studio's **hybrid Liquid + Web API** pattern, plus safe `pac paportal` sync workflows and static-analysis security audit.
 
-If you build classic Power Pages sites — particularly the hybrid native pattern where Liquid renders the initial state in Studio-managed portal assets and custom JS calls `/_api/<entity>` for interactivity — this marketplace turns Claude Code into a Power Pages-aware pair programmer that knows the gotchas, runs the right `pac` commands with the right safety guards, and audits your portal's permissions for misalignment. It is intentionally scoped away from full Power Pages code sites built as React-style SPAs; for those, use Microsoft's `power-pages` plugin.
+If you build classic Power Pages sites, particularly the hybrid native pattern where Liquid renders the initial state in Studio-managed portal assets and custom JS calls `/_api/<entity>` for interactivity, this marketplace turns Claude Code into a Power Pages-aware pair programmer that knows the gotchas, runs the right `pac` commands with the right safety guards, and audits your portal's permissions for misalignment. It is intentionally scoped away from full Power Pages code sites built as React-style SPAs; for those, use Microsoft's `power-pages` plugin.
 
 ## Plugins
 
 | Plugin | Purpose |
 |---|---|
-| [`pp-portal`](plugins/pp-portal/) | Microsoft Power Pages classic portals — hybrid Liquid + Web API pattern. Categorized references: language (operators / tags / filters / objects / DotLiquid gotchas), data (Web API / FetchXML / Dataverse naming / permissions), pages (hybrid idiom / styling / bundled libraries), design systems (USWDS 3 / Material 3 / Apple HIG / Fluent 2 / shadcn/ui / responsive crossover), workflow (sync), quality (accessibility / troubleshooting) |
-| [`pp-sync`](plugins/pp-sync/) | Action skill + `pp` CLI for running portal sync workflows safely — `pac paportal` + project registry + alias resolution + bulk-upload safety guards + 6 ready-to-drop wrapper templates |
-| [`pp-permissions-audit`](plugins/pp-permissions-audit/) | Static-analysis audit of a portal's Web Roles, Table Permissions, Site Settings, Web API config, AND (when `dataverse-schema/` is present) FetchXML + `$select=` field references — 25 checks including base-vs-localized blank-page detection, polymorphic lookup pre-emption, missing anti-forgery tokens, schema-aware field validation, secured-field exposure detection, missing snippet references, FetchXML performance guardrails, and divergent base/localized pair detection. Drop-in [GitHub Action template](plugins/pp-permissions-audit/CI.md) for PR gating. |
+| [`pp-portal`](plugins/pp-portal/) | Microsoft Power Pages classic portals, hybrid Liquid + Web API pattern. Categorized references: language (operators / tags / filters / objects / DotLiquid gotchas), data (Web API / FetchXML / Dataverse naming / permissions), pages (hybrid idiom / styling / bundled libraries), design systems (USWDS 3 / Material 3 / Apple HIG / Fluent 2 / shadcn/ui / responsive crossover), workflow (sync), quality (accessibility / troubleshooting) |
+| [`pp-sync`](plugins/pp-sync/) | Action skill + `pp` CLI for running portal sync workflows safely, `pac paportal` + project registry + alias resolution + bulk-upload safety guards + 6 ready-to-drop wrapper templates |
+| [`pp-permissions-audit`](plugins/pp-permissions-audit/) | Static-analysis audit of a portal's Web Roles, Table Permissions, Site Settings, Web API config, AND (when `dataverse-schema/` is present) FetchXML + `$select=` field references, 25 checks including base-vs-localized blank-page detection, polymorphic lookup pre-emption, missing anti-forgery tokens, schema-aware field validation, secured-field exposure detection, missing snippet references, FetchXML performance guardrails, and divergent base/localized pair detection. Drop-in [GitHub Action template](plugins/pp-permissions-audit/CI.md) for PR gating. |
 
 ## Install
 
@@ -29,7 +29,7 @@ After installing `pp-sync`, run its installer once to put the `pp` CLI on your P
 
 ```bash
 ~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh
-pp setup    # interactive bootstrap — auto-detects PAC profiles + site folders
+pp setup    # interactive bootstrap, auto-detects PAC profiles + site folders
 ```
 
 ## Platform support
@@ -70,7 +70,7 @@ If the marketplace was already added, re-add it to refresh: `claude plugin marke
 - **Plugin slugs**: short, kebab-case, prefixed with the platform if ambiguous (`pp-*` for Power Pages classic portals; `dv-*` is reserved for Microsoft's `dataverse` plugin)
 - **Skill descriptions**: must include both positive triggers ("use when…") and explicit negatives ("NOT for…") so the description-gated skill loader doesn't drift onto unrelated tasks
 - **Reference files**: keep `SKILL.md` lean (overview + critical gotchas + decision routing); push detail to `references/<topic>.md` so the model lazy-loads only what it needs
-- **No client-specific identifiers in shipped content** — anonymize examples using fictional company names (Acme, Contoso) or placeholder syntax (`<your-prefix>_<field>`)
+- **No client-specific identifiers in shipped content**, anonymize examples using fictional company names (Acme, Contoso) or placeholder syntax (`<your-prefix>_<field>`)
 
 ## License
 

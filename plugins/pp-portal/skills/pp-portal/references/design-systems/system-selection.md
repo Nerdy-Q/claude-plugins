@@ -6,9 +6,9 @@ This reference teaches the model how to work with a **primary design system** an
 
 Treat every portal as having one of these states:
 
-1. **Existing house style** — preserve it unless the user explicitly wants a redesign.
-2. **Named primary system** — e.g. USWDS 3, Material Design 3, Fluent 2, Apple Human Interface Guidelines, or shadcn/ui-inspired styling.
-3. **No explicit system** — default to a restrained, accessible Bootstrap-friendly system that can later be aligned to one of the references below.
+1. **Existing house style**, preserve it unless the user explicitly wants a redesign.
+2. **Named primary system**, e.g. USWDS 3, Material Design 3, Fluent 2, Apple Human Interface Guidelines, or shadcn/ui-inspired styling.
+3. **No explicit system**, default to a restrained, accessible Bootstrap-friendly system that can later be aligned to one of the references below.
 
 Always choose **one primary system**. Borrow from another only when the primary system lacks a pattern the user explicitly needs.
 
@@ -39,7 +39,7 @@ Example:
 
 ## Special rule: web-only primary system + mobile-app feel needed
 
-Some design systems are **explicitly web-scoped** and have no native-app navigation patterns. USWDS 3 is the clearest case — it does not define bottom tab bars, Android-style navigation drawers, large-title-collapse navigation, or FAB. When a portal that uses a web-only primary system needs to feel **like a mobile app** (PWA, mobile-first kiosk, "feels like an app" stakeholder request), the borrow must come from a system that does cover that surface.
+Some design systems are **explicitly web-scoped** and have no native-app navigation patterns. USWDS 3 is the clearest case, it does not define bottom tab bars, Android-style navigation drawers, large-title-collapse navigation, or FAB. When a portal that uses a web-only primary system needs to feel **like a mobile app** (PWA, mobile-first kiosk, "feels like an app" stakeholder request), the borrow must come from a system that does cover that surface.
 
 The model **must ask the user** before assuming:
 
@@ -51,7 +51,7 @@ After the choice is made, apply the standard crossover rule:
 - **iOS variant**: borrow nav anatomy from [apple-hig.md](apple-hig.md) (bottom tab bar, large title with scroll-collapse, sheet presentations, popovers); preserve USWDS color, type, focus, and content tone.
 - **Android variant**: borrow nav anatomy from [material-3.md](material-3.md) (M3 navigation bar, navigation drawer, FAB, bottom sheets); preserve USWDS color, type, focus, and content tone.
 
-In both variants, **only the navigation chrome changes** — forms, alerts, tables, content typography, button treatment, focus states, and color all stay USWDS.
+In both variants, **only the navigation chrome changes**, forms, alerts, tables, content typography, button treatment, focus states, and color all stay USWDS.
 
 This rule generalizes:
 

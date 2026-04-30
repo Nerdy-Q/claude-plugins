@@ -1,6 +1,6 @@
 # Power Pages Liquid Filter Reference
 
-This is the verified Power Pages filter inventory per Microsoft Learn. Filters absent from this list don't exist — even if standard Liquid / Shopify Liquid documents them. Source: <https://learn.microsoft.com/en-us/power-pages/configure/liquid/liquid-filters>.
+This is the verified Power Pages filter inventory per Microsoft Learn. Filters absent from this list don't exist, even if standard Liquid / Shopify Liquid documents them. Source: <https://learn.microsoft.com/en-us/power-pages/configure/liquid/liquid-filters>.
 
 Power Pages runs a customized DotLiquid implementation. Several Shopify staples (`map`, `sort`, `compact`, `slice` on strings, `url_encode`, `abs`, `escape_once`) are not implemented and will silently render nothing or throw, depending on context.
 
@@ -23,7 +23,7 @@ Power Pages runs a customized DotLiquid implementation. Several Shopify staples 
 | `skip` | `{{ arr \| skip: 2 }}` | array | Skip first N |
 | `take` | `{{ arr \| take: 2 }}` | array | Take first N |
 | `then_by` | `{{ entities \| order_by: 'a' \| then_by: 'b' }}` | sorted array | Secondary sort. Chain after `order_by` |
-| `where` | `{{ entities \| where: 'statecode', 0 }}` | filtered array | Two-arg form. `'attr', value` — no expression form |
+| `where` | `{{ entities \| where: 'statecode', 0 }}` | filtered array | Two-arg form. `'attr', value`, no expression form |
 
 There is no `map`, no `sort`, no `compact`, no `uniq`, no `reverse` filter, and no `where_exp`. Use `select` instead of `map`. Use `order_by` instead of `sort`. To dedupe or reverse, do it in JavaScript after JSON-passthrough.
 
@@ -71,7 +71,7 @@ Format specifiers are **case-sensitive** and differ from strftime in critical wa
 
 ### strftime → .NET migration map
 
-If you're porting from Shopify Liquid (Ruby strftime), translate verbatim — strftime tokens render as literals in Power Pages.
+If you're porting from Shopify Liquid (Ruby strftime), translate verbatim, strftime tokens render as literals in Power Pages.
 
 | strftime | .NET equivalent | Output |
 |---|---|---|
@@ -103,7 +103,7 @@ Common porting failure: `{{ x \| date: '%Y-%m-%d' }}` renders the literal string
 | `url_escape` | `{{ 'a b/c' \| url_escape }}` | `a%20b%2Fc` | Percent-encodes for URL components |
 | `xml_escape` | `{{ '<x>' \| xml_escape }}` | `&lt;x&gt;` | XML-safe entity encode |
 
-There is no `url_encode` (use `url_escape`), no `escape_once`, and no `cgi_escape`. For embedding strings in JSON, see the JSON Output section below — `escape` is wrong for that purpose.
+There is no `url_encode` (use `url_escape`), no `escape_once`, and no `cgi_escape`. For embedding strings in JSON, see the JSON Output section below, `escape` is wrong for that purpose.
 
 ## List filters (entitylist-only)
 
@@ -194,7 +194,7 @@ Operate on a URL string and return a parsed component or modified URL.
 
 ## JSON output pattern
 
-Emitting a server-side object into a `<script>` block requires two steps: Unicode-escape the value at server render time, then `JSON.parse` on the client. Plain `escape` is not safe — it does not protect against `</script>` breakouts or unescaped quotes inside string fields.
+Emitting a server-side object into a `<script>` block requires two steps: Unicode-escape the value at server render time, then `JSON.parse` on the client. Plain `escape` is not safe, it does not protect against `</script>` breakouts or unescaped quotes inside string fields.
 
 ```liquid
 <script type="application/json" id="bootstrap-data">
@@ -213,7 +213,7 @@ For a JSON literal you build in Liquid, prefer the `<script type="application/js
 
 These appear in Shopify Liquid documentation, Stack Overflow answers, and AI-generated Liquid code. **None of them are implemented in Power Pages.** Using them produces silent failure or literal output.
 
-**String:** `strip`, `lstrip`, `rstrip`, `slice` (on strings), `escape_once`, `url_encode`, `pluralize`, `truncatewords` (camelCase — Power Pages uses `truncate_words` with underscore), `t` (translation)
+**String:** `strip`, `lstrip`, `rstrip`, `slice` (on strings), `escape_once`, `url_encode`, `pluralize`, `truncatewords` (camelCase, Power Pages uses `truncate_words` with underscore), `t` (translation)
 
 **Array:** `sort`, `sort_natural`, `uniq`, `compact`, `reverse` (filter form), `map`, `where_exp`
 
@@ -232,11 +232,11 @@ When porting code that uses any of the above, the substitutions are:
 - `map: 'name'` → `select: 'name'`
 - `sort: 'name'` → `order_by: 'name'`
 - `sort` (descending) → `order_by: 'name', 'desc'`
-- `reverse` → no equivalent — pass through JSON and reverse client-side, or pre-reverse the source query
-- `uniq` / `compact` → no equivalent — handle in JavaScript after JSON-passthrough
+- `reverse` → no equivalent, pass through JSON and reverse client-side, or pre-reverse the source query
+- `uniq` / `compact` → no equivalent, handle in JavaScript after JSON-passthrough
 - `abs` → `if x < 0`, then `times: -1`
 - `url_encode` → `url_escape`
-- `strip` / `lstrip` / `rstrip` → no equivalent — `replace` known characters or post-process client-side
+- `strip` / `lstrip` / `rstrip` → no equivalent, `replace` known characters or post-process client-side
 - `truncatewords: N` → `truncate_words: N`
 - strftime tokens → .NET tokens (see migration map above)
 - `json` filter → `<script type="application/json">` envelope + `xml_escape` + `JSON.parse`

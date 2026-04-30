@@ -4,7 +4,7 @@ This directory contains a shell-script mock of the Microsoft Power Platform CLI 
 
 ## Why a mock at all
 
-`pp-sync` orchestrates `pac` for every sync, doctor, and solution operation. Real-world testing of those flows requires a Power Platform tenant + an authenticated PAC profile (see `tests/integration/test_pac_dependent.sh`). The mock lets the same flows be exercised in CI without any of that — deterministic, fast, no secrets needed.
+`pp-sync` orchestrates `pac` for every sync, doctor, and solution operation. Real-world testing of those flows requires a Power Platform tenant + an authenticated PAC profile (see `tests/integration/test_pac_dependent.sh`). The mock lets the same flows be exercised in CI without any of that, deterministic, fast, no secrets needed.
 
 ## What's mocked
 
@@ -34,8 +34,8 @@ rm -rf "$state"
 ```
 
 State files:
-- `profiles` — one line per registered profile: `name=env_url`
-- `selected` — currently selected profile name
+- `profiles`, one line per registered profile: `name=env_url`
+- `selected`, currently selected profile name
 
 To pre-populate a profile (skip the `auth create` step):
 
@@ -70,4 +70,4 @@ Add new subcommands to `pac` as new `cmd_<sub>_<action>()` functions and dispatc
 
 ## Why this is a shell script and not a Python tool
 
-Same reason the test suites are bash: it runs on every machine that has bash, with no `pip install`. Tests that depend on the mock add no new dependencies to CI. The mock is ~355 lines (covers auth list/select/create, org who, paportal list/download/upload, solution export/unpack/pack/import, plus a `PP_MOCK_PAC_AUDIT_LOG` capture facility for assertion-friendly invocation tracing) — short enough to read end-to-end before trusting.
+Same reason the test suites are bash: it runs on every machine that has bash, with no `pip install`. Tests that depend on the mock add no new dependencies to CI. The mock is ~355 lines (covers auth list/select/create, org who, paportal list/download/upload, solution export/unpack/pack/import, plus a `PP_MOCK_PAC_AUDIT_LOG` capture facility for assertion-friendly invocation tracing), short enough to read end-to-end before trusting.

@@ -1,6 +1,6 @@
 # Material Design 3 for Power Pages
 
-Google's design system, third major version. Strongest primary system when a Power Pages portal needs **modern mobile-first navigation, vivid systematic state communication, richer interaction states, and clear hierarchy** — particularly for self-service account flows, dashboards, and citizen-facing customer experiences.
+Google's design system, third major version. Strongest primary system when a Power Pages portal needs **modern mobile-first navigation, vivid systematic state communication, richer interaction states, and clear hierarchy**, particularly for self-service account flows, dashboards, and citizen-facing customer experiences.
 
 ## Canonical sources
 
@@ -19,7 +19,7 @@ Google's design system, third major version. Strongest primary system when a Pow
 
 ## Component catalog
 
-Material 3 has a richer component set than USWDS, and **carousel was added in M3** (Material 2 did not have one — this is a common knowledge trap).
+Material 3 has a richer component set than USWDS, and **carousel was added in M3** (Material 2 did not have one, this is a common knowledge trap).
 
 | Component | In Material 3? | Notes |
 |---|---|---|
@@ -29,7 +29,7 @@ Material 3 has a richer component set than USWDS, and **carousel was added in M3
 | Badges | ✓ | Numeric + dot |
 | Bottom sheet | ✓ | Standard + modal |
 | Side sheet | ✓ | Standard + modal; tablet/desktop |
-| Buttons: Common | ✓ | Filled / Tonal / Elevated / Outlined / Text — five emphasis levels |
+| Buttons: Common | ✓ | Filled / Tonal / Elevated / Outlined / Text, five emphasis levels |
 | Buttons: FAB | ✓ | Small / Regular / Large / Extended |
 | Buttons: Icon button | ✓ | With/without container; toggle state |
 | Buttons: Segmented button | ✓ | Single + multi select |
@@ -55,7 +55,7 @@ Material 3 has a richer component set than USWDS, and **carousel was added in M3
 | Time pickers | ✓ | Dial + input |
 | Toolbar | ✓ | Floating action toolbar pattern |
 | Tooltip | ✓ | Plain + rich |
-| **Banner** | ✗ | Removed from M3 (was in M2) — use Snackbar or in-page Card |
+| **Banner** | ✗ | Removed from M3 (was in M2), use Snackbar or in-page Card |
 | **Step indicator / Stepper** | partial | Not a first-class M3 component; M3 uses linear progress + content sectioning |
 | **Hero (USWDS-style)** | partial | M3 does not name a "hero" component; build from large display type + image + button |
 | **Data table (sortable / filterable)** | partial | M3 doesn't ship a heavy data-table component; borrow from Fluent 2 for enterprise tables |
@@ -100,7 +100,7 @@ Five corner-radius tiers: `none` (0), `extra-small` (4), `small` (8), `medium` (
 
 ### Elevation
 
-Six levels (0-5), expressed as **surface tint overlays** rather than only shadows in M3 — this is a deliberate change from M2. Shadow values still exist but pair with tonal elevation.
+Six levels (0-5), expressed as **surface tint overlays** rather than only shadows in M3, this is a deliberate change from M2. Shadow values still exist but pair with tonal elevation.
 
 ### Motion
 
@@ -111,24 +111,24 @@ Six levels (0-5), expressed as **surface tint overlays** rather than only shadow
 ## Power Pages implementation bias
 
 - Use Material Theme Builder once, export the CSS variables, and ship them in the portal CSS file.
-- **Do not pull in `@material/web`** — it's a Web Components library that may collide with Power Pages Studio rendering and assumes a build pipeline. Re-implement the components you need with HTML + tokens.
+- **Do not pull in `@material/web`**, it's a Web Components library that may collide with Power Pages Studio rendering and assumes a build pipeline. Re-implement the components you need with HTML + tokens.
 - Material Symbols can ship as a self-hosted variable font (Apache 2.0); don't depend on `fonts.googleapis.com` if strict CSP is in play.
-- Surface tint elevation is a CSS-only effect — feasible to recreate without JS.
+- Surface tint elevation is a CSS-only effect, feasible to recreate without JS.
 
 ## License + foot-guns
 
-- **Specs and code: Apache 2.0** — safe to use commercially. Attribution recommended (NOTICE file).
-- **Roboto: Apache 2.0** — bundle locally.
-- **Material Symbols: Apache 2.0** — bundle the variable font; no attribution required, but a NOTICE entry is courteous.
-- **`@material/web` Web Components** — do not import directly into Power Pages; they can fight Studio's rendering pipeline and require build tooling.
-- **Don't confuse M2 and M3** — M2 `theme.palette.primary.main` ≠ M3 `--md-sys-color-primary`. Models trained on older Material content may emit M2 token names.
+- **Specs and code: Apache 2.0**, safe to use commercially. Attribution recommended (NOTICE file).
+- **Roboto: Apache 2.0**, bundle locally.
+- **Material Symbols: Apache 2.0**, bundle the variable font; no attribution required, but a NOTICE entry is courteous.
+- **`@material/web` Web Components**, do not import directly into Power Pages; they can fight Studio's rendering pipeline and require build tooling.
+- **Don't confuse M2 and M3**, M2 `theme.palette.primary.main` ≠ M3 `--md-sys-color-primary`. Models trained on older Material content may emit M2 token names.
 - **Tonal palette source-color expansion** is non-trivial math; use Material Theme Builder rather than guessing tones.
 
 ## Component-level guidance
 
 ### Cards
 
-M3 distinguishes Elevated / Filled / Outlined — these have semantic meaning, not just visual variation:
+M3 distinguishes Elevated / Filled / Outlined, these have semantic meaning, not just visual variation:
 - Elevated: highest emphasis, hover lift
 - Filled: medium emphasis, surface-container-highest background
 - Outlined: lowest emphasis, content-first
@@ -143,13 +143,13 @@ M3 distinguishes Elevated / Filled / Outlined — these have semantic meaning, n
 
 ### Carousel (M3-native)
 
-Four variants — pick by content:
+Four variants, pick by content:
 - **Hero**: one large item, peek of next
 - **Multi-browse**: 2-4 items visible, browsable
 - **Full-screen**: vertical full-width, e.g., onboarding
 - **Uncontained**: scrolling without container chrome
 
-Always include keyboard nav, pause control if auto-advancing, and `prefers-reduced-motion` disable. M3 carousels do **not** auto-advance by default — that's a deliberate accessibility choice.
+Always include keyboard nav, pause control if auto-advancing, and `prefers-reduced-motion` disable. M3 carousels do **not** auto-advance by default, that's a deliberate accessibility choice.
 
 ## Responsive bias
 
@@ -164,9 +164,9 @@ See [responsive-defaults.md](responsive-defaults.md) for cross-system responsive
 
 ## Pairing with other systems
 
-- **USWDS 3** — when civic seriousness is needed; borrow USWDS form rigor + plain language; see [uswds-3.md](uswds-3.md)
-- **Fluent 2** — when enterprise data density is needed (Material is not strong here); see [fluent-2.md](fluent-2.md)
-- **shadcn/ui** — when the team wants restrained web-product feel without M3's heavy color system; see [shadcn-ui.md](shadcn-ui.md)
-- **Apple HIG** — Material and HIG conflict on motion language; do not mix both equally — pick one motion system and let the other contribute spacing/clarity only
+- **USWDS 3**, when civic seriousness is needed; borrow USWDS form rigor + plain language; see [uswds-3.md](uswds-3.md)
+- **Fluent 2**, when enterprise data density is needed (Material is not strong here); see [fluent-2.md](fluent-2.md)
+- **shadcn/ui**, when the team wants restrained web-product feel without M3's heavy color system; see [shadcn-ui.md](shadcn-ui.md)
+- **Apple HIG**, Material and HIG conflict on motion language; do not mix both equally, pick one motion system and let the other contribute spacing/clarity only
 
 See [system-selection.md](system-selection.md) for selection logic and [crossover-recipes.md](crossover-recipes.md) for concrete combined patterns.

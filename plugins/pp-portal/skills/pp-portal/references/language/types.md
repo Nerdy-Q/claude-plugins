@@ -1,10 +1,10 @@
 # Liquid Types in Power Pages
 
-Microsoft documents exactly seven basic types at <https://learn.microsoft.com/en-us/power-pages/configure/liquid/liquid-types>: String, Number, Boolean, Array, Dictionary, DateTime, Null. There is no separate Integer/Decimal split, no array literal syntax, and no auto-coercion from string to number. Anything outside this set isn't a real type — it's an object with attributes (covered in [objects.md](objects.md)).
+Microsoft documents exactly seven basic types at <https://learn.microsoft.com/en-us/power-pages/configure/liquid/liquid-types>: String, Number, Boolean, Array, Dictionary, DateTime, Null. There is no separate Integer/Decimal split, no array literal syntax, and no auto-coercion from string to number. Anything outside this set isn't a real type, it's an object with attributes (covered in [objects.md](objects.md)).
 
 ## String
 
-Wrap in single OR double quotes — both are valid and identical. Length comes from `.size`, not `.length`.
+Wrap in single OR double quotes, both are valid and identical. Length comes from `.size`, not `.length`.
 
 ```liquid
 {% assign greeting = "Hello" %}
@@ -14,7 +14,7 @@ Wrap in single OR double quotes — both are valid and identical. Length comes f
 
 ## Number
 
-A single Number type covers integers and floats. Arithmetic is done through math filters (`plus`, `minus`, `times`, `divided_by`, `modulo`) — there is no bare `+` operator in Liquid.
+A single Number type covers integers and floats. Arithmetic is done through math filters (`plus`, `minus`, `times`, `divided_by`, `modulo`), there is no bare `+` operator in Liquid.
 
 ```liquid
 {% assign pi    = 3.14 %}
@@ -24,7 +24,7 @@ A single Number type covers integers and floats. Arithmetic is done through math
 
 ## Boolean
 
-Bare keywords `true` and `false` — no quotes. Quoting them turns them into strings, which are truthy.
+Bare keywords `true` and `false`, no quotes. Quoting them turns them into strings, which are truthy.
 
 ```liquid
 {% assign is_admin = true %}
@@ -47,11 +47,11 @@ Liquid has **no** `[1, 2, 3]` array literal syntax. The canonical idiom is to bu
 {% assign tags = 'featured,sale,new' | split: ',' %}
 ```
 
-Filters that produce arrays: `split`, `select`, `where`, `concat`, `batch`. To project a single attribute across rows of objects, use `select` (not `map` — Power Pages doesn't implement `map`).
+Filters that produce arrays: `split`, `select`, `where`, `concat`, `batch`. To project a single attribute across rows of objects, use `select` (not `map`, Power Pages doesn't implement `map`).
 
 ## Dictionary
 
-Holds key/value pairs accessed by string key. Power Pages calls this "Dictionary"; other Liquid implementations call it "hash" or "object". Iterating yields 2-element arrays — `[0]` is the key, `[1]` is the value.
+Holds key/value pairs accessed by string key. Power Pages calls this "Dictionary"; other Liquid implementations call it "hash" or "object". Iterating yields 2-element arrays, `[0]` is the key, `[1]` is the value.
 
 ```liquid
 {{ request.params['id'] }}
@@ -63,7 +63,7 @@ Holds key/value pairs accessed by string key. Power Pages calls this "Dictionary
 {{ request.params.size }}
 ```
 
-A nonexistent key returns `null`, not an error. `request.params` is the canonical example — it's the parsed querystring.
+A nonexistent key returns `null`, not an error. `request.params` is the canonical example, it's the parsed querystring.
 
 ## DateTime
 
@@ -82,9 +82,9 @@ Represents an empty / nonexistent value.
 - Rendering null produces an empty string, not the literal `"null"`.
 - Treated as **false** in conditionals.
 - A missing dictionary key returns null.
-- A missing attribute on an object returns null — so `{% if record.someattr %}` is safe.
+- A missing attribute on an object returns null, so `{% if record.someattr %}` is safe.
 
-## Truthiness rules — critical gotcha
+## Truthiness rules: critical gotcha
 
 Microsoft, verbatim at <https://learn.microsoft.com/en-us/power-pages/configure/liquid/liquid-conditional-operators>: **"null and the Boolean value false are treated as false; everything else is treated as true."**
 
@@ -114,7 +114,7 @@ There is no implicit string-to-number coercion. Querystring and form values arri
 |---|---|---|
 | `integer` | `'42' \| integer` | `42` (Number) |
 | `decimal` | `'3.14' \| decimal` | `3.14` (Number) |
-| `boolean` | `'true' \| boolean` | `true` — also accepts `on`, `yes`, `enabled` |
+| `boolean` | `'true' \| boolean` | `true`, also accepts `on`, `yes`, `enabled` |
 | `string`  | `0 \| string` | `"0"` |
 
 All four return `null` on conversion failure. Combine with `default:` to provide a fallback:
@@ -130,7 +130,7 @@ All four return `null` on conversion failure. Combine with `default:` to provide
 {% capture name %}…multi-line content…{% endcapture %}    {# captures rendered output #}
 ```
 
-Variable names are case-sensitive. `{% capture %}` is the only way to build a string from multiple lines/tags — `assign` is single-expression only.
+Variable names are case-sensitive. `{% capture %}` is the only way to build a string from multiple lines/tags, `assign` is single-expression only.
 
 ## Common patterns
 
@@ -162,12 +162,12 @@ Variable names are case-sensitive. `{% capture %}` is the only way to build a st
 | `request.params['n'] + 1` (string concat, not addition) | `{% assign n = request.params['n'] \| integer \| plus: 1 %}` |
 | `{% if x in [1,2,3] %}` (no array literal syntax) | `{% assign valid = '1,2,3' \| split: ',' %}{% if valid contains x \| string %}…` |
 | `{{ list.length }}` | `{{ list.size }}` |
-| `{% assign flag = "true" %}` then `{% if flag %}` | `{% assign flag = true %}` — quotes make it a truthy string |
+| `{% assign flag = "true" %}` then `{% if flag %}` | `{% assign flag = true %}`, quotes make it a truthy string |
 
 ## See also
 
-- [operators.md](operators.md) — comparison operators and full truthiness rules
-- [filters.md](filters.md) — type-coercion filters (`integer`, `decimal`, `boolean`, `string`) and date format strings
-- [objects.md](objects.md) — built-in objects and the types of their attributes
+- [operators.md](operators.md), comparison operators and full truthiness rules
+- [filters.md](filters.md), type-coercion filters (`integer`, `decimal`, `boolean`, `string`) and date format strings
+- [objects.md](objects.md), built-in objects and the types of their attributes
 
 > Verified against Microsoft Learn 2026-04-29.

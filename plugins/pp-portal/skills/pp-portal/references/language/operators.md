@@ -1,6 +1,6 @@
 # Liquid Operators in Power Pages
 
-Power Pages runs DotLiquid, and Microsoft documents the operator surface in two pages: the operator inventory at `/power-pages/configure/liquid/liquid-operators` and the truthiness rules at `/power-pages/configure/liquid/liquid-conditional-operators`. This file is the cross-reference of what those pages actually guarantee — and what they don't. Anything outside this set is either undocumented or unsupported.
+Power Pages runs DotLiquid, and Microsoft documents the operator surface in two pages: the operator inventory at `/power-pages/configure/liquid/liquid-operators` and the truthiness rules at `/power-pages/configure/liquid/liquid-conditional-operators`. This file is the cross-reference of what those pages actually guarantee, and what they don't. Anything outside this set is either undocumented or unsupported.
 
 ## Operator inventory
 
@@ -15,7 +15,7 @@ Power Pages runs DotLiquid, and Microsoft documents the operator surface in two 
 | `startswith` | String prefix test |
 | `endswith` | String suffix test |
 
-Operators **NOT** documented by Microsoft for Power Pages — do not use them, even if a sandbox accepts them: `<>`, `not`, `in`, `&&`, `||`. There is no negation operator. Invert with `{% unless %}` or `!=`.
+Operators **NOT** documented by Microsoft for Power Pages, do not use them, even if a sandbox accepts them: `<>`, `not`, `in`, `&&`, `||`. There is no negation operator. Invert with `{% unless %}` or `!=`.
 
 ## Truthiness rules
 
@@ -44,16 +44,16 @@ The right way to test for emptiness is the `empty` keyword for strings/collectio
 {% if page.children.size > 0 %}…{% endif %}
 ```
 
-`empty` matches `null`, `""`, and empty collections — it's the catch-all. `.size > 0` is more explicit when you mean "non-empty array" and excludes the string-of-length-zero case.
+`empty` matches `null`, `""`, and empty collections, it's the catch-all. `.size > 0` is more explicit when you mean "non-empty array" and excludes the string-of-length-zero case.
 
 ## Operator precedence
 
-**Microsoft does not document operator precedence or parenthesis grouping.** Do not assume C-style precedence and do not assume `( ... )` groups expressions — DotLiquid's parser doesn't honor either.
+**Microsoft does not document operator precedence or parenthesis grouping.** Do not assume C-style precedence and do not assume `( ... )` groups expressions, DotLiquid's parser doesn't honor either.
 
 The DotLiquid implementation evaluates conditions **left to right with no precedence**, so:
 
 ```liquid
-{% if a or b and c %}    {# parses as: (a or b) and c — NOT (a or (b and c)) #}
+{% if a or b and c %}    {# parses as: (a or b) and c, NOT (a or (b and c)) #}
 ```
 
 When logic is non-trivial, push it to intermediate `{% assign %}` expressions instead of relying on grouping:
@@ -66,7 +66,7 @@ When logic is non-trivial, push it to intermediate `{% assign %}` expressions in
 
 ## `contains` examples
 
-`contains` does double duty — substring test on a string, and membership test on an array of strings:
+`contains` does double duty, substring test on a string, and membership test on an array of strings:
 
 ```liquid
 {# substring test on a string #}

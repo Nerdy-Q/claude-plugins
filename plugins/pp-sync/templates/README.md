@@ -1,8 +1,8 @@
 # pp-sync templates
 
-Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each script encodes the safety logic the bare `pac` commands lack — auth confirmation, env URL display, working-dir checks, bulk-upload warnings, post-flight smoke tests.
+Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each script encodes the safety logic the bare `pac` commands lack, auth confirmation, env URL display, working-dir checks, bulk-upload warnings, post-flight smoke tests.
 
-> **Most users want the `pp` CLI instead.** See [`../bin/pp`](../bin/pp) and [`../skills/pp-sync/references/cli-reference.md`](../skills/pp-sync/references/cli-reference.md). It uses a project registry (`~/.config/nq-pp-sync/projects/`) so `pp down anchor` works from anywhere — no per-project script copying. Run `~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh` once, then `pp setup` to register projects.
+> **Most users want the `pp` CLI instead.** See [`../bin/pp`](../bin/pp) and [`../skills/pp-sync/references/cli-reference.md`](../skills/pp-sync/references/cli-reference.md). It uses a project registry (`~/.config/nq-pp-sync/projects/`) so `pp down anchor` works from anywhere, no per-project script copying. Run `~/.claude/plugins/cache/nq-claude-power-pages-plugins/pp-sync/<version>/install.sh` once, then `pp setup` to register projects.
 >
 > Use these standalone templates only when (a) you want wrappers committed to the project repo for teammates without `pp` installed, or (b) you're working a one-off project you don't want to register globally.
 
@@ -28,7 +28,7 @@ Drop-in shell wrappers for `pac paportal` and `pac solution` workflows. Each scr
 
 2. Edit the `CONFIG` block at the top of each script:
    ```bash
-   # ============== CONFIG — set these per project ==============
+   # ============== CONFIG, set these per project ==============
    SITE_DIR="contoso---contoso"           # your site folder name
    PROFILE="modernization-dev"                                # your PAC auth profile
    WEBSITE_ID="00000000-0000-0000-0000-000000000000"  # from `pac paportal list`
@@ -95,15 +95,15 @@ for sub in basic-forms advanced-forms entity-lists web-templates web-files conte
 done
 ```
 
-PAC doesn't natively support subset upload, so this is more conceptual than literal — production uses tend to git-stash everything else, upload, unstash next batch. Document the convention you settle on in your project's CLAUDE.md.
+PAC doesn't natively support subset upload, so this is more conceptual than literal, production uses tend to git-stash everything else, upload, unstash next batch. Document the convention you settle on in your project's CLAUDE.md.
 
 ## What these scripts deliberately do NOT do
 
-- **No `--no-verify` on `git commit`** — pre-commit hooks run. If a hook fails, fix the issue.
-- **No `git reset --hard`** — too easy to lose local work. Use `git stash` instead.
-- **No `pac admin delete`** — deleting environments is out of scope; do it via Admin Center where you can see what you're about to break.
-- **No service principal auth flow** — these scripts assume interactive PAC profiles. SP auth is for CI/CD; use Microsoft's official patterns for that.
-- **No untested cleanup** — the default noise-cleanup rules are conservative. Extend per-project if you have known-safe noise.
+- **No `--no-verify` on `git commit`**, pre-commit hooks run. If a hook fails, fix the issue.
+- **No `git reset --hard`**, too easy to lose local work. Use `git stash` instead.
+- **No `pac admin delete`**, deleting environments is out of scope; do it via Admin Center where you can see what you're about to break.
+- **No service principal auth flow**, these scripts assume interactive PAC profiles. SP auth is for CI/CD; use Microsoft's official patterns for that.
+- **No untested cleanup**, the default noise-cleanup rules are conservative. Extend per-project if you have known-safe noise.
 
 ## License
 

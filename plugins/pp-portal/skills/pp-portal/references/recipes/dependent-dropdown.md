@@ -1,4 +1,4 @@
-# Recipe — Dependent Dropdown (Account → Office Branches)
+# Recipe: Dependent Dropdown (Account → Office Branches)
 
 ## What you'll build
 
@@ -21,7 +21,7 @@ The flow:
 | Read Table Permission on `account` | table-permissions YAML | The parent dropdown reads this on initial render via Liquid |
 | Web Role assigned | Studio | Owns both Table Permissions |
 
-The parent dropdown is read by Liquid at render — so it goes through Table Permissions but **not** through `Webapi/account/...` settings (those are only for client-side calls). The child dropdown is read by JS, so it needs both layers.
+The parent dropdown is read by Liquid at render, so it goes through Table Permissions but **not** through `Webapi/account/...` settings (those are only for client-side calls). The child dropdown is read by JS, so it needs both layers.
 
 ## Page setup
 
@@ -36,7 +36,7 @@ web-pages/branch-picker/
     BranchPicker.en-US.webpage.copy.html
 ```
 
-## Step 1 — Liquid renders the parent select with empty child
+## Step 1: Liquid renders the parent select with empty child
 
 ```liquid
 {% fetchxml accounts_query %}
@@ -75,17 +75,17 @@ web-pages/branch-picker/
 Notes:
 
 - The child select starts `disabled`. The user can't tab into it until there's something to choose.
-- `aria-controls` ties the parent to the child for screen readers — when the parent changes, AT users know the child is the dependent target.
+- `aria-controls` ties the parent to the child for screen readers, when the parent changes, AT users know the child is the dependent target.
 - `aria-live="polite"` on the help div lets us announce "Loading branches..." to AT without grabbing focus.
 
-## Step 2 — JS listens for change
+## Step 2: JS listens for change
 
 ```javascript
 // BranchPicker.webpage.custom_javascript.js
 (function (webapi, $) {
   'use strict';
 
-  // Canonical safeAjax — see references/data/webapi-patterns.md
+  // Canonical safeAjax, see references/data/webapi-patterns.md
   function safeAjax(ajaxOptions) {
     var deferredAjax = $.Deferred();
     shell.getTokenDeferred().done(function (token) {
@@ -129,7 +129,7 @@ $(function () {
 });
 ```
 
-## Step 3 — GET to the child entity set
+## Step 3: GET to the child entity set
 
 ```javascript
 function loadBranches(accountId) {
@@ -160,14 +160,14 @@ Critical mechanics:
 
 | Element | Form |
 |---|---|
-| **URL path** | `/_api/<entity-set-name>` — entity set name is **lowercase plural with prefix** (`contoso_officebranches`) |
-| **Lookup filter** | `_<lookup>_value eq <guid>` — leading underscore, `_value` suffix, **no quotes around the GUID**, no curly braces |
+| **URL path** | `/_api/<entity-set-name>`, entity set name is **lowercase plural with prefix** (`contoso_officebranches`) |
+| **Lookup filter** | `_<lookup>_value eq <guid>`, leading underscore, `_value` suffix, **no quotes around the GUID**, no curly braces |
 | **`$select`** | Always specify it; without it you get every column on the entity, slowing the response |
 | **`$orderby`** | Use the **logical name** (lowercase), not display name |
 
 A 400 with "no field" almost always means you wrote `contoso_account eq <id>` (the bare lookup) instead of `_contoso_account_value eq <id>` (the filter form).
 
-## Step 4 — Populate the child select
+## Step 4: Populate the child select
 
 ```javascript
 function populateBranches(branches) {
@@ -196,9 +196,9 @@ function populateBranches(branches) {
 }
 ```
 
-`$('<option></option>').text(...)` is the safe way to set text — using `.html(value)` would expose you to XSS if any branch name contains markup.
+`$('<option></option>').text(...)` is the safe way to set text, using `.html(value)` would expose you to XSS if any branch name contains markup.
 
-## Step 5 — Optional third-level cascade (Branch → Rooms)
+## Step 5: Optional third-level cascade (Branch → Rooms)
 
 Same pattern, one more chain link. Each level resets all downstream selects.
 
@@ -242,7 +242,7 @@ url: '/_api/accounts'
    + '&$top=10'
 ```
 
-Mind the single quotes in `contains()` — strings need them; GUIDs do not.
+Mind the single quotes in `contains()`, strings need them; GUIDs do not.
 
 ### Debouncing typeahead requests
 
@@ -255,9 +255,9 @@ $('#accountSearch').on('input', function (e) {
 });
 ```
 
-250 ms is a comfortable default — enough to coalesce a fast typist's keystrokes, fast enough to feel responsive.
+250 ms is a comfortable default, enough to coalesce a fast typist's keystrokes, fast enough to feel responsive.
 
-### Accessibility — announce loading state to screen readers
+### Accessibility: announce loading state to screen readers
 
 The `aria-live="polite"` div in Step 1 is half the story. The other half is updating it consistently:
 
@@ -269,7 +269,7 @@ The `aria-live="polite"` div in Step 1 is half the story. The other half is upda
 | Loaded with zero results | `This account has no office branches.` |
 | Error | `Unable to load branches. Please try again.` |
 
-Don't use `aria-live="assertive"` — it interrupts the user mid-action. `polite` queues the announcement until the user pauses.
+Don't use `aria-live="assertive"`, it interrupts the user mid-action. `polite` queues the announcement until the user pauses.
 
 ## Gotchas
 
@@ -300,8 +300,8 @@ $('#accountSelect').on('change', function () {
 
 ## See also
 
-- [../data/webapi-patterns.md](../data/webapi-patterns.md) — `safeAjax`, GET with `$select` / `$filter` / `$orderby`, "Dependent dropdown pattern" canonical example
-- [../data/dataverse-naming.md](../data/dataverse-naming.md) — entity-set name vs logical name; lookup `_value` form
-- [../data/permissions-and-roles.md](../data/permissions-and-roles.md) — Web API access (site setting + table permission + web role)
-- [../quality/accessibility.md](../quality/accessibility.md#async-ui-updates--aria-live-regions) — full `aria-live` pattern guide (polite vs assertive, empty-then-populate, `aria-atomic`)
-- [hybrid-form-with-safeajax.md](hybrid-form-with-safeajax.md) — full safeAjax helper context if you need POST in the same page
+- [../data/webapi-patterns.md](../data/webapi-patterns.md), `safeAjax`, GET with `$select` / `$filter` / `$orderby`, "Dependent dropdown pattern" canonical example
+- [../data/dataverse-naming.md](../data/dataverse-naming.md), entity-set name vs logical name; lookup `_value` form
+- [../data/permissions-and-roles.md](../data/permissions-and-roles.md), Web API access (site setting + table permission + web role)
+- [../quality/accessibility.md](../quality/accessibility.md#async-ui-updates--aria-live-regions), full `aria-live` pattern guide (polite vs assertive, empty-then-populate, `aria-atomic`)
+- [hybrid-form-with-safeajax.md](hybrid-form-with-safeajax.md), full safeAjax helper context if you need POST in the same page

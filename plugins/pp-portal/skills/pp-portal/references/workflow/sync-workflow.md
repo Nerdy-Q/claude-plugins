@@ -6,7 +6,7 @@ Power Pages source code lives in **Dataverse**, not your repo. The dev loop is:
 pac paportal download → edit locally → commit → pac paportal upload → test in browser
 ```
 
-Naive `pac paportal download` is non-deterministic — it regenerates files with timestamp drift, GUID reordering in `.portalconfig/`, and occasional whitespace churn. Production projects wrap it in shell scripts that auto-stash known noise so only meaningful diffs reach git.
+Naive `pac paportal download` is non-deterministic, it regenerates files with timestamp drift, GUID reordering in `.portalconfig/`, and occasional whitespace churn. Production projects wrap it in shell scripts that auto-stash known noise so only meaningful diffs reach git.
 
 ## Authentication
 
@@ -26,7 +26,7 @@ If the env URL prints to stdout, you're authenticated. For multiple environments
 # Discover the website ID for the env
 pac paportal list
 
-# Download — REQUIRES website-id arg (you'll get this from `list`)
+# Download, REQUIRES website-id arg (you'll get this from `list`)
 pac paportal download --path . --webSiteId <website-id> --modelVersion 2
 
 # Upload (uploads everything new/modified relative to last sync)
@@ -36,7 +36,7 @@ pac paportal upload --path . --modelVersion 2
 pac paportal upload --path . --modelVersion 2 --validateBeforeUpload
 ```
 
-`--modelVersion 2` is the Enhanced data model — required for any portal created in 2023 or later. Older portals use `--modelVersion 1`.
+`--modelVersion 2` is the Enhanced data model, required for any portal created in 2023 or later. Older portals use `--modelVersion 1`.
 
 ## Why you need a wrapper script
 
@@ -62,7 +62,7 @@ A typical wrapper:
 
 ```bash
 #!/usr/bin/env bash
-# sync-down-dev.sh — download portal, then auto-stash noise
+# sync-down-dev.sh, download portal, then auto-stash noise
 
 set -euo pipefail
 
@@ -76,17 +76,17 @@ cd "$ROOT"
 pac auth select --name "$PROFILE" >/dev/null
 pac org who >/dev/null
 
-# 2. Download — but never inside the site folder (that produces nested folders)
+# 2. Download, but never inside the site folder (that produces nested folders)
 echo "Downloading portal…"
 pac paportal download --path . --webSiteId "$WEBSITE_ID" --modelVersion 2
 
 # 3. Auto-restore known noise files
 echo "Stashing PAC noise…"
 
-# .portalconfig/ reorders deterministically — restore from main if only ordering changed
+# .portalconfig/ reorders deterministically, restore from main if only ordering changed
 git checkout HEAD -- .portalconfig/ 2>/dev/null || true
 
-# .copy.html trailing-whitespace-only changes — strip and re-check
+# .copy.html trailing-whitespace-only changes, strip and re-check
 find "$SITE_DIR" -name "*.webpage.copy.html" -exec sed -i '' -e 's/[[:space:]]*$//' {} +
 
 # 4. Show what's actually changed
@@ -97,7 +97,7 @@ echo "Done. Review changes before commit."
 
 ```bash
 #!/usr/bin/env bash
-# sync-up-dev.sh — upload changes
+# sync-up-dev.sh, upload changes
 
 set -euo pipefail
 
@@ -116,7 +116,7 @@ echo "Done. Test in browser."
 
 ```bash
 #!/usr/bin/env bash
-# *-doctor.sh — health check
+# *-doctor.sh, health check
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
@@ -138,7 +138,7 @@ git status --porcelain | awk '{print $2}' | sort | uniq -c | sort -rn | head -20
 
 ```bash
 #!/usr/bin/env bash
-# *-commit.sh — interactive selective commit
+# *-commit.sh, interactive selective commit
 
 ROOT=$(git rev-parse --show-toplevel)
 cd "$ROOT"
@@ -187,7 +187,7 @@ ContosoPortal/                                   ← .git lives HERE
 
 Never move `.git` inside the site folder. PAC's download regenerates the site folder freely; if `.git` is there it gets clobbered.
 
-### Site folder name is fixed by Power Pages — never rename
+### Site folder name is fixed by Power Pages: never rename
 
 The site folder is `<website-name>---<website-name>/`. Power Pages sets this at site creation; renaming it breaks `pac paportal upload` (which uses the folder name as a sync key).
 
@@ -207,7 +207,7 @@ The portal service is alive but unresponsive. **Recovery:**
    - GCC: `admin.powerplatform.microsoft.us`
 2. Find the portal → Restart
 3. After restart, optionally Purge cache from Admin Center
-4. Wait — may get 503 briefly during cache rebuild
+4. Wait, may get 503 briefly during cache rebuild
 5. Verify in browser
 
 **Prevention**: upload incrementally (1-3 files at a time), verify the portal loads between each batch. Wrapper scripts with `--maxFiles N` or per-table chunking help here.
@@ -221,7 +221,7 @@ PowerPageComponentDeletePlugin: <name> not found
 adx_entitypermission not found: <id>
 ```
 
-These are **cosmetic** — the upload still succeeds for valid files. But they pollute logs and can mask real errors.
+These are **cosmetic**, the upload still succeeds for valid files. But they pollute logs and can mask real errors.
 
 **Fix**: delete the orphaned local files (the YAML metadata for deleted records) and commit. Wrapper script for this:
 
@@ -251,7 +251,7 @@ Wrapper scripts that target both clouds should branch on the env URL or take a `
 
 ## Schema export workflow
 
-Separate from portal sync — Dataverse table/column metadata exports as a **solution**:
+Separate from portal sync, Dataverse table/column metadata exports as a **solution**:
 
 ```bash
 # Export
@@ -286,4 +286,4 @@ For projects where you develop in your own dev env and deploy to a client env (s
 - Each branch has its own PAC profile
 - Sync down to `main` from your dev, sync up to client from `client-dev`
 - Apply changes from `main` → `client-dev` via `git cherry-pick` or `git checkout main -- <files>`
-- Always upload to the client env **incrementally** (1-3 files per batch) — bulk uploads hang the cache (see above)
+- Always upload to the client env **incrementally** (1-3 files per batch), bulk uploads hang the cache (see above)

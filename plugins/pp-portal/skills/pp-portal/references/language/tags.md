@@ -1,14 +1,14 @@
 # Power Pages Liquid Tag Reference
 
-Verified reference for every Liquid tag Power Pages ships, grouped by category as Microsoft Learn organizes them. Scope is the tag surface — for filters and objects, see the sibling references.
+Verified reference for every Liquid tag Power Pages ships, grouped by category as Microsoft Learn organizes them. Scope is the tag surface, for filters and objects, see the sibling references.
 
 Categories map directly to Microsoft Learn pages under `learn.microsoft.com/en-us/power-pages/configure/liquid/`:
 
-- [Control flow](https://learn.microsoft.com/en-us/power-pages/configure/liquid/control-flow-tags) — `if`, `unless`, `case`
-- [Iteration](https://learn.microsoft.com/en-us/power-pages/configure/liquid/iteration-tags) — `for`, `cycle`, `tablerow`
-- [Variable](https://learn.microsoft.com/en-us/power-pages/configure/liquid/variable-tags) — `assign`, `capture`
-- [Template](https://learn.microsoft.com/en-us/power-pages/configure/liquid/template-tags) — `include`, `block`, `extends`, `comment`, `raw`, `substitution`, `fetchxml`, `codecomponent`
-- [Dataverse](https://learn.microsoft.com/en-us/power-pages/configure/liquid/dataverse-liquid-tags) — `chart`, `powerbi`, `editable`, `entitylist`, `entityview`, `searchindex`, `entityform`, `webform`
+- [Control flow](https://learn.microsoft.com/en-us/power-pages/configure/liquid/control-flow-tags), `if`, `unless`, `case`
+- [Iteration](https://learn.microsoft.com/en-us/power-pages/configure/liquid/iteration-tags), `for`, `cycle`, `tablerow`
+- [Variable](https://learn.microsoft.com/en-us/power-pages/configure/liquid/variable-tags), `assign`, `capture`
+- [Template](https://learn.microsoft.com/en-us/power-pages/configure/liquid/template-tags), `include`, `block`, `extends`, `comment`, `raw`, `substitution`, `fetchxml`, `codecomponent`
+- [Dataverse](https://learn.microsoft.com/en-us/power-pages/configure/liquid/dataverse-liquid-tags), `chart`, `powerbi`, `editable`, `entitylist`, `entityview`, `searchindex`, `entityform`, `webform`
 
 This file gives full attribute coverage for the Power-Pages-specific tags (template + Dataverse) and a quick reference for the standard Liquid tags. For the standard tags, link out for full operator/filter docs.
 
@@ -23,7 +23,7 @@ This file gives full attribute coverage for the Power-Pages-specific tags (templ
 | A multi-step wizard form | `webform` | One per page; same hosting rules as `entityform` |
 | A saved Dataverse chart | `chart` | GUIDs only |
 | An embedded Power BI tile/report | `powerbi` | `path` required; `authentication_type` defaults to Anonymous |
-| Inline-editable snippet/page text | `editable` | `liquid: true` is the default — pre-parsed |
+| Inline-editable snippet/page text | `editable` | `liquid: true` is the default, pre-parsed |
 | A code component (PCF) | `codecomponent` | Pass props as `propName:'value'` |
 | FetchXML query results | `fetchxml` | Self-closing `<attribute/>` is forbidden |
 | A reusable Liquid partial | `include` | Comma-separated kwargs, no `with` keyword |
@@ -32,7 +32,7 @@ This file gives full attribute coverage for the Power-Pages-specific tags (templ
 | Hide content from rendering | `comment` | Body is parsed but not output |
 | Show Liquid syntax literally | `raw` | Body is not parsed |
 
-If none of the above fits, drop to the hybrid page idiom — see [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md).
+If none of the above fits, drop to the hybrid page idiom, see [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md).
 
 ---
 
@@ -118,7 +118,7 @@ Renders an HTML table with one cell per item. Supports `cols:N`, `limit:N`, `off
 </table>
 ```
 
-`tablerow` emits its own `<tr>` and `<td>` markup — wrap it in a `<table>` only.
+`tablerow` emits its own `<tr>` and `<td>` markup, wrap it in a `<table>` only.
 
 ---
 
@@ -133,7 +133,7 @@ See [Microsoft Learn](https://learn.microsoft.com/en-us/power-pages/configure/li
 {{ full_name }}
 ```
 
-Filters chain on the right of `=`. The variable is scoped to the rendering context (web template, page, layout) — not global across the site.
+Filters chain on the right of `=`. The variable is scoped to the rendering context (web template, page, layout), not global across the site.
 
 ### `capture` / `endcapture`
 
@@ -146,7 +146,7 @@ Assigns rendered content to a variable instead of emitting it.
 {{ greeting }}
 ```
 
-Whitespace inside `capture` is preserved verbatim — use `{%- ... -%}` (whitespace-trimming) markers if you need it stripped.
+Whitespace inside `capture` is preserved verbatim, use `{%- ... -%}` (whitespace-trimming) markers if you need it stripped.
 
 ---
 
@@ -168,7 +168,7 @@ Renders a Web Template by name and inlines its output.
 | Argument syntax | Comma-separated `key: value` pairs. **No `with` keyword** (that's Shopify Liquid, not Power Pages). |
 | Argument scope | Available as locals inside the included template. |
 | Web Template lookup | By the `adx_webtemplate.adx_name` value, case-sensitive. |
-| Recursion | Allowed but easy to runaway — guard with a depth flag. |
+| Recursion | Allowed but easy to runaway, guard with a depth flag. |
 
 ### `block` / `endblock`
 
@@ -181,7 +181,7 @@ Defines a named region inside a Page Template that child pages can override.
 <main>{% block content %}{% endblock %}</main>
 ```
 
-The text between `block` and `endblock` is the default — used when no child overrides.
+The text between `block` and `endblock` is the default, used when no child overrides.
 
 ### `extends`
 
@@ -190,7 +190,7 @@ Declares that the current template inherits from another, replacing its blocks.
 ```liquid
 {% extends 'Site Layout' %}
 
-{% block title %}Customers — {{ website.adx_name }}{% endblock %}
+{% block title %}Customers, {{ website.adx_name }}{% endblock %}
 {% block content %}
   <h1>Customers</h1>
   ...
@@ -216,7 +216,7 @@ Body is parsed but produces no output.
 
 ### `raw` / `endraw`
 
-Body is emitted verbatim — Liquid syntax inside is not interpreted. Use to display literal `{% ... %}` in docs or code samples.
+Body is emitted verbatim, Liquid syntax inside is not interpreted. Use to display literal `{% ... %}` in docs or code samples.
 
 ```liquid
 <pre>
@@ -238,7 +238,7 @@ Marks a fragment as cache-busted. Power Pages caches output of Page Templates an
 {% endsubstitution %}
 ```
 
-Use sparingly — every substitution defeats output caching for that fragment.
+Use sparingly, every substitution defeats output caching for that fragment.
 
 ### `fetchxml` / `endfetchxml`
 
@@ -265,12 +265,12 @@ Runs a FetchXML query against Dataverse and binds the results to a variable.
 | Property of result variable | What it is |
 |---|---|
 | `accounts.results.entities` | Array of result records. Attribute access via `record.<logicalname>`. |
-| `accounts.results.MoreRecords` | Boolean — true if a next page exists. |
+| `accounts.results.MoreRecords` | Boolean, true if a next page exists. |
 | `accounts.results.PagingCookie` | Opaque cookie to pass back via the FetchXML `paging-cookie` attribute. |
 | `accounts.results.TotalRecordCount` | Set only when the query opts in via `returntotalrecordcount="true"`. |
 | `accounts.xml` | The original FetchXML string. |
 
-**Hard rule:** self-closing `<attribute name="..."/>` is forbidden — Power Pages' FetchXML parser rejects it. Always use `<attribute name="..."></attribute>`. Same applies to `<all-attributes>`. See [../data/fetchxml-patterns.md](../data/fetchxml-patterns.md) for query patterns and aggregate rules.
+**Hard rule:** self-closing `<attribute name="..."/>` is forbidden, Power Pages' FetchXML parser rejects it. Always use `<attribute name="..."></attribute>`. Same applies to `<all-attributes>`. See [../data/fetchxml-patterns.md](../data/fetchxml-patterns.md) for query patterns and aggregate rules.
 
 ### `codecomponent`
 
@@ -283,7 +283,7 @@ Renders a Power Apps Component Framework (PCF) control inline.
 | Attribute | Required | Notes |
 |---|---|---|
 | `name` | Yes | Fully qualified PCF control name (`Namespace.Name`). |
-| (any other) | No | Property bindings — passed to the control as inputs. Strings need quotes; Liquid expressions don't. |
+| (any other) | No | Property bindings, passed to the control as inputs. Strings need quotes; Liquid expressions don't. |
 
 The control must be added to the site via Power Pages Studio (Set up → Code components) before it can render.
 
@@ -321,10 +321,10 @@ Embeds a Power BI dashboard, report, or tile.
 
 | Attribute | Required | Default | Notes |
 |---|---|---|---|
-| `path` | Yes | — | Full Power BI item URL (workspace + report/dashboard/tile). |
+| `path` | Yes |, | Full Power BI item URL (workspace + report/dashboard/tile). |
 | `authentication_type` | No | `Anonymous` | One of `Anonymous`, `AAD`, `powerbiembedded`. Case-insensitive. |
-| `tileid` | No | — | When embedding a single tile from a dashboard. |
-| `roles` | No | — | RLS roles to apply. **Only honored when `authentication_type` is `powerbiembedded`.** |
+| `tileid` | No |, | When embedding a single tile from a dashboard. |
+| `roles` | No |, | RLS roles to apply. **Only honored when `authentication_type` is `powerbiembedded`.** |
 
 Anonymous embedding requires the Power BI item to be published to web. AAD requires the visitor to be signed in to a tenant with access. `powerbiembedded` uses Power Pages' service principal and supports row-level security via `roles`.
 
@@ -342,26 +342,26 @@ Positional arguments:
 
 | Position | Required | What it is |
 |---|---|---|
-| 1st | Yes | The editable object — typically `snippets[...]`, `weblinks[...]`, `page`, or a similar bindable object. |
+| 1st | Yes | The editable object, typically `snippets[...]`, `weblinks[...]`, `page`, or a similar bindable object. |
 | 2nd | No | Attribute or key name when the object exposes multiple editable fields (e.g. `'adx_copy'` on `page`). |
 
 Named arguments:
 
 | Name | Type | Default | Notes |
 |---|---|---|---|
-| `class` | string | — | CSS class added to the wrapping element. |
-| `default` | string | — | Fallback content when the bound value is empty. |
+| `class` | string |, | CSS class added to the wrapping element. |
+| `default` | string |, | Fallback content when the bound value is empty. |
 | `escape` | bool | `false` | When true, HTML-encode the value before output. |
-| `liquid` | bool | **`true`** | Parse the value as Liquid before rendering. **This is the default — pass `liquid: false` to opt out.** |
+| `liquid` | bool | **`true`** | Parse the value as Liquid before rendering. **This is the default, pass `liquid: false` to opt out.** |
 | `tag` | string | `'div'` | HTML element used for the wrapper. |
-| `title` | string | — | Tooltip / aria title for the edit affordance. |
+| `title` | string |, | Tooltip / aria title for the edit affordance. |
 | `type` | string | `'html'` | One of `'html'` or `'text'`. Affects the inline editor used. |
 
 Security implication of the default `liquid: true`: anyone with edit permission on a snippet/page can author Liquid that runs server-side. Restrict the Web Role.
 
 ### `entitylist` / `endentitylist`
 
-Renders a configured List (Power Pages Studio → Lists). Inside the body, the list metadata is exposed as `entitylist`, but **rows are not — they come from a nested `{% entityview %}` block.**
+Renders a configured List (Power Pages Studio → Lists). Inside the body, the list metadata is exposed as `entitylist`, but **rows are not, they come from a nested `{% entityview %}` block.**
 
 ```liquid
 {% entitylist name:"Active Accounts" %}
@@ -388,7 +388,7 @@ Renders a configured List (Power Pages Studio → Lists). Inside the body, the l
 {% endentitylist %}
 ```
 
-Identifier attributes — pass **exactly one**:
+Identifier attributes, pass **exactly one**:
 
 | Attribute | Type | Notes |
 |---|---|---|
@@ -413,16 +413,16 @@ Variable rebinding:
 When you rebind, the inner variable replaces `entitylist`. Use this when nesting two lists.
 
 **Common mistakes:**
-- `{% entitylist name:"..." page:"2" %}` — `page` is **not** an entitylist attribute. It belongs on `entityview`.
-- `{% entitylist name:"..." key:"contactid" %}` — `key` takes a list identifier, not a column name. This silently fails to resolve.
-- `for row in entitylist.records` — there is no `entitylist.records`. Iterate `entityview.records` inside a nested `{% entityview %}`.
+- `{% entitylist name:"..." page:"2" %}`, `page` is **not** an entitylist attribute. It belongs on `entityview`.
+- `{% entitylist name:"..." key:"contactid" %}`, `key` takes a list identifier, not a column name. This silently fails to resolve.
+- `for row in entitylist.records`, there is no `entitylist.records`. Iterate `entityview.records` inside a nested `{% entityview %}`.
 
 ### `entityview` / `endentityview`
 
 Two modes:
 
-1. **Nested inside `{% entitylist %}`** — inherits the list's entity and uses the list's default view unless overridden. This is the documented way to render rows.
-2. **Standalone** — render a saved view inline without list chrome. Requires either `id` or both `logical_name` and `name`.
+1. **Nested inside `{% entitylist %}`**, inherits the list's entity and uses the list's default view unless overridden. This is the documented way to render rows.
+2. **Standalone**, render a saved view inline without list chrome. Requires either `id` or both `logical_name` and `name`.
 
 ```liquid
 {# Standalone, by view name #}
@@ -436,7 +436,7 @@ Two modes:
 {% endentityview %}
 ```
 
-Identifier attributes — pass either `id` OR (`logical_name` + `name`):
+Identifier attributes, pass either `id` OR (`logical_name` + `name`):
 
 | Attribute | Required when | Type | Notes |
 |---|---|---|---|
@@ -448,12 +448,12 @@ Optional attributes (apply in both modes):
 
 | Attribute | Type | Default | Notes |
 |---|---|---|---|
-| `filter` | string | — | One of `'user'` or `'account'`. Constrains rows to the signed-in user or their parent account. |
-| `metafilter` | string | — | Metadata filter expression. **Only valid when nested inside `entitylist`** — the parent list defines the filter UX. |
-| `order` | string | — | `"<logicalname> ASC"` or `"<logicalname> DESC"`. Overrides the view's default sort. |
+| `filter` | string |, | One of `'user'` or `'account'`. Constrains rows to the signed-in user or their parent account. |
+| `metafilter` | string |, | Metadata filter expression. **Only valid when nested inside `entitylist`**, the parent list defines the filter UX. |
+| `order` | string |, | `"<logicalname> ASC"` or `"<logicalname> DESC"`. Overrides the view's default sort. |
 | `page` | int | `1` | 1-based page number. |
 | `page_size` | int | `10` (or inherited from `entitylist`) | Records per page. When nested, parent list's page size wins unless overridden here. |
-| `search` | string | — | Free-text search applied across the view's search-enabled columns. |
+| `search` | string |, | Free-text search applied across the view's search-enabled columns. |
 | `language_code` | int | site default | LCID. |
 
 Body variables: `entityview.records`, `entityview.columns`, `entityview.total_records`, `entityview.total_pages`, `entityview.page`, `entityview.first_page`, `entityview.last_page`, `entityview.previous_page`, `entityview.next_page`.
@@ -470,10 +470,10 @@ Runs a query against the Power Pages search index (configured via the Search set
   {% if searchindex.results.size > 0 %}
     <ul>
       {% for r in searchindex.results %}
-        <li><a href="{{ r.url }}">{{ r.title }}</a> — {{ r.fragment }}</li>
+        <li><a href="{{ r.url }}">{{ r.title }}</a>, {{ r.fragment }}</li>
       {% endfor %}
     </ul>
-    <p>Page {{ searchindex.page }} of {{ searchindex.pages }} — {{ searchindex.total_records }} hits</p>
+    <p>Page {{ searchindex.page }} of {{ searchindex.pages }}, {{ searchindex.total_records }} hits</p>
   {% else %}
     <p>No matches.</p>
   {% endif %}
@@ -482,8 +482,8 @@ Runs a query against the Power Pages search index (configured via the Search set
 
 | Attribute | Type | Default | Notes |
 |---|---|---|---|
-| `query` | string | — | User-supplied search text. Lucene query syntax is parsed loosely. |
-| `filter` | string | — | Lucene-strict filter expression. Mismatched parens or unescaped specials throw a runtime error. |
+| `query` | string |, | User-supplied search text. Lucene query syntax is parsed loosely. |
+| `filter` | string |, | Lucene-strict filter expression. Mismatched parens or unescaped specials throw a runtime error. |
 | `logical_names` | string (CSV) | all indexed entities | Comma-separated logical names to restrict the search (e.g. `"knowledgearticle,adx_webpage"`). |
 | `page` | int | `1` | 1-based. |
 | `page_size` | int | `10` | Records per page. |
@@ -507,8 +507,8 @@ That's the entire surface. Entity, mode (Insert/Edit/ReadOnly), Dataverse main f
 
 **Hosting rules** (this is where most "form doesn't render" bugs come from):
 
-- The page hosting `entityform` must use a **web-template-based Page Template**, not a Rewrite-based one. Studio defaults old templates to Rewrite — check the Page Template's `adx_type`.
-- **Only one** `entityform` OR `webform` per page. A second tag on the same page silently renders nothing — no error, no warning. If you need two forms, split into two pages.
+- The page hosting `entityform` must use a **web-template-based Page Template**, not a Rewrite-based one. Studio defaults old templates to Rewrite, check the Page Template's `adx_type`.
+- **Only one** `entityform` OR `webform` per page. A second tag on the same page silently renders nothing, no error, no warning. If you need two forms, split into two pages.
 - Anonymous users can render the form when the Form record allows anonymous access; submission still requires either authentication or the configured captcha.
 
 Pre-filling values: configure URL parameters on the Form record, then visit `/page?firstname=Jane`. Don't read the querystring in Liquid.
@@ -550,13 +550,13 @@ Power Pages tag attributes follow one consistent shape:
 | Convention | Detail |
 |---|---|
 | Pair separator | Colon between key and value (`name:"x"`), comma between pairs. |
-| Optional commas | Most tags accept either commas or whitespace between pairs. Use commas — it's unambiguous and matches Microsoft samples. |
+| Optional commas | Most tags accept either commas or whitespace between pairs. Use commas, it's unambiguous and matches Microsoft samples. |
 | String values | Wrap in `"..."` or `'...'`. Both work. |
 | Expression values | Drop quotes for Liquid expressions: `page:request.params.page`. |
 | `with` keyword | **Not supported.** That's Shopify Liquid. Power Pages uses comma-separated kwargs even for `include`. |
 | Integer/boolean values | Unquoted: `page_size:25`, `escape:false`. |
 
-Standard Liquid tags (`if`, `for`, `assign`, etc.) use Liquid's normal syntax, not the colon form — only Power Pages-specific tags adopt this attribute style.
+Standard Liquid tags (`if`, `for`, `assign`, etc.) use Liquid's normal syntax, not the colon form, only Power Pages-specific tags adopt this attribute style.
 
 ---
 
@@ -564,8 +564,8 @@ Standard Liquid tags (`if`, `for`, `assign`, etc.) use Liquid's normal syntax, n
 
 | Pattern | Detail |
 |---|---|
-| `extends` must be first | Any non-block content before `{% extends %}` breaks inheritance silently — child blocks render outside the parent layout. Strip leading whitespace too if your template starts with a BOM or blank lines. |
-| One form per page | `entityform` and `webform` enforce a single-instance-per-page rule. Subsequent tags don't error — they render nothing. Diagnose by checking the Page Template type (must be web-template-based). |
+| `extends` must be first | Any non-block content before `{% extends %}` breaks inheritance silently, child blocks render outside the parent layout. Strip leading whitespace too if your template starts with a BOM or blank lines. |
+| One form per page | `entityform` and `webform` enforce a single-instance-per-page rule. Subsequent tags don't error, they render nothing. Diagnose by checking the Page Template type (must be web-template-based). |
 | `entitylist` rows come from `entityview` | There is no `entitylist.records`. Always nest `{% entityview %}{% endentityview %}` inside `{% entitylist %}{% endentitylist %}` to render rows. The `metafilter` attribute is only valid in this nested form. |
 | Table Permissions are automatic | `entitylist`/`entityview`/`entityform`/`webform` all honor Web Role + Table Permissions. Empty results with a populated view usually mean the calling Web Role lacks Read scope on the underlying table. |
 | FetchXML self-closing tags | `<attribute name="x"/>` and `<all-attributes/>` are rejected. Always use opening + closing form. |
@@ -574,7 +574,7 @@ Standard Liquid tags (`if`, `for`, `assign`, etc.) use Liquid's normal syntax, n
 | `chart` needs both GUIDs | The chart's entity must match the view's entity. Mismatches render an empty box with no error. |
 | `powerbi` `roles` is conditional | RLS `roles` only apply with `authentication_type:"powerbiembedded"`. Anonymous and AAD modes ignore the attribute. |
 | `codecomponent` requires registration | The PCF control must be added to the site in Studio first. Liquid doesn't load it on demand. |
-| `searchindex` Lucene strictness | `filter` is parsed strictly — unescaped `+`, `-`, `(`, `)`, `:` will throw. Sanitize user input before interpolating. |
+| `searchindex` Lucene strictness | `filter` is parsed strictly, unescaped `+`, `-`, `(`, `)`, `:` will throw. Sanitize user input before interpolating. |
 | Web template name lookup is case-sensitive | `{% include 'page header' %}` won't match a template named "Page Header". |
 
 For deeper FetchXML patterns (joins, aggregates, paging) and form/list integration patterns, see the sibling references in this skill.

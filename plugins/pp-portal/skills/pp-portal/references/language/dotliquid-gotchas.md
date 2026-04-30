@@ -1,19 +1,19 @@
-# DotLiquid Gotchas — Power Pages-Specific Liquid Behavior
+# DotLiquid Gotchas: Power Pages-Specific Liquid Behavior
 
 Power Pages uses **DotLiquid**, a .NET reimplementation of Shopify's Liquid. The syntax matches in the common cases, but several filters and behaviors differ in ways that bite you only when you reach for them. This file lists the gotchas and how to work around each.
 
-## 1. JSON serialization — the `replace` quote-escape trap
+## 1. JSON serialization: the `replace` quote-escape trap
 
 **The trap:**
 
 ```liquid
-{# This DOES NOT produce \" — it produces \\" (3 chars) #}
+{# This DOES NOT produce \", it produces \\" (3 chars) #}
 "name": "{{ value | replace: '"', '\\"' }}"
 ```
 
-DotLiquid's `replace` interprets backslash literally — there's no string-escape pass on the replacement argument. The output of `replace: '"', '\\"'` is `\` + `\` + `"` (three characters), which breaks JSON parsing.
+DotLiquid's `replace` interprets backslash literally, there's no string-escape pass on the replacement argument. The output of `replace: '"', '\\"'` is `\` + `\` + `"` (three characters), which breaks JSON parsing.
 
-**The fix — Unicode escape:**
+**The fix, Unicode escape:**
 
 ```liquid
 "name": "{{ value | replace: '"', '"' }}"
@@ -35,16 +35,16 @@ DotLiquid's `replace` interprets backslash literally — there's no string-escap
 </script>
 ```
 
-`type="application/json"` prevents the browser from executing the content — so even if your JSON has a syntax error, no script crashes. You catch the error in the `JSON.parse`.
+`type="application/json"` prevents the browser from executing the content, so even if your JSON has a syntax error, no script crashes. You catch the error in the `JSON.parse`.
 
 **Do NOT use `| escape`** for JSON values. `| escape` produces HTML entities (`&quot;`, `&#39;`) which stay literal inside `<script>` blocks because there's no HTML entity decoding inside a script tag. The result is `JSON.parse` blowing up on `"name":"&quot;value&quot;"`.
 
 ## 2. `replace` is not regex
 
-DotLiquid's `replace` is a literal string replace — not a regex. To do pattern replaces, do them in JavaScript after JSON.parse, not in Liquid.
+DotLiquid's `replace` is a literal string replace, not a regex. To do pattern replaces, do them in JavaScript after JSON.parse, not in Liquid.
 
 ```liquid
-{# Won't work — `replace` doesn't take regex #}
+{# Won't work, `replace` doesn't take regex #}
 {{ phone | replace: '\D', '' }}
 ```
 
@@ -65,17 +65,17 @@ DotLiquid's `date` filter accepts strftime tokens but **not** all of them:
 | `%b` (abbrev month) | OK |
 | `%A` `%a` (day names) | OK |
 | `%I` `%p` (12-hour clock) | OK |
-| `%-d` `%-m` (no-leading-zero) | **DotLiquid: NOT supported** — strip zeros in output instead |
+| `%-d` `%-m` (no-leading-zero) | **DotLiquid: NOT supported**, strip zeros in output instead |
 | `%Z` (timezone) | OK on server |
 | `%s` (Unix timestamp) | **NOT supported** |
 
-For numeric-only dates (e.g., GCC environment requirements), stick to `%m/%d/%Y` — these work everywhere.
+For numeric-only dates (e.g., GCC environment requirements), stick to `%m/%d/%Y`, these work everywhere.
 
 To emit a Unix timestamp, do it server-side in C# or compute in JavaScript on the client.
 
 ## 4. `default` is "blank-default", not "nil-default"
 
-Liquid's `default` filter falls through on blank string OR nil — but the definition of "blank" includes `0` and `false`:
+Liquid's `default` filter falls through on blank string OR nil, but the definition of "blank" includes `0` and `false`:
 
 ```liquid
 {{ count | default: 'none' }}                      "none" if count is 0!
@@ -87,7 +87,7 @@ If you want zero to pass through, check explicitly:
 {% if count == 0 or count > 0 %}{{ count }}{% else %}none{% endif %}
 ```
 
-Or use `| default: 'none', allow_false: true` — but `allow_false` support varies by DotLiquid version. Test it on your portal before relying on it.
+Or use `| default: 'none', allow_false: true`, but `allow_false` support varies by DotLiquid version. Test it on your portal before relying on it.
 
 ## 5. `forloop.length` ≠ array.size
 
@@ -110,15 +110,15 @@ For array length **outside** a loop, use `arr.size`:
 
 ## 6. Logical operators
 
-DotLiquid uses `and` / `or`, not `&&` / `||`. They're left-associative — there is no operator precedence:
+DotLiquid uses `and` / `or`, not `&&` / `||`. They're left-associative, there is no operator precedence:
 
 ```liquid
 {# DotLiquid evaluates this LEFT to RIGHT, not C-style precedence #}
-{% if a and b or c %}                              == ((a and b) or c) — works
-{% if a or b and c %}                              == ((a or b) and c) — surprising!
+{% if a and b or c %}                              == ((a and b) or c), works
+{% if a or b and c %}                              == ((a or b) and c), surprising!
 ```
 
-Use parentheses to be explicit: DotLiquid supports `( ... )` grouping in some operators but it's flaky — if logic is non-trivial, push it to assigned booleans:
+Use parentheses to be explicit: DotLiquid supports `( ... )` grouping in some operators but it's flaky, if logic is non-trivial, push it to assigned booleans:
 
 ```liquid
 {% assign is_priority   = item.priority == 'High' %}
@@ -144,7 +144,7 @@ Always assign first:
 
 ## 8. String concatenation
 
-There's no `+` operator for strings — use `| append:`:
+There's no `+` operator for strings, use `| append:`:
 
 ```liquid
 {% assign url = customers_url | append: '?search=' | append: encoded_search %}
@@ -209,7 +209,7 @@ Example:
 
 ## 12. Comments
 
-DotLiquid comments use `{% comment %}…{% endcomment %}`. Inline `{# ... #}`-style comments are NOT supported in production DotLiquid — they sometimes work but leak through to output unexpectedly. Use `{% comment %}` only.
+DotLiquid comments use `{% comment %}…{% endcomment %}`. Inline `{# ... #}`-style comments are NOT supported in production DotLiquid, they sometimes work but leak through to output unexpectedly. Use `{% comment %}` only.
 
 ## 13. `include` parameter syntax
 

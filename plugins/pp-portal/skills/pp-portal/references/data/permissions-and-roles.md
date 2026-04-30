@@ -2,8 +2,8 @@
 
 Power Pages enforces access on **two layers**, both of which must allow an action for it to succeed:
 
-1. **Page-level access** — controls who can reach a URL
-2. **Record-level access** — controls which Dataverse records that user can read/write/create/delete
+1. **Page-level access**, controls who can reach a URL
+2. **Record-level access**, controls which Dataverse records that user can read/write/create/delete
 
 A page that loads correctly for one user but errors for another is almost always a **record-level** miss (Table Permissions), not a page-level one. Conversely, a page that 404s for everyone is almost always a page-level miss (sitemap or webrole).
 
@@ -28,11 +28,11 @@ Two implicit roles every site has:
 | Authenticated Users | Every signed-in user |
 | Anonymous Users | Every visitor without a session |
 
-**The most common mistake**: assuming a role isn't honored. It is — but you must explicitly assign it to the calling Contact via the `adx_contact_webrole` link table. New Contacts default to having **only** the implicit Authenticated Users role until you assign more.
+**The most common mistake**: assuming a role isn't honored. It is, but you must explicitly assign it to the calling Contact via the `adx_contact_webrole` link table. New Contacts default to having **only** the implicit Authenticated Users role until you assign more.
 
 ## Web Role assignment lifecycle
 
-How a Contact picks up a role assignment, and — more importantly — when they **don't**.
+How a Contact picks up a role assignment, and, more importantly, when they **don't**.
 
 ### How assignment happens
 
@@ -43,11 +43,11 @@ A Contact is granted a Web Role by inserting a row in the `adx_contact_webrole` 
 | Studio: **Contacts → Web Roles** tab on the Contact record | Most admin / one-off assignments |
 | Maker portal Power Apps grid on the link table | Bulk assignment scripts, automated provisioning flows |
 
-Either path produces the same row. There is no "publish" step — the assignment is live in Dataverse the instant the row commits.
+Either path produces the same row. There is no "publish" step, the assignment is live in Dataverse the instant the row commits.
 
 ### The session-cache gotcha
 
-When a Web Role is added to or removed from a Contact, the user's existing portal session does **not** automatically reflect the change. Power Pages caches role membership at sign-in — every subsequent request is authorized against that cached set, not against the current `adx_contact_webrole` rows.
+When a Web Role is added to or removed from a Contact, the user's existing portal session does **not** automatically reflect the change. Power Pages caches role membership at sign-in, every subsequent request is authorized against that cached set, not against the current `adx_contact_webrole` rows.
 
 So: dev assigns the Contractor role to a test user, hits refresh on the role-gated page, sees nothing, spends an hour debugging Liquid (`{% if user.roles contains 'Contractor' %}`) and Table Permissions, and never realizes the test user's session was opened five minutes before the role was assigned. **The role is not in the session.**
 
@@ -55,7 +55,7 @@ So: dev assigns the Contractor role to a test user, hits refresh on the role-gat
 
 1. **Sign out and sign back in.** Cleanest. The new sign-in establishes a session with the current role set. Always do this immediately after assignment for any test user.
 2. **Wait for session expiry.** Default is around 30 minutes idle, governed by Site Setting `Authentication/SessionTimeout`. The next request after the timeout starts a fresh session. Useful for production rollouts where you don't want to force-log-out users, but unreliable for testing because you don't know exactly when the session expired.
-3. **Force-refresh the role cache via Studio (admin-only, uncommon).** Power Platform Admin Center → site → Restart drops all sessions, after which every user signs back in. Only appropriate for emergency role corrections — disruptive for active users.
+3. **Force-refresh the role cache via Studio (admin-only, uncommon).** Power Platform Admin Center → site → Restart drops all sessions, after which every user signs back in. Only appropriate for emergency role corrections, disruptive for active users.
 
 ### Implications for testing
 
@@ -71,13 +71,13 @@ After assigning a role to your test Contact you **must** sign out and sign back 
 
 ### Rolling out to many users
 
-When updating role assignments for a population (e.g., granting "Contractor" to 200 Contacts during a launch), do **not** rely on user reports of "I can / can't see the page" to verify the rollout — those reports mix lifecycle effects (stale sessions) with actual permission errors and produce noise.
+When updating role assignments for a population (e.g., granting "Contractor" to 200 Contacts during a launch), do **not** rely on user reports of "I can / can't see the page" to verify the rollout, those reports mix lifecycle effects (stale sessions) with actual permission errors and produce noise.
 
 Instead:
 
 1. Run a server-side audit query against `adx_contact_webrole` to confirm every targeted Contact has the row.
 2. Assume the user-visible effect rolls out gradually as sessions expire (30 min default) or on next sign-in.
-3. If the change is urgent, communicate "please sign out and back in" to affected users — don't assume they will discover it.
+3. If the change is urgent, communicate "please sign out and back in" to affected users, don't assume they will discover it.
 4. For removed roles (downgrade), the user retains the old role for the rest of their current session. If that's a security risk, a portal restart is the only immediate fix.
 
 ### Cross-references
@@ -141,7 +141,7 @@ The "related to" definition uses the `adx_entityreference` field on the Table Pe
 
 ### Cascading via Parent scope
 
-For a deep hierarchy — e.g., Account → Project → WorkOrder where a user has Account-scope access to Projects but should also see the WorkOrders under those Projects — create:
+For a deep hierarchy, e.g., Account → Project → WorkOrder where a user has Account-scope access to Projects but should also see the WorkOrders under those Projects, create:
 
 1. **Permission A**: Account-scope on `contoso_project`, lookup = `contoso_account`
 2. **Permission B**: Parent-scope on `contoso_workorder`, parent = Permission A, lookup = `contoso_project` (the lookup from WorkOrder back to Project)
@@ -150,7 +150,7 @@ Permission B inherits Permission A's qualifying record set.
 
 ### Multiple permissions on the same entity for the same role
 
-A user can have **multiple** Table Permissions on the same entity through the same role. The portal **OR**s them — if any rule allows the operation on the record, it's allowed. So you can build complex access patterns by stacking simple rules:
+A user can have **multiple** Table Permissions on the same entity through the same role. The portal **OR**s them, if any rule allows the operation on the record, it's allowed. So you can build complex access patterns by stacking simple rules:
 
 - Permission 1: Read records where `contoso_assigned_consultant = user.contactid`
 - Permission 2: Read records where `_contoso_account_value = user.parentcustomerid.id`
@@ -185,7 +185,7 @@ Inline auth checks for UI:
 {% endif %}
 ```
 
-**These are UI checks, not security**. They control what the user *sees* — but the actual data access is enforced by Table Permissions on the server. Always rely on Table Permissions for security; use Liquid checks only to hide UI elements from users who couldn't act on them anyway.
+**These are UI checks, not security**. They control what the user *sees*, but the actual data access is enforced by Table Permissions on the server. Always rely on Table Permissions for security; use Liquid checks only to hide UI elements from users who couldn't act on them anyway.
 
 ## Web API access
 
@@ -211,7 +211,7 @@ The `audit-permissions` agent in Microsoft's `power-pages` plugin can scan a por
 
 Anonymous users **can** call `/_api/...` endpoints **if** the Web API site settings allow it AND the calling Web Role (Anonymous Users by default) has a Table Permission allowing the operation.
 
-Anonymous Web API calls still require the `__RequestVerificationToken`. The token is per-session — for anonymous, the session is established on first portal page load.
+Anonymous Web API calls still require the `__RequestVerificationToken`. The token is per-session, for anonymous, the session is established on first portal page load.
 
 Anonymous create patterns (e.g., a public contact form):
 
@@ -227,7 +227,7 @@ adx_webroles:
   - <Anonymous Users role guid>
 ```
 
-Pair with Site Settings `Webapi/contact/enabled=true` and `Webapi/contact/fields=firstname,lastname,emailaddress1,…`. **Restrict the field list** for anonymous — never `*` on a security-sensitive table.
+Pair with Site Settings `Webapi/contact/enabled=true` and `Webapi/contact/fields=firstname,lastname,emailaddress1,…`. **Restrict the field list** for anonymous, never `*` on a security-sensitive table.
 
 ## Field-level security
 
@@ -257,22 +257,22 @@ Linked to specific Web Pages via `adx_webpage_accesscontrolrule`. This lets you 
 Walk this list:
 
 1. **Liquid `{{ user.roles }}` shows the expected roles?** If not, the user isn't assigned the role. Fix in Studio (Contacts → Roles).
-2. **Run the same FetchXML in the Maker Portal as a System Admin** — does it return rows? If yes, the data exists and the issue is permissions.
-3. **Run via Web API as the user** — does it return 401/403/404? Identifies which permission layer is blocking.
+2. **Run the same FetchXML in the Maker Portal as a System Admin**, does it return rows? If yes, the data exists and the issue is permissions.
+3. **Run via Web API as the user**, does it return 401/403/404? Identifies which permission layer is blocking.
 4. **Inspect the Table Permissions for the calling role**:
    - Is there a permission on this entity with Read=true?
    - Is the scope reachable for this user (Global / Account / Contact)?
    - For non-Global scopes, is `adx_entityreference` set to the correct lookup column?
 5. **Check site settings for Web API**: `Webapi/<entity>/enabled`, `Webapi/<entity>/fields`.
-6. **Look for stacked permissions** — additional rules may be needed to cover the user's intended record set.
+6. **Look for stacked permissions**, additional rules may be needed to cover the user's intended record set.
 
 ## Two-tenant deployment workflow (auth profiles)
 
 When the same portal exists in your dev env (your tenant) and a client env (their tenant), keep:
 
-- **One PAC profile per env** — different tenant IDs, different sign-in accounts
-- **One git branch per env** — `main` for dev, `client-dev` for the client env
+- **One PAC profile per env**, different tenant IDs, different sign-in accounts
+- **One git branch per env**, `main` for dev, `client-dev` for the client env
 - Apply changes from `main` to `client-dev` via `git cherry-pick`, then sync up to client
-- Anonymous-Users role and System Admin role exist independently per env — exporting Table Permissions from dev and importing to client requires re-mapping role GUIDs (the role is the same logical role; the GUID is different per env)
+- Anonymous-Users role and System Admin role exist independently per env, exporting Table Permissions from dev and importing to client requires re-mapping role GUIDs (the role is the same logical role; the GUID is different per env)
 
 The unmanaged solution export/import will preserve the YAML structure but break role-GUID references. After import, re-link Table Permissions to the client env's roles in Studio.

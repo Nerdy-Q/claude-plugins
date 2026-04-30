@@ -2,6 +2,28 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.12.2] — 2026-04-30
+
+Voice consistency sweep: removed em-dashes from all authored marketplace content per the maintainer's writing rules. No behavior change, no plugin version bumps. The CHANGELOG itself is preserved as-is per Keep a Changelog convention (historical record).
+
+### Changed
+
+- **1,175 em-dashes replaced across 63 files** in active authored content (plugin descriptions, SKILL.md frontmatter, references, READMEs, tests/READMEs, top-level docs, marketplace.json). Em-dashes were replaced per English grammar role: parentheticals and noun expansions became commas, headings became colons. The most-visible metadata strings (per-plugin descriptions in `plugin.json` and the marketplace listing in `.claude-plugin/marketplace.json`) were hand-tuned where colon read better than comma.
+- **`scripts/sweep_em_dashes.py`** added: a reusable sweep tool that handles ` — ` (space-em-space) → `, ` for prose, ` — ` in headings → `: `, and `—` (no spaces) → `-`. Skips `CHANGELOG.md` (historical), `BLOG-DRAFT.md` (untracked), and `scripts/sweep_em_dashes.py` (the script itself). Has a `--dry-run` mode and a `--diff` mode for review before applying.
+
+### Why this matters
+
+Em-dashes had crept into shipped plugin metadata (the marketplace listing description, the per-plugin SKILL.md frontmatter) where they affect what a user sees on first contact, and into reference content the model loads into context (where any pattern in the text can be picked up by future authoring). The maintainer has a documented rule against em-dashes in user-on-behalf writing; this release brings the marketplace into compliance.
+
+### Tests
+
+All 404 regression tests still pass. Doc-link validator: 222 links / 56 files. Metadata consistency: 3 plugins / 28 keywords. No new tests added (the sweep is content-only; the script has its own dry-run for verification).
+
+### Versions
+
+- marketplace: 2.12.1 → **2.12.2** (patch, content-only sweep, no behavior change)
+- All plugin versions unchanged
+
 ## [2.12.1] — 2026-04-30
 
 Eight quality enhancements that close the remaining "if-we-kept-going" testing gaps surfaced after v2.12.0. **Test count: 330 → 404 (+74)**. Two real metadata bugs surfaced and fixed by writing the tests.
@@ -912,6 +934,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.12.2]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.12.2
 [2.12.1]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.12.1
 [2.12.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.12.0
 [2.11.3]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.11.3

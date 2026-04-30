@@ -1,6 +1,6 @@
 # Bundled Libraries on Power Pages
 
-Every Power Pages site ships with a fixed set of client-side libraries already loaded on every rendered page. Knowing exactly which libraries are auto-loaded — and which globals Microsoft injects on top of them — keeps you from shipping duplicates, breaking the portal's internal scripts, or assuming a helper exists when it doesn't.
+Every Power Pages site ships with a fixed set of client-side libraries already loaded on every rendered page. Knowing exactly which libraries are auto-loaded, and which globals Microsoft injects on top of them, keeps you from shipping duplicates, breaking the portal's internal scripts, or assuming a helper exists when it doesn't.
 
 This file is the canonical inventory: what's always available, what's only available in some contexts, and what is **not** bundled despite popular belief.
 
@@ -22,7 +22,7 @@ These load on every page of every Power Pages site, in this order, before any cu
 
 ## Microsoft-injected globals on authenticated pages
 
-These are injected by the portal runtime — not by a bundled library — and are present only when an authenticated user is on the page (anonymous-only pages will not have them):
+These are injected by the portal runtime, not by a bundled library, and are present only when an authenticated user is on the page (anonymous-only pages will not have them):
 
 | Global | Shape | Purpose |
 |---|---|---|
@@ -42,11 +42,11 @@ if (window.shell && typeof window.shell.getTokenDeferred === 'function') {
 
 ## Important: `webapi.safeAjax` is NOT pre-loaded
 
-A common misconception: developers see `webapi.safeAjax(...)` in Microsoft's Web API code samples and assume it's a portal-provided global. It is not. Microsoft documents `safeAjax` as a **boilerplate pattern you copy into your own JavaScript** — typically a custom JS file or web file. Calling `webapi.safeAjax(...)` on a page where you haven't pasted that helper will throw `ReferenceError: webapi is not defined`.
+A common misconception: developers see `webapi.safeAjax(...)` in Microsoft's Web API code samples and assume it's a portal-provided global. It is not. Microsoft documents `safeAjax` as a **boilerplate pattern you copy into your own JavaScript**, typically a custom JS file or web file. Calling `webapi.safeAjax(...)` on a page where you haven't pasted that helper will throw `ReferenceError: webapi is not defined`.
 
 See `webapi-patterns.md` for the canonical helper to copy.
 
-## NOT bundled — bring your own
+## NOT bundled: bring your own
 
 These are **not** loaded by Power Pages. If you need them, you must include them yourself via a content snippet (typically `Head/Fonts` or a custom-JS file) or via the standard `<link>` / `<script>` machinery.
 
@@ -58,7 +58,7 @@ These are **not** loaded by Power Pages. If you need them, you must include them
 | Moment.js | Not bundled (use `Date` or import explicitly). |
 | Bootstrap 4 | **Not supported on Power Pages.** Either 3.3.6 or 5.x. |
 
-**The Font Awesome misconception** — many tutorials, starter templates, and older portal community posts assume FA is available because earlier Microsoft starter templates injected a partial FA stylesheet for icon classes used in their default content. The current Power Pages runtime does **not** ship FA. If you use `<i class="fa fa-...">` without first including Font Awesome, the icons silently render as empty boxes.
+**The Font Awesome misconception**, many tutorials, starter templates, and older portal community posts assume FA is available because earlier Microsoft starter templates injected a partial FA stylesheet for icon classes used in their default content. The current Power Pages runtime does **not** ship FA. If you use `<i class="fa fa-...">` without first including Font Awesome, the icons silently render as empty boxes.
 
 If you add Font Awesome, **pin it to a major version** in your CDN URL. Floating versions (`@latest` or unpinned major) can break the Power Pages internal date-picker icon when FA's class names shift.
 
@@ -73,9 +73,9 @@ Power Pages supports two data models with different Bootstrap versions:
 
 Three signals tell you which one your site is on:
 
-1. **Read the bootstrap.min.css web file content** — version is in the file header comment.
-2. **Check the `Site/EnableBootstrap5` site setting** — flips the environment-wide preference toward 5.x.
-3. **`pac pages bootstrap-migrate`** — the PAC CLI command that performs the one-way 3 → 5 upgrade environment-wide. Once run, the site cannot be reverted via PAC.
+1. **Read the bootstrap.min.css web file content**, version is in the file header comment.
+2. **Check the `Site/EnableBootstrap5` site setting**, flips the environment-wide preference toward 5.x.
+3. **`pac pages bootstrap-migrate`**, the PAC CLI command that performs the one-way 3 → 5 upgrade environment-wide. Once run, the site cannot be reverted via PAC.
 
 Practical rule: until you've verified BS version, **write Bootstrap markup that works in both 3 and 5** (avoid `data-bs-*` for BS5-only attributes, avoid BS3-only `panel` and `well` classes).
 
@@ -83,18 +83,18 @@ Practical rule: until you've verified BS version, **write Bootstrap markup that 
 
 | Mistake | Fix |
 |---|---|
-| Loading a second copy of jQuery via CDN | Power Pages already provides 3.6.2. Don't load a second one — multiple jQuery versions clobber each other and break portal internals. |
+| Loading a second copy of jQuery via CDN | Power Pages already provides 3.6.2. Don't load a second one, multiple jQuery versions clobber each other and break portal internals. |
 | Using `<i class="fa fa-...">` without including FA | Add a Font Awesome stylesheet via the `Head/Fonts` content snippet (pinned to a major version). |
 | Calling `webapi.safeAjax(...)` assuming it's pre-loaded | Paste the canonical `safeAjax` helper into your custom JS first. See `webapi-patterns.md`. |
 | Calling `window.shell.getTokenDeferred()` on anonymous pages | Feature-detect first; gracefully degrade or skip the request. |
-| Replacing Bootstrap with Tailwind/Bulma/etc | Add alongside Bootstrap, not in place of — portal internals depend on BS classes. |
+| Replacing Bootstrap with Tailwind/Bulma/etc | Add alongside Bootstrap, not in place of, portal internals depend on BS classes. |
 | Assuming Bootstrap 4 patterns work | They don't. The site is either 3.3.6 or 5.x. Confirm before writing markup. |
 | Loading PCF runtime manually | Don't. Power Pages auto-loads it on pages that need it. |
 
 ## See also
 
-- `webapi-patterns.md` — the canonical `safeAjax` helper and the Web API request flow that depends on `window.shell.getTokenDeferred()`.
-- `dotliquid-gotchas.md` — Liquid-side patterns for emitting JSON safely into pages that the bundled jQuery / vanilla JS will consume.
+- `webapi-patterns.md`, the canonical `safeAjax` helper and the Web API request flow that depends on `window.shell.getTokenDeferred()`.
+- `dotliquid-gotchas.md`, Liquid-side patterns for emitting JSON safely into pages that the bundled jQuery / vanilla JS will consume.
 
 ## Sources
 

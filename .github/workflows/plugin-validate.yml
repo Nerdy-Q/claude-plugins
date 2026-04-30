@@ -302,7 +302,7 @@ jobs:
       - name: Check for client-specific identifiers
         run: |
           patterns='Anchor360|anchor360|Anchor Dock|Petrofund|petrofund-|petrofund_|enf_[a-z]|access-modernization|accessmod-development|biadmin|Jeremy\.Quittschreiber|jeremy\.quittschreiber@nerdyq|@anchor-dock|@state\.mn\.us|5d242a9e-676e|6747769d-2b05|c7a91a20-40e8|/Users/jquittschreiber|anchor360-dev\.crm|petrofund-development\.crm|commpetrofunddev|NerdyQ-Dev|COMM-Energy-Dev|COMM_PP_'
-          # Exclude this workflow file itself — it contains the patterns as
+          # Exclude this workflow file itself: it contains the patterns as
           # the regex it searches for (self-reference, not a real leak).
           leaks=$(git ls-files '*.md' '*.py' '*.sh' '*.json' '*.yml' 'pp' \
                   | grep -v '^\.github/workflows/plugin-validate\.yml$' \

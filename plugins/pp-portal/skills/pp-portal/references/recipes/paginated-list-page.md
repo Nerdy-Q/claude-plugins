@@ -1,8 +1,8 @@
-# Recipe — Paginated List Page with Search
+# Recipe: Paginated List Page with Search
 
 ## What you'll build
 
-A `Customers` page that renders a server-rendered, search-filterable, paginated table of contacts. The kind of "list of records" page nearly every portal has: a search box at the top, a Bootstrap table in the middle, page links at the bottom. Everything happens in Liquid — no Web API call, no client-side fetch. The page is bookmarkable, refresh-safe, and indexable by search engines.
+A `Customers` page that renders a server-rendered, search-filterable, paginated table of contacts. The kind of "list of records" page nearly every portal has: a search box at the top, a Bootstrap table in the middle, page links at the bottom. Everything happens in Liquid, no Web API call, no client-side fetch. The page is bookmarkable, refresh-safe, and indexable by search engines.
 
 When the user types a query and submits, the page reloads with `?search=acme&page=1` in the URL. Liquid reads those params, runs two FetchXML queries (one count, one paged), and renders the result.
 
@@ -11,10 +11,10 @@ When the user types a query and submits, the page reloads with `?search=acme&pag
 | Requirement | Where | Notes |
 |---|---|---|
 | Read permission on `contact` | Table Permission YAML | Scope = Global for staff; Account/Contact for self-service |
-| Web Role assigned to caller | Studio Contacts → Roles | Authenticated Users alone is not enough — the role must own the Table Permission |
-| **No Web API site settings needed** | — | Liquid `{% fetchxml %}` runs server-side under the portal app user; it bypasses `Webapi/<entity>/enabled` |
+| Web Role assigned to caller | Studio Contacts → Roles | Authenticated Users alone is not enough, the role must own the Table Permission |
+| **No Web API site settings needed** |, | Liquid `{% fetchxml %}` runs server-side under the portal app user; it bypasses `Webapi/<entity>/enabled` |
 
-The last row trips people up. `{% fetchxml %}` and `/_api/<entityset>` are two different access paths — they share Table Permissions, but only the Web API path needs `Webapi/contact/enabled = true`.
+The last row trips people up. `{% fetchxml %}` and `/_api/<entityset>` are two different access paths, they share Table Permissions, but only the Web API path needs `Webapi/contact/enabled = true`.
 
 ## Page setup
 
@@ -31,7 +31,7 @@ web-pages/customers/
     └── Customers.en-US.webpage.copy.html    ← keep in sync with base
 ```
 
-## Step 1 — Liquid count query for total
+## Step 1: Liquid count query for total
 
 Read the querystring, derive the search string and current page, then run an aggregate FetchXML to know how many total rows match. The count is what drives pagination math.
 
@@ -69,7 +69,7 @@ Read the querystring, derive the search string and current page, then run an agg
 
 Why two queries instead of one with `returntotalrecordcount="true"`? Because the page-count math has to happen **before** the paged query runs (so we can clamp `current_page`). Doing it in one query works for "next/prev" links but breaks "jump to page N".
 
-## Step 2 — Liquid paged query for visible rows
+## Step 2: Liquid paged query for visible rows
 
 Same filter, but with `count` and `page` for pagination, and explicit `<attribute>` elements instead of `<all-attributes />` so lookup columns expose `.id` / `.name` properties.
 
@@ -100,7 +100,7 @@ Same filter, but with `count` and `page` for pagination, and explicit `<attribut
 
 `sitemarkers['Customers']` is the named anchor for this page. Defining it once and reading it everywhere means a future URL rename doesn't require touching the form action or the pagination links.
 
-## Step 3 — Render the search form
+## Step 3: Render the search form
 
 ```liquid
 <header class="d-flex justify-content-between align-items-center mb-3">
@@ -125,11 +125,11 @@ Same filter, but with `count` and `page` for pagination, and explicit `<attribut
 
 Notes:
 
-- `method="get"` — the search state has to live in the URL for bookmarkability
-- `name="page" value="1"` resets paging on a new search — without it, a search from page 7 stays on page 7 with a new filter and likely shows zero rows
+- `method="get"`, the search state has to live in the URL for bookmarkability
+- `name="page" value="1"` resets paging on a new search, without it, a search from page 7 stays on page 7 with a new filter and likely shows zero rows
 - `value="{{ search | escape }}"` round-trips the previous query into the input; `escape` is non-negotiable on user input
 
-## Step 4 — Render the results table
+## Step 4: Render the results table
 
 ```liquid
 {% if rows.size == 0 %}
@@ -171,9 +171,9 @@ Notes:
 {% endif %}
 ```
 
-`{{ row.parentcustomerid.name }}` reads the lookup's display name — only works because we explicitly listed `<attribute name="parentcustomerid"></attribute>` in the FetchXML. With `<all-attributes />` you'd see `_parentcustomerid_value` instead, a bare GUID with no name.
+`{{ row.parentcustomerid.name }}` reads the lookup's display name, only works because we explicitly listed `<attribute name="parentcustomerid"></attribute>` in the FetchXML. With `<all-attributes />` you'd see `_parentcustomerid_value` instead, a bare GUID with no name.
 
-## Step 5 — Render pagination links
+## Step 5: Render pagination links
 
 ```liquid
 {% if total_pages > 1 %}
@@ -211,7 +211,7 @@ Notes:
 {% endif %}
 ```
 
-For larger result sets, replace the `(1..total_pages)` loop with a windowed range (current ± 3) plus jump-to-first/jump-to-last links — at 200 pages the all-numbers approach overflows the viewport.
+For larger result sets, replace the `(1..total_pages)` loop with a windowed range (current ± 3) plus jump-to-first/jump-to-last links, at 200 pages the all-numbers approach overflows the viewport.
 
 ## Common variations
 
@@ -239,7 +239,7 @@ If the table doesn't carry city/state but the Account does, use `<link-entity>`:
 </link-entity>
 ```
 
-Then read `{{ row.city }}` / `{{ row.state }}` (flat — aliased columns are not nested).
+Then read `{{ row.city }}` / `{{ row.state }}` (flat, aliased columns are not nested).
 
 ## Gotchas
 
@@ -255,8 +255,8 @@ Then read `{{ row.city }}` / `{{ row.state }}` (flat — aliased columns are not
 
 ## See also
 
-- [../data/fetchxml-patterns.md](../data/fetchxml-patterns.md) — count + paginate + filter snippet (canonical), link-entity, current-user filters
-- [../data/permissions-and-roles.md](../data/permissions-and-roles.md) — Table Permission scopes, debugging "no records appear"
-- [../language/objects.md](../language/objects.md) — `request.params`, `user`, `sitemarkers`
-- [../language/dotliquid-gotchas.md](../language/dotliquid-gotchas.md) — string/number coercion, escape behavior
-- [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md) — the broader render-then-mutate pattern this recipe is the read-only half of
+- [../data/fetchxml-patterns.md](../data/fetchxml-patterns.md), count + paginate + filter snippet (canonical), link-entity, current-user filters
+- [../data/permissions-and-roles.md](../data/permissions-and-roles.md), Table Permission scopes, debugging "no records appear"
+- [../language/objects.md](../language/objects.md), `request.params`, `user`, `sitemarkers`
+- [../language/dotliquid-gotchas.md](../language/dotliquid-gotchas.md), string/number coercion, escape behavior
+- [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md), the broader render-then-mutate pattern this recipe is the read-only half of

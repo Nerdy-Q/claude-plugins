@@ -4,8 +4,8 @@
 
 | Version | Status |
 |---|---|
-| 2.12.x | Active — security fixes shipped within days of disclosure |
-| Earlier than 2.12.x | **Unsupported** — upgrade to 2.12.x |
+| 2.12.x | Active, security fixes shipped within days of disclosure |
+| Earlier than 2.12.x | **Unsupported**, upgrade to 2.12.x |
 
 The 2.7.0 release (2026-04-29) closed a CVE-class arbitrary-code-execution sink in the `pp-sync` conf loader (`source` → strict parser). All earlier versions of `pp-sync` are vulnerable when run against a hand-edited or attacker-tampered project conf file. **Upgrade required.**
 
@@ -67,7 +67,7 @@ If you find a path through the parser, the URL validator, the page-name validato
 
 | Date | Severity | Issue | Fixed in |
 |---|---|---|---|
-| 2026-04-29 | Critical | `pp-sync` source-evaluated project conf files (any field was an RCE sink) | v2.7.0 (pp-sync 2.0.0 — breaking change) |
+| 2026-04-29 | Critical | `pp-sync` source-evaluated project conf files (any field was an RCE sink) | v2.7.0 (pp-sync 2.0.0, breaking change) |
 | 2026-04-29 | High | `pp journal note\|close` could comment on / close arbitrary issues across any repo the maintainer has push access to (JOURNAL.md hijack via PR) | v2.7.0 |
 | 2026-04-29 | High | `pp generate-page` page name flowed unchecked into filenames + heredocs (path traversal + YAML injection) | v2.7.3 |
 | 2026-04-29 | Medium | `pp solution-down\|up` out-of-range pick crashed with bash `unbound variable` instead of friendly error | v2.7.3 |

@@ -2,8 +2,8 @@
 
 A Claude Code action skill for running **Power Pages classic portal sync workflows** safely. Ships two ergonomic levels:
 
-1. **`pp` CLI** — unified dispatcher backed by a project registry. `pp down anchor` from anywhere; aliases, prefix-matching, switch/status, cross-plugin audit. Recommended for daily use.
-2. **`templates/*.sh`** — drop-in standalone wrappers for projects you don't want to register globally.
+1. **`pp` CLI**, unified dispatcher backed by a project registry. `pp down anchor` from anywhere; aliases, prefix-matching, switch/status, cross-plugin audit. Recommended for daily use.
+2. **`templates/*.sh`**, drop-in standalone wrappers for projects you don't want to register globally.
 
 Plus the skill (this directory's `skills/pp-sync/`) which guides Claude through pre-flight safety checks when assisting with sync operations interactively.
 
@@ -15,7 +15,7 @@ Native Windows support is planned as a separate release path, likely via dedicat
 
 ## What this is
 
-A **rigid action skill** — has a checklist of steps that must run in order. Detects which Power Pages project is active by scanning for known wrapper-script patterns (project-prefix, env-suffix, or verb-only), confirms the operation with the user, runs pre-flight safety checks, delegates to existing wrapper scripts when present, and falls back to bare `pac` commands when not.
+A **rigid action skill**, has a checklist of steps that must run in order. Detects which Power Pages project is active by scanning for known wrapper-script patterns (project-prefix, env-suffix, or verb-only), confirms the operation with the user, runs pre-flight safety checks, delegates to existing wrapper scripts when present, and falls back to bare `pac` commands when not.
 
 ## Operations supported
 
@@ -32,15 +32,15 @@ A **rigid action skill** — has a checklist of steps that must run in order. De
 | **solution-up** | Pack + import Dataverse solution |
 | **audit** | Run permissions audit (delegates to `pp-permissions-audit`) |
 
-For interactive commits, use `git` directly or copy `templates/commit.sh` into your project. Portal cache recovery is an Admin Center action — see `references/safety-checks.md`.
+For interactive commits, use `git` directly or copy `templates/commit.sh` into your project. Portal cache recovery is an Admin Center action, see `references/safety-checks.md`.
 
 ## Reference files
 
-- `references/project-detection.md` — algorithm for identifying the active project, site folder, branch-driven env routing
-- `references/wrapper-scripts.md` — three common naming patterns (project-prefix, env-suffix, verb-only) and what each wrapper does
-- `references/direct-pac.md` — bare `pac paportal` and `pac solution` commands when no wrapper exists
-- `references/safety-checks.md` — pre-flight, post-flight, incremental upload, recovery from hung portal cache and wrong-env mistakes
-- `references/solution-sync.md` — `pac solution export/unpack/pack/import` workflow, plugin deployment, two-env promotion
+- `references/project-detection.md`, algorithm for identifying the active project, site folder, branch-driven env routing
+- `references/wrapper-scripts.md`, three common naming patterns (project-prefix, env-suffix, verb-only) and what each wrapper does
+- `references/direct-pac.md`, bare `pac paportal` and `pac solution` commands when no wrapper exists
+- `references/safety-checks.md`, pre-flight, post-flight, incremental upload, recovery from hung portal cache and wrong-env mistakes
+- `references/solution-sync.md`, `pac solution export/unpack/pack/import` workflow, plugin deployment, two-env promotion
 
 ## Critical safety rules this skill enforces
 
@@ -52,10 +52,10 @@ For interactive commits, use `git` directly or copy `templates/commit.sh` into y
 
 ## Project config format (v2.0.0+)
 
-Each project lives in `~/.config/nq-pp-sync/projects/<name>.conf`. The format is a strict `KEY="value"` line layout — the file is **parsed**, not sourced. Values are stored as literal strings, so:
+Each project lives in `~/.config/nq-pp-sync/projects/<name>.conf`. The format is a strict `KEY="value"` line layout, the file is **parsed**, not sourced. Values are stored as literal strings, so:
 
 - `REPO="$HOME/Projects/foo"` stores the literal string `$HOME/Projects/foo`. Use `~/Projects/foo` (the `~` shorthand IS expanded) or an absolute path instead.
-- `REPO="$(rm -rf $HOME)"` stores the literal string. **It does not execute** — that was the CVE-class behavior in v1.x and is closed.
+- `REPO="$(rm -rf $HOME)"` stores the literal string. **It does not execute**, that was the CVE-class behavior in v1.x and is closed.
 - Comments (`#`) and blank lines are skipped.
 - Unknown keys are skipped with a warning. Only allowlisted keys are assigned (`NAME`, `REPO`, `SITE_DIR`, `PROFILE`, `WEBSITE_ID`, `ENV_URL`, `MODEL_VERSION`, `BRANCH`, `SCHEMA_DIR`, `BOARD_URL`, `BOARD_SYSTEM`, `AI_ATTR`, `TAGS`, `SOLUTIONS`).
 - Project names, aliases, and PAC profile names are validated against `^[A-Za-z0-9_-]+$` (PAC profiles also allow dots) at registration. Solution names follow the same shape.
@@ -87,10 +87,10 @@ See [`tests/README.md`](tests/README.md) for fixture conventions and how to add 
 
 ## What this skill does NOT do
 
-- Edit Liquid or JS files — use the `pp-portal` skill
-- Audit permissions — use the `pp-permissions-audit` skill
-- Configure Power Pages from scratch — use Microsoft's `power-pages` plugin
-- Manage Dataverse schema interactively — use the `dataverse` plugin
+- Edit Liquid or JS files, use the `pp-portal` skill
+- Audit permissions, use the `pp-permissions-audit` skill
+- Configure Power Pages from scratch, use Microsoft's `power-pages` plugin
+- Manage Dataverse schema interactively, use the `dataverse` plugin
 
 ## License
 

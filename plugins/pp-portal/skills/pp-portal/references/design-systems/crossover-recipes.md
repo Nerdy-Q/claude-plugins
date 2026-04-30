@@ -6,7 +6,7 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 
 ---
 
-## Recipe 1 — USWDS hero with Material 3 carousel
+## Recipe 1: USWDS hero with Material 3 carousel
 
 **When to use**: Civic / grants / public-service portal that the stakeholder insists must rotate featured items. USWDS deliberately removed carousel; Material 3 added it.
 
@@ -54,7 +54,7 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 ```
 
 ```javascript
-// /web-files/pp-carousel.js — local file, no runtime injection
+// /web-files/pp-carousel.js, local file, no runtime injection
 (function () {
   document.querySelectorAll('.pp-carousel').forEach(initCarousel);
   function initCarousel(root) {
@@ -94,9 +94,9 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 
 ---
 
-## Recipe 2 — USWDS web with iOS-native mobile feel
+## Recipe 2: USWDS web with iOS-native mobile feel
 
-**When to use**: USWDS-primary government portal that must feel like an iOS app on phones (PWA install, mobile-first service kiosk, "feels like an app" stakeholder request — and the user has chosen iOS feel).
+**When to use**: USWDS-primary government portal that must feel like an iOS app on phones (PWA install, mobile-first service kiosk, "feels like an app" stakeholder request, and the user has chosen iOS feel).
 
 **Primary**: USWDS 3 (color, type, content tone, focus, accessibility posture)
 **Borrowed from**: Apple HIG (bottom tab bar, large title with scroll-collapse, sheet presentation)
@@ -187,11 +187,11 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 - USWDS color tokens (`--pp-uswds-primary`, base dark/light) preserved on every surface
 - iOS feel comes from: `env(safe-area-inset-*)` for notch/home-bar, translucent tab bar with `backdrop-filter`, large-title scroll-collapse, 44px touch targets
 - Lucide icons (ISC license) substitute for SF Symbols (which can't ship on web)
-- Desktop reverts to standard USWDS nav — the iOS feel is mobile-only
+- Desktop reverts to standard USWDS nav, the iOS feel is mobile-only
 
 ---
 
-## Recipe 3 — USWDS web with Android-native mobile feel
+## Recipe 3: USWDS web with Android-native mobile feel
 
 **When to use**: USWDS-primary government portal that must feel like an Android app on phones (user chose Android feel, or "cross-platform / unsure" defaulted to Material 3).
 
@@ -280,14 +280,14 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 ```
 
 **Why this works**:
-- USWDS color tokens preserved everywhere — the FAB is *USWDS primary blue*, not M3's source-color generated tone
+- USWDS color tokens preserved everywhere, the FAB is *USWDS primary blue*, not M3's source-color generated tone
 - Android feel comes from: M3 navigation bar height (80px, not iOS 49pt), active-indicator pill anatomy, FAB shape and position, Material Symbols icons
 - Material Symbols (Apache 2.0) bundle locally; safer than fonts.googleapis.com under CSP
 - Desktop reverts to USWDS standard nav
 
 ---
 
-## Recipe 4 — Fluent 2 enterprise card with shadcn polish
+## Recipe 4: Fluent 2 enterprise card with shadcn polish
 
 **When to use**: Fluent 2-primary partner/vendor portal where the stock Fluent card pattern feels too utilitarian for a customer-facing surface. shadcn's card composition is more polished without breaking enterprise tone.
 
@@ -355,12 +355,12 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 **Why this works**:
 - All tokens are Fluent (alias names, restrained 4px radius, enterprise spacing)
 - shadcn's compound-component thinking (Header / Title / Description / Content / Footer) gives a more polished composition than ad-hoc Fluent markup
-- No React, no Radix, no Tailwind — just semantic HTML + Fluent CSS variables
+- No React, no Radix, no Tailwind, just semantic HTML + Fluent CSS variables
 - The `<dl>` for metrics is a small accessibility upgrade shadcn's marketing examples sometimes skip
 
 ---
 
-## Recipe 5 — shadcn/ui product portal with USWDS form rigor
+## Recipe 5: shadcn/ui product portal with USWDS form rigor
 
 **When to use**: shadcn-primary modern web portal where citizen-facing forms (registration, eligibility intake) need stronger labeling, validation summaries, and plain-language error messages than shadcn's default `<Form>` examples provide.
 
@@ -485,7 +485,7 @@ For the rules that govern these recipes, see [system-selection.md](system-select
       if (errors.length) {
         e.preventDefault();
         var ul = summary.querySelector('.pp-form-summary__list');
-        ul.replaceChildren();  // safer than innerHTML = '' — explicit DOM clear
+        ul.replaceChildren();  // safer than innerHTML = '', explicit DOM clear
         errors.forEach(function (err) {
           var li = document.createElement('li');
           var a = document.createElement('a');
@@ -515,26 +515,26 @@ For the rules that govern these recipes, see [system-selection.md](system-select
 ```
 
 **Why this works**:
-- shadcn token language preserved (`hsl(var(--primary))`, `var(--radius)`) — visual identity stays modern web product
+- shadcn token language preserved (`hsl(var(--primary))`, `var(--radius)`), visual identity stays modern web product
 - USWDS form patterns layered on top:
   - Required indicated by **asterisk text**, not just an asterisk symbol (USWDS A11y rule)
   - Helper text **before** the input, not in placeholder (USWDS rule)
   - Plain-language error messages, not browser defaults
   - Validation summary at top with anchor links to fields (USWDS pattern; shadcn's default `<Form>` does inline-only)
 - 44px touch targets across all controls
-- DOM construction with `textContent` + `replaceChildren` — no innerHTML, no XSS surface
+- DOM construction with `textContent` + `replaceChildren`, no innerHTML, no XSS surface
 - All vanilla JS, CSP-safe, no React or zod required
 
 ---
 
-## Recipe 6 — Apple HIG calm + USWDS civic seriousness
+## Recipe 6: Apple HIG calm + USWDS civic seriousness
 
 **When to use**: Premium government / quasi-government portal (state-level economic development, museum membership, library systems) that wants Apple HIG calm + spacing + readability with USWDS rigor on forms and content tone.
 
 **Primary**: USWDS 3 (content tone, accessibility, focus, plain-language messaging)
 **Borrowed from**: Apple HIG (spacing rhythm, type calm, dark-mode parity, restrained motion)
 
-This recipe is mostly **token translation** — no new components needed, just a calmer expression of USWDS via HIG-style spacing and dark-mode treatment.
+This recipe is mostly **token translation**, no new components needed, just a calmer expression of USWDS via HIG-style spacing and dark-mode treatment.
 
 ```css
 /* USWDS tokens, HIG-flavored spacing rhythm and dark mode */
@@ -607,15 +607,15 @@ h3 { font-size: var(--pp-type-title-2); margin-block: var(--pp-space-5) var(--pp
 - All semantic colors are USWDS-derived; HIG contributes the **calm spacing rhythm** and **dark-mode posture**
 - `-apple-system` first in the font stack gives Apple users actual SF (no licensing issue), then falls back to Segoe / Public Sans / web stack
 - Continuous-corner approximation via `border-radius` is acceptable for web (HIG's actual squircle math isn't reproducible in CSS without an SVG mask)
-- Dark mode is first-class — light is the **secondary**, not the only mode
+- Dark mode is first-class, light is the **secondary**, not the only mode
 
 ---
 
 ## What's not in these recipes
 
-- **Tailwind configurations** — these recipes use plain CSS variables so they work in classic Power Pages portals without a build pipeline
-- **React component code** — every recipe is HTML + CSS + vanilla JS
-- **CDN dependencies** — every asset (fonts, icons, JS) is meant to be vendored locally per [strict-csp.md](strict-csp.md)
-- **Auto-installing CLI commands** — no `npx shadcn add card` or `dotnet tool install`; recipes can be implemented by hand by reading the source
+- **Tailwind configurations**, these recipes use plain CSS variables so they work in classic Power Pages portals without a build pipeline
+- **React component code**, every recipe is HTML + CSS + vanilla JS
+- **CDN dependencies**, every asset (fonts, icons, JS) is meant to be vendored locally per [strict-csp.md](strict-csp.md)
+- **Auto-installing CLI commands**, no `npx shadcn add card` or `dotnet tool install`; recipes can be implemented by hand by reading the source
 
 When a stakeholder asks for something not covered here, follow the rule in [system-selection.md](system-selection.md): identify the primary system, identify what's missing, borrow only the anatomy needed, re-express in the primary tokens, verify accessibility and responsive behavior.

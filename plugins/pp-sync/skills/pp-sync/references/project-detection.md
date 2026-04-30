@@ -30,7 +30,7 @@ If a `CLAUDE.md` is present at the repo root, **trust it as the source of truth*
 | `scripts/sync-down-dev.sh` AND branch `main` | Dual-environment project, dev branch (Pattern B wrapper family) | `<repo>/<site>---<site>/` at repo top level | `<project>-Dev` |
 | `scripts/client-dev/sync-down-client-dev.sh` AND branch `client-dev` | Dual-environment project, client branch (Pattern B wrapper family) | `<repo>/client-dev/<site>---<site>/` | `<project>-Client-Dev` |
 | `divisions/<name>/pages/<site>---<site>/` | Multi-division portfolio, one portal per business unit | `<repo>/divisions/<div>/pages/<site>---<site>/` | Often a single dev profile across all divisions |
-| Bare `<site>---<site>/` with no scripts | Greenfield or one-off project | the bare folder | unknown — ask the user |
+| Bare `<site>---<site>/` with no scripts | Greenfield or one-off project | the bare folder | unknown, ask the user |
 
 ### 3. Generic fallback
 
@@ -64,7 +64,7 @@ Some larger projects split multiple Power Pages sites across divisions or busine
 │           └── <site>---<site>/                              etc.
 ```
 
-For multi-division portfolios, **identify the specific division and site** before running sync. Each division may have its own portal in its own Dataverse environment — running `pac paportal upload` against the wrong division pushes code to the wrong site.
+For multi-division portfolios, **identify the specific division and site** before running sync. Each division may have its own portal in its own Dataverse environment, running `pac paportal upload` against the wrong division pushes code to the wrong site.
 
 If the user says "sync the X division portal" or "deploy the Y site", route to the matching division's site folder. If ambiguous, ask.
 
@@ -92,7 +92,7 @@ Some projects deploy to two environments from the same repo (dev + client, or co
 | `main` | Your dev env | `<project>-Dev` | `<site>---<site>/` (top-level) |
 | `client-dev` | Client / downstream env | `<project>-Client-Dev` | `client-dev/<site>---<site>/` |
 
-When syncing, **the active git branch determines which env** to target. If the user is on `main` but wants to sync the client env, ask them to checkout `client-dev` first — don't override branch implicitly.
+When syncing, **the active git branch determines which env** to target. If the user is on `main` but wants to sync the client env, ask them to checkout `client-dev` first, don't override branch implicitly.
 
 For projects with `*-down.sh` and `*-down-client-dev.sh`, choose the script that matches the active branch.
 
@@ -104,4 +104,4 @@ If you can't decide which project/env to operate against:
 2. Ask the user to pick
 3. Proceed only after explicit confirmation
 
-Never guess — wrong guess on `up` operations pushes code to the wrong portal.
+Never guess, wrong guess on `up` operations pushes code to the wrong portal.

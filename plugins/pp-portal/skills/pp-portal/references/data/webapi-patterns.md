@@ -1,6 +1,6 @@
 # Power Pages Web API in Custom JS
 
-The Power Pages Web API is exposed at `/_api/<entityset>` on every portal. Custom JavaScript can call it for client-side reads, writes, and file uploads. Auth is handled by the portal session — every request must include the `__RequestVerificationToken` header (anti-CSRF).
+The Power Pages Web API is exposed at `/_api/<entityset>` on every portal. Custom JavaScript can call it for client-side reads, writes, and file uploads. Auth is handled by the portal session, every request must include the `__RequestVerificationToken` header (anti-CSRF).
 
 ## Prerequisites
 
@@ -19,7 +19,7 @@ A 401 from `/_api/...` almost always means: missing site setting, missing table 
 
 ## The safeAjax helper (canonical pattern)
 
-Every Power Pages portal needs a wrapper around its HTTP client that handles the anti-forgery token. There are two shapes you'll see in the wild — start with whichever matches the rest of the portal's JS.
+Every Power Pages portal needs a wrapper around its HTTP client that handles the anti-forgery token. There are two shapes you'll see in the wild, start with whichever matches the rest of the portal's JS.
 
 ### Microsoft's canonical safeAjax pattern (the one you'll see in legacy portal code)
 
@@ -46,7 +46,7 @@ This is the verbatim helper from Microsoft's `web-api-http-requests-handle-error
 })(window.webapi = window.webapi || {}, jQuery);
 ```
 
-Invocation shape — note this is **jQuery `$.ajax`**, not `fetch`:
+Invocation shape, note this is **jQuery `$.ajax`**, not `fetch`:
 
 ```javascript
 webapi.safeAjax({
@@ -59,11 +59,11 @@ webapi.safeAjax({
 });
 ```
 
-`validateLoginSession` is the portal's session-expiry guard — when the user's portal session has silently lapsed, the response is an HTML login page rather than the expected JSON, and `validateLoginSession` redirects rather than running `success` with HTML. **Keep this version when the portal already loads jQuery and the `validateLoginSession` shim** (every standard Power Pages template does).
+`validateLoginSession` is the portal's session-expiry guard, when the user's portal session has silently lapsed, the response is an HTML login page rather than the expected JSON, and `validateLoginSession` redirects rather than running `success` with HTML. **Keep this version when the portal already loads jQuery and the `validateLoginSession` shim** (every standard Power Pages template does).
 
 ### Modernized fetch-based version (preferred for new code, but loses validateLoginSession)
 
-If you're building a fresh portal that doesn't ship jQuery (rare) or you want a Promise-native API, the same wrapper rebuilt on the browser `fetch` API. **Trade-off**: you lose the `validateLoginSession` session-expiry redirect — if the portal session lapses mid-request you'll see HTML come back where JSON was expected, and you have to detect/handle it yourself.
+If you're building a fresh portal that doesn't ship jQuery (rare) or you want a Promise-native API, the same wrapper rebuilt on the browser `fetch` API. **Trade-off**: you lose the `validateLoginSession` session-expiry redirect, if the portal session lapses mid-request you'll see HTML come back where JSON was expected, and you have to detect/handle it yourself.
 
 ```javascript
 function getToken() {
@@ -111,11 +111,11 @@ function safeAjax(options) {
 
 Why this helper exists:
 
-- `window.shell.getTokenDeferred()` is the official way to obtain the anti-forgery token. It returns a jQuery `Deferred`, hence the `.done().fail()` shape — wrapping it in a native Promise smooths the rest of the code.
+- `window.shell.getTokenDeferred()` is the official way to obtain the anti-forgery token. It returns a jQuery `Deferred`, hence the `.done().fail()` shape, wrapping it in a native Promise smooths the rest of the code.
 - `credentials: 'same-origin'` is required so the portal session cookie travels with the request.
 - Reading `.text()` on error rather than `.json()` because Web API errors are sometimes returned as HTML (auth wall) or plain text (CSRF rejection).
 
-## GET — read with $select / $filter / $orderby / $expand
+## GET: read with $select / $filter / $orderby / $expand
 
 ```javascript
 safeAjax({
@@ -135,8 +135,8 @@ safeAjax({
 Notes:
 
 - **Lookup filters use the `_<attr>_value` form**, not the bare attribute name. `_contoso_account_value eq <guid>` works; `contoso_account eq <guid>` doesn't.
-- `<guid>` in `$filter` is **bare** — no quotes, no curly braces. `_contoso_account_value eq d8a3...e4` is correct.
-- `$select` is strongly recommended — without it you get every field on the entity, slowing the response.
+- `<guid>` in `$filter` is **bare**, no quotes, no curly braces. `_contoso_account_value eq d8a3...e4` is correct.
+- `$select` is strongly recommended, without it you get every field on the entity, slowing the response.
 - For paged responses, the response includes `@odata.nextLink` when there are more rows.
 
 To request formatted (display) values for choice fields and lookups, add this header:
@@ -153,7 +153,7 @@ safeAjax({
 });
 ```
 
-## POST — create a record
+## POST: create a record
 
 ```javascript
 var payload = {
@@ -188,7 +188,7 @@ function getEntityId(response) {
 }
 ```
 
-> Header naming: Microsoft's official Power Pages samples read the new record's GUID from the **`entityid`** response header (their canonical `safeAjax` POST sample shows `xhr.getResponseHeader("entityid")`). The OData v4 spec defines this header as **`OData-EntityId`**, and Dataverse direct also returns that name. Read both — the portal layer normalizes inconsistently across versions, and code that only checks one header occasionally returns `null` GUIDs in the wild.
+> Header naming: Microsoft's official Power Pages samples read the new record's GUID from the **`entityid`** response header (their canonical `safeAjax` POST sample shows `xhr.getResponseHeader("entityid")`). The OData v4 spec defines this header as **`OData-EntityId`**, and Dataverse direct also returns that name. Read both, the portal layer normalizes inconsistently across versions, and code that only checks one header occasionally returns `null` GUIDs in the wild.
 
 Add `Prefer: return=representation` if you need the full created record back:
 
@@ -202,7 +202,7 @@ safeAjax({
 .then(function (created) { /* `created` is the full record */ });
 ```
 
-## POST with lookup binding — @odata.bind
+## POST with lookup binding: @odata.bind
 
 To set a lookup, use the `<navigation_property>@odata.bind` syntax with the **entityset URI**:
 
@@ -224,7 +224,7 @@ payload['contoso_Applicant_contact@odata.bind'] = '/contacts(' + contactId + ')'
 // Setting the applicant when they're an Account:
 payload['contoso_Applicant_account@odata.bind'] = '/accounts(' + accountId + ')';
 
-// WRONG — bare `contoso_Applicant@odata.bind` returns 400 Bad Request
+// WRONG, bare `contoso_Applicant@odata.bind` returns 400 Bad Request
 ```
 
 ### Navigation property names are case-sensitive AND entity-specific
@@ -238,9 +238,9 @@ The same field name can map to different navigation properties on different enti
 | Contractor | Account | `contoso_CompanyAccount` | `contoso_CompanyAccount@odata.bind` |
 | InsurancePolicy | Account | `contoso_CompanyAccount` | `contoso_CompanyAccount@odata.bind` |
 
-**Always verify against the entity's schema XML** before assuming. A 400 with `'<name>' is not a valid navigation property` means you guessed wrong — check the actual schema export.
+**Always verify against the entity's schema XML** before assuming. A 400 with `'<name>' is not a valid navigation property` means you guessed wrong, check the actual schema export.
 
-## PATCH — update a record
+## PATCH: update a record
 
 ```javascript
 safeAjax({
@@ -252,7 +252,7 @@ safeAjax({
 
 PATCH returns 204 No Content on success. To get the updated record back, add `Prefer: return=representation`.
 
-## PUT — single-property update
+## PUT: single-property update
 
 When you need to update **one column** in isolation (no other fields touched, no risk of accidentally clobbering a concurrent edit elsewhere on the record), Power Pages supports OData's single-property `PUT`:
 
@@ -265,7 +265,7 @@ safeAjax({
 });
 ```
 
-The URL ends in the **logical attribute name** of the column you're updating (here, `firstname`), and the body is `{ "value": <new value> }`. Returns 204 No Content. Most teams stick with `PATCH` for everything; `PUT` is useful when you specifically want the narrowest possible write contract — e.g. a single-cell inline edit.
+The URL ends in the **logical attribute name** of the column you're updating (here, `firstname`), and the body is `{ "value": <new value> }`. Returns 204 No Content. Most teams stick with `PATCH` for everything; `PUT` is useful when you specifically want the narrowest possible write contract, e.g. a single-cell inline edit.
 
 ## Associate / Disassociate via $ref
 
@@ -287,7 +287,7 @@ safeAjax({
 });
 ```
 
-The path segment after the source record (`parentcustomerid_account` above) is the **navigation property name** — same case-sensitive value used in `@odata.bind` payloads, including the polymorphic `_<entity>` suffix for customer-type lookups. Both operations return 204 No Content on success.
+The path segment after the source record (`parentcustomerid_account` above) is the **navigation property name**, same case-sensitive value used in `@odata.bind` payloads, including the polymorphic `_<entity>` suffix for customer-type lookups. Both operations return 204 No Content on success.
 
 ## DELETE
 
@@ -335,9 +335,9 @@ function uploadAttachment(file, parentRecordEntitySet, parentRecordId) {
 Notes:
 
 - **`documentbody` is base64-encoded file content** with the `data:...;base64,` prefix stripped
-- **`objectid_<entity>@odata.bind`** is the polymorphic lookup that links the note to its parent — the suffix is the entity logical name (`objectid_contact`, `objectid_account`, `objectid_<custom>`)
+- **`objectid_<entity>@odata.bind`** is the polymorphic lookup that links the note to its parent, the suffix is the entity logical name (`objectid_contact`, `objectid_account`, `objectid_<custom>`)
 - The Annotation table needs `Webapi/annotation/enabled = true` and Table Permissions allowing Create
-- If SharePoint integration is enabled on the env, attachments over a configurable size threshold get redirected to SharePoint automatically — no code change
+- If SharePoint integration is enabled on the env, attachments over a configurable size threshold get redirected to SharePoint automatically, no code change
 
 ## Dependent dropdown pattern
 
@@ -383,9 +383,9 @@ Power Pages Web API errors come back as OData JSON when the request reaches Data
 | `401 Unauthorized` HTML | User not authenticated; page allows anonymous but table doesn't |
 | `403 Forbidden` HTML | Anti-forgery token missing or invalid; or Table Permissions deny scope |
 | `404 Not Found` HTML | Site Setting `Webapi/<entity>/enabled` is missing or false |
-| `400 Bad Request` JSON | OData payload error — usually navigation property name, field name, or polymorphic lookup |
+| `400 Bad Request` JSON | OData payload error, usually navigation property name, field name, or polymorphic lookup |
 | `412 Precondition Failed` | Etag mismatch on PATCH (record changed since you read it) |
-| `500 Internal Server Error` JSON | Plugin failure or business rule rejection — read the `error.message` field |
+| `500 Internal Server Error` JSON | Plugin failure or business rule rejection, read the `error.message` field |
 
 For 400, parse the JSON body for the human-readable message:
 

@@ -1,6 +1,6 @@
 # Wrapper Script Naming Patterns
 
-Each Power Pages project tends to have its own family of wrapper scripts that encode project-specific safety logic (path handling, noise auto-stash, GCC vs Commercial branching, incremental upload). Always prefer the wrapper over bare `pac` — wrappers handle nuances the bare commands don't.
+Each Power Pages project tends to have its own family of wrapper scripts that encode project-specific safety logic (path handling, noise auto-stash, GCC vs Commercial branching, incremental upload). Always prefer the wrapper over bare `pac`, wrappers handle nuances the bare commands don't.
 
 ## Naming patterns
 
@@ -32,7 +32,7 @@ ls *.sh scripts/*.sh 2>/dev/null | grep -iE "(down|up|doctor|commit|sync|paporta
 | Solution upload | `acme-solution-up.sh` | `scripts/project-solution-up.sh` | `scripts/client-dev/client-dev-solution-up.sh` |
 | Icons (if applicable) | (rare) | `scripts/project-icons-down.sh` / `-up.sh` | (matches main branch's wrappers) |
 
-For projects without any wrappers, fall back to bare `pac paportal` (see [direct-pac.md](direct-pac.md)) — or propose installing the plugin's `templates/*.sh` (Pattern C) as a starting point.
+For projects without any wrappers, fall back to bare `pac paportal` (see [direct-pac.md](direct-pac.md)), or propose installing the plugin's `templates/*.sh` (Pattern C) as a starting point.
 
 ## What each wrapper typically does
 
@@ -41,10 +41,10 @@ For projects without any wrappers, fall back to bare `pac paportal` (see [direct
 ```
 1. cd to repo root (NEVER inside the site folder)
 2. pac auth select to ensure right profile is active
-3. pac org who — verify env URL
+3. pac org who, verify env URL
 4. pac paportal download --path . --webSiteId <id> --modelVersion 2
 5. Auto-restore known noise files (.portalconfig manifest, trailing whitespace in *.copy.html)
-6. git status — show what actually changed
+6. git status, show what actually changed
 ```
 
 ### `*-up.sh` (Upload)
@@ -52,7 +52,7 @@ For projects without any wrappers, fall back to bare `pac paportal` (see [direct
 ```
 1. cd to repo root
 2. pac auth select
-3. pac org who — confirm correct env
+3. pac org who, confirm correct env
 4. pac paportal upload --path . --modelVersion 2
 5. Parse output for errors / warnings
 6. Report counts: components uploaded, files skipped, errors
@@ -70,7 +70,7 @@ Some wrappers add validation (`--validateBeforeUpload`) for safety. Some add inc
 5. Report
 ```
 
-Doctor scripts are read-only — safe to run any time. Use them as the **first thing** before any uncertain sync operation.
+Doctor scripts are read-only, safe to run any time. Use them as the **first thing** before any uncertain sync operation.
 
 ### `*-commit.sh` (Interactive Commit)
 
@@ -100,7 +100,7 @@ These scripts often add timestamping or commit-message templates. Read the scrip
 2. pac solution import --path <Solution>.zip --publish-changes
 ```
 
-Solution import is **destructive in-env** — it overwrites existing components in the target environment. Always confirm with the user before running.
+Solution import is **destructive in-env**, it overwrites existing components in the target environment. Always confirm with the user before running.
 
 ## How to invoke a wrapper
 
@@ -113,7 +113,7 @@ cd $(git rev-parse --show-toplevel)
 ./scripts/client-dev/sync-down-client-dev.sh         # Pattern B: env-suffix (client-dev branch)
 ```
 
-If a wrapper script lacks the executable bit, the user can `chmod +x` it. Don't `chmod` files implicitly without asking — file mode changes are a form of state mutation.
+If a wrapper script lacks the executable bit, the user can `chmod +x` it. Don't `chmod` files implicitly without asking, file mode changes are a form of state mutation.
 
 ## Reading a wrapper before invoking
 
@@ -136,4 +136,4 @@ If the wrapper does anything you don't expect, surface it to the user before run
 
 For projects without wrappers (multi-division portfolios, new projects, freshly-cloned repos missing scripts), use bare `pac` commands with explicit safety checks. See [direct-pac.md](direct-pac.md).
 
-It's also reasonable to **propose creating wrappers** modeled on Pattern A or B — they're 30-50 lines each and pay for themselves in the first week of use. The plugin's `templates/*.sh` (Pattern C) are a quick drop-in.
+It's also reasonable to **propose creating wrappers** modeled on Pattern A or B, they're 30-50 lines each and pay for themselves in the first week of use. The plugin's `templates/*.sh` (Pattern C) are a quick drop-in.

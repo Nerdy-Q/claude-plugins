@@ -29,7 +29,7 @@ Native Windows support is planned as a separate release path. Until that exists,
 
 | Command | Description |
 |---|---|
-| `pp setup` | Interactive bootstrap — auto-detects Power Pages projects in `~/Projects/`, lists PAC profiles, walks through registering each |
+| `pp setup` | Interactive bootstrap, auto-detects Power Pages projects in `~/Projects/`, lists PAC profiles, walks through registering each |
 | `pp list` (`pp ls`) | Show all registered projects with aliases and env URLs |
 | `pp show <project>` | Show full config for a project |
 | `pp project add [name]` | Register a new project (interactive) |
@@ -53,8 +53,8 @@ All sync commands take a project as the first argument. The project arg can be t
 |---|---|
 | `pp down <project> [--no-clean]` | Download portal from Dataverse with auto noise-stash |
 | `pp up <project> [--validate-only] [--force-bulk] [--bulk-threshold=N]` | Upload portal changes; warns if >50 changed files |
-| `pp diff <project> [--diff] [--names-only] [--bulk-threshold=N]` | Preview what `pp up` would push — categorized changed-file list, no upload |
-| `pp doctor <project>` | Health check — tooling, auth, structure, content counts |
+| `pp diff <project> [--diff] [--names-only] [--bulk-threshold=N]` | Preview what `pp up` would push, categorized changed-file list, no upload |
+| `pp doctor <project>` | Health check, tooling, auth, structure, content counts |
 | `pp generate-page <project> <Name>` | Scaffold a new hybrid-pattern page (base + en-US) |
 | `pp sync-pages <project> [direction]` | Bulk-copy between base `<Page>.webpage.copy.html` and localized `content-pages/<lang>/` variants. Direction is `base-to-localized` or `localized-to-base`; omit for interactive prompt |
 | `pp journal <project> {init|open|note|close} <args>` | Automated work tracking & Project Board integration |
@@ -72,10 +72,10 @@ All sync commands take a project as the first argument. The project arg can be t
 
 When you pass a project name to a command, `pp` resolves it in this order:
 
-1. **Exact match** — `~/.config/nq-pp-sync/projects/<name>.conf` exists
-2. **Alias** — `<name>` appears in `~/.config/nq-pp-sync/aliases` as a key
-3. **Unique prefix** — `<name>` is a unique prefix of exactly one registered project
-4. **Active project** — if no name passed, use `~/.config/nq-pp-sync/active`
+1. **Exact match**, `~/.config/nq-pp-sync/projects/<name>.conf` exists
+2. **Alias**, `<name>` appears in `~/.config/nq-pp-sync/aliases` as a key
+3. **Unique prefix**, `<name>` is a unique prefix of exactly one registered project
+4. **Active project**, if no name passed, use `~/.config/nq-pp-sync/active`
 
 Examples (assuming you've registered `anchor`, `contoso-dev`, `contoso-client`, `modernization-energy`):
 
@@ -91,7 +91,7 @@ pp down                     # uses active project (energy)
 
 ## Project config files
 
-Each project lives in a single config file at `~/.config/nq-pp-sync/projects/<name>.conf`. The file uses a strict `KEY="value"` line format — it is **parsed**, not sourced, so values are stored as literal strings (no shell interpolation, no command substitution). Supported variables:
+Each project lives in a single config file at `~/.config/nq-pp-sync/projects/<name>.conf`. The file uses a strict `KEY="value"` line format, it is **parsed**, not sourced, so values are stored as literal strings (no shell interpolation, no command substitution). Supported variables:
 
 | Variable | Required? | Description |
 |---|---|---|
@@ -107,7 +107,7 @@ Each project lives in a single config file at `~/.config/nq-pp-sync/projects/<na
 | `BOARD_URL` | optional | URL or ID of the GitHub/GitLab project board |
 | `BOARD_SYSTEM` | default: `auto` | `github`, `gitlab`, or `none` |
 | `AI_ATTR` | default: `yes` | Whether to tag notes as `[AI-Assisted]` |
-| `SOLUTIONS` | optional | List of solution names — `SOLUTIONS=("Foo" "Bar")` |
+| `SOLUTIONS` | optional | List of solution names, `SOLUTIONS=("Foo" "Bar")` |
 | `TAGS` | optional | Free-form tags; not used by pp itself |
 
 Example:
@@ -178,7 +178,7 @@ When to use which:
 
 ## Migrating from templates to the registry
 
-If you already have `templates/down.sh` etc. in a project, you can keep them — they continue to work. To migrate to `pp`:
+If you already have `templates/down.sh` etc. in a project, you can keep them, they continue to work. To migrate to `pp`:
 
 1. Run `pp setup` (auto-detects the project)
 2. Confirm the suggested config matches what's in the template's CONFIG block

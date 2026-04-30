@@ -1,4 +1,4 @@
-# Recipe — Role-Gated UI Section
+# Recipe: Role-Gated UI Section
 
 ## What you'll build
 
@@ -12,12 +12,12 @@ This recipe is for **role-based UI rendering**, not record-level access. Record-
 |---|---|---|
 | Web Roles defined in Dataverse | `web-roles/` YAML | One per intended audience (e.g. `Admin`, `Support`, `Customer`) |
 | Web Role assigned to the calling Contact | Studio Contacts then Roles, or `adx_contact_webrole` link table | Roles are not auto-applied; assign explicitly |
-| Page accessible to all signed-in users | Page properties | If the entire page is admin-only, set Authentication = "Specific Roles" with role rule — different recipe |
-| Table Permissions on the underlying data | table-permissions YAML | UI hiding is **not** security — back it with real Table Permissions |
+| Page accessible to all signed-in users | Page properties | If the entire page is admin-only, set Authentication = "Specific Roles" with role rule, different recipe |
+| Table Permissions on the underlying data | table-permissions YAML | UI hiding is **not** security, back it with real Table Permissions |
 
-The contract: this recipe hides UI elements. **The underlying data and write paths must enforce access independently.** A user who knows the URL of an admin action can still hit it — the buttons just are not visible. Power Pages does enforce row-level access via Table Permissions; this recipe never substitutes for that.
+The contract: this recipe hides UI elements. **The underlying data and write paths must enforce access independently.** A user who knows the URL of an admin action can still hit it, the buttons just are not visible. Power Pages does enforce row-level access via Table Permissions; this recipe never substitutes for that.
 
-## Step 1 — Liquid `has_role` server-side check
+## Step 1: Liquid `has_role` server-side check
 
 ```liquid
 {% assign customer_id = request.params['id'] | escape %}
@@ -29,7 +29,7 @@ The contract: this recipe hides UI elements. **The underlying data and write pat
   </div>
 
   <div class="btn-group" role="group" aria-label="Customer actions">
-    {# Universal action — visible to anyone who can reach this page #}
+    {# Universal action, visible to anyone who can reach this page #}
     <a href="/edit-customer/?id={{ customer_id }}" class="btn btn-outline-primary">Edit</a>
 
     {# Admin-only actions #}
@@ -60,7 +60,7 @@ The contract: this recipe hides UI elements. **The underlying data and write pat
 1. `user` is non-nil (i.e., authenticated)
 2. The user has at least one `adx_contact_webrole` link to a Web Role with the **exact** name `Admin`
 
-> **Role names are case-sensitive strings.** `'Admin'` and `'admin'` are different roles. The runtime does an exact string compare against `adx_name` on `adx_webrole`. Mistyping the name silently returns false — there is no "did you mean..." warning.
+> **Role names are case-sensitive strings.** `'Admin'` and `'admin'` are different roles. The runtime does an exact string compare against `adx_name` on `adx_webrole`. Mistyping the name silently returns false, there is no "did you mean..." warning.
 
 Why server-side first? Three reasons:
 
@@ -68,14 +68,14 @@ Why server-side first? Three reasons:
 - No flash-of-unstyled-content where the admin button briefly shows then disappears
 - The role name lives in a single place per page; client-side checks can drift
 
-## Step 2 — When to use this vs page-level access control
+## Step 2: When to use this vs page-level access control
 
 | Pattern | Use when |
 |---|---|
 | **Inline `has_role` Liquid check** | Same page contains content for multiple audiences; admins see extra buttons but the rest of the page is identical |
-| **Web Page Access Control Rule** (page-level) | Whole page is gated — e.g. `/admin-tools/` should 404 for non-admins |
+| **Web Page Access Control Rule** (page-level) | Whole page is gated, e.g. `/admin-tools/` should 404 for non-admins |
 | **Authentication = "Specific Roles" on the page** | Same as above, but expressed as a property of the page rather than a separate access rule |
-| **Table Permission scope** | The data itself differs by role — admins see all rows, customers see their own. UI is the same |
+| **Table Permission scope** | The data itself differs by role, admins see all rows, customers see their own. UI is the same |
 
 Decision tree:
 
@@ -87,11 +87,11 @@ Are the rows themselves different per user?               -> Table Permissions, 
 
 A page can use all three layers at once: Web Page Access Control Rule says "any signed-in user", Table Permissions filter the visible rows by ownership, and Liquid `has_role` adds admin-only action buttons. Each layer answers a different question.
 
-## Step 3 — Multi-role checks
+## Step 3: Multi-role checks
 
 Two equivalent shapes; pick by readability.
 
-**Filter chain** — concise for small role lists:
+**Filter chain**, concise for small role lists:
 
 ```liquid
 {% if user | has_role: 'Admin' or user | has_role: 'Support' %}
@@ -99,7 +99,7 @@ Two equivalent shapes; pick by readability.
 {% endif %}
 ```
 
-**Array contains** — natural when you have a longer list or need a "user has any of these" check:
+**Array contains**, natural when you have a longer list or need a "user has any of these" check:
 
 ```liquid
 {% if user.roles contains 'Admin' or user.roles contains 'Support' or user.roles contains 'Auditor' %}
@@ -107,7 +107,7 @@ Two equivalent shapes; pick by readability.
 {% endif %}
 ```
 
-**ALL-of (intersection)** — uncommon but occasionally needed:
+**ALL-of (intersection)**, uncommon but occasionally needed:
 
 ```liquid
 {% if user | has_role: 'Admin' and user | has_role: 'BillingApprover' %}
@@ -115,7 +115,7 @@ Two equivalent shapes; pick by readability.
 {% endif %}
 ```
 
-**NOT-of (exclusion)** — public content not shown to staff:
+**NOT-of (exclusion)**, public content not shown to staff:
 
 ```liquid
 {% unless user | has_role: 'Admin' %}
@@ -123,7 +123,7 @@ Two equivalent shapes; pick by readability.
 {% endunless %}
 ```
 
-## Step 4 — Defensive client-side hiding via data-attributes
+## Step 4: Defensive client-side hiding via data-attributes
 
 For UX defense (e.g. ensuring a fast page nav doesn't briefly flash a stale-cached admin button), tag every gated element with `data-role-required` and run a JS pass on page load.
 
@@ -177,7 +177,7 @@ Server-side bootstrap of the roles array (in your master `Layout` web template):
 
 **The defensive layer is purely a backstop.** If the Liquid check above already excluded the element, `[data-role-required]` will not find it in the DOM and the JS does nothing. Both layers stay in sync because they read from the same Web Role data.
 
-## Step 5 — Anonymous-user pattern
+## Step 5: Anonymous-user pattern
 
 Anonymous users have no Contact record, no Web Roles, and no `user` object:
 
@@ -226,7 +226,7 @@ If "admin" means "this user belongs to a privileged Account" rather than "this u
 Power Pages can be configured so that roles assigned to the Account "cascade" to all its Contacts. This is a setting on the Web Role record (`adx_accountrolesenabled` or similar; verify in the env). When enabled:
 
 ```liquid
-{# Same syntax — has_role transparently considers Account-inherited roles #}
+{# Same syntax, has_role transparently considers Account-inherited roles #}
 {% if user | has_role: 'Acme Staff' %}
 ```
 
@@ -250,7 +250,7 @@ Same pattern, applied to top nav. In the master `Layout` web template:
 </nav>
 ```
 
-The `user.parentcustomerid.id` check is "this user has a parent Account" — useful for showing company-mode UI to corporate users while hiding it from individual customers.
+The `user.parentcustomerid.id` check is "this user has a parent Account", useful for showing company-mode UI to corporate users while hiding it from individual customers.
 
 ## Gotchas
 
@@ -258,7 +258,7 @@ The `user.parentcustomerid.id` check is "this user has a parent Account" — use
 |---|---|---|
 | Role name typo (case) | Button never shows | Role names are exact-match strings; verify against `adx_webrole.adx_name` |
 | Newly-assigned role not honored immediately | User logs in, role still missing | Roles are loaded into the user's session at sign-in. The user must sign out and back in (or the portal session must lapse) to pick up new role assignments. Full lifecycle in [../data/permissions-and-roles.md → Web Role assignment lifecycle](../data/permissions-and-roles.md#web-role-assignment-lifecycle) |
-| Liquid check passes but Web API call fails 403 | Button works in Studio preview; fails in production | UI checks are **not** security — your Table Permission must independently grant the action |
+| Liquid check passes but Web API call fails 403 | Button works in Studio preview; fails in production | UI checks are **not** security, your Table Permission must independently grant the action |
 | `user.roles` returns Authenticated Users only | Custom roles missing | The Contact has not been assigned the role via `adx_contact_webrole`. New Contacts default to Authenticated Users only |
 | Gating with `if user.contactid == record.ownerid` | Owner check works inconsistently | Owner-style checks belong in Table Permissions (Contact scope), not in Liquid |
 | Anonymous user error: `user.contactid` blows up | Page errors for signed-out users | Always wrap user-property reads in `{% if user %}`; `nil` propagation does not protect against missing-method calls |
@@ -278,8 +278,8 @@ The `user.parentcustomerid.id` check is "this user has a parent Account" — use
 
 ## See also
 
-- [../data/permissions-and-roles.md](../data/permissions-and-roles.md) — Web Roles, Table Permissions scopes, two-layer access model, [Web Role assignment lifecycle](../data/permissions-and-roles.md#web-role-assignment-lifecycle) (the session-cache gotcha and how to test around it)
-- [../language/objects.md](../language/objects.md) — `user`, `user.roles`, `user.parentcustomerid`, `user.contactid`
-- [../language/filters.md](../language/filters.md) — `has_role` filter and other user filters
-- [../language/tags.md](../language/tags.md) — `{% if %}` / `{% elsif %}` / `{% unless %}` control flow
-- [paginated-list-page.md](paginated-list-page.md) — uses `user.parentcustomerid` for company-scope filtering
+- [../data/permissions-and-roles.md](../data/permissions-and-roles.md), Web Roles, Table Permissions scopes, two-layer access model, [Web Role assignment lifecycle](../data/permissions-and-roles.md#web-role-assignment-lifecycle) (the session-cache gotcha and how to test around it)
+- [../language/objects.md](../language/objects.md), `user`, `user.roles`, `user.parentcustomerid`, `user.contactid`
+- [../language/filters.md](../language/filters.md), `has_role` filter and other user filters
+- [../language/tags.md](../language/tags.md), `{% if %}` / `{% elsif %}` / `{% unless %}` control flow
+- [paginated-list-page.md](paginated-list-page.md), uses `user.parentcustomerid` for company-scope filtering

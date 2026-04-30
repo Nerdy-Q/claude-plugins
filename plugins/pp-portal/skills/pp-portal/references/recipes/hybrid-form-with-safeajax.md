@@ -1,4 +1,4 @@
-# Recipe — Hybrid Form with safeAjax + Web API POST
+# Recipe: Hybrid Form with safeAjax + Web API POST
 
 ## What you'll build
 
@@ -17,7 +17,7 @@ The flow:
 | Requirement | Where | Value |
 |---|---|---|
 | `Webapi/contact/enabled` site setting | site-settings YAML | `true` (Active) |
-| `Webapi/contact/fields` site setting | site-settings YAML | `firstname,lastname,emailaddress1,telephone1,parentcustomerid` (whitelist — never `*` for write-capable tables) |
+| `Webapi/contact/fields` site setting | site-settings YAML | `firstname,lastname,emailaddress1,telephone1,parentcustomerid` (whitelist, never `*` for write-capable tables) |
 | Table Permission allowing `Create` on `contact` | table-permissions YAML | Scope = Global (or appropriate); Create=true |
 | Web Role grant on the calling Contact | Studio Contacts then Roles | The role that owns the Table Permission |
 
@@ -38,7 +38,7 @@ web-pages/add-customer/
     AddCustomer.en-US.webpage.copy.html
 ```
 
-## Step 1 — Liquid renders the form chrome
+## Step 1: Liquid renders the form chrome
 
 ```liquid
 {% assign form_action_url = sitemarkers['Add Customer'].url | default: '/add-customer/' %}
@@ -92,18 +92,18 @@ web-pages/add-customer/
 
 Notes:
 
-- `novalidate` on the `<form>` defers to JS for validation messages — keeps the experience consistent across browsers
+- `novalidate` on the `<form>` defers to JS for validation messages, keeps the experience consistent across browsers
 - The empty alert div with `role="alert"` and `aria-live="polite"` is announced by screen readers when populated
-- `autocomplete="given-name"` etc. are passed-down WCAG 2.2 SC 1.3.5 hints — free quality
+- `autocomplete="given-name"` etc. are passed-down WCAG 2.2 SC 1.3.5 hints, free quality
 
-## Step 2 — Custom JS with the canonical safeAjax helper
+## Step 2: Custom JS with the canonical safeAjax helper
 
 ```javascript
 // AddCustomer.webpage.custom_javascript.js
 (function (webapi, $) {
   'use strict';
 
-  // Canonical safeAjax — see references/data/webapi-patterns.md
+  // Canonical safeAjax, see references/data/webapi-patterns.md
   // jQuery + validateLoginSession version (every standard Power Pages template ships these)
   function safeAjax(ajaxOptions) {
     var deferredAjax = $.Deferred();
@@ -125,9 +125,9 @@ Notes:
 })(window.webapi = window.webapi || {}, jQuery);
 ```
 
-`validateLoginSession` is the portal's session-expiry guard — when the portal session has silently lapsed mid-form-fill, the response is a redirect to the login page rather than the expected JSON. `validateLoginSession` detects this and redirects, rather than running `success` with HTML masquerading as data. **Do not drop it** unless you have an alternative session check.
+`validateLoginSession` is the portal's session-expiry guard, when the portal session has silently lapsed mid-form-fill, the response is a redirect to the login page rather than the expected JSON. `validateLoginSession` detects this and redirects, rather than running `success` with HTML masquerading as data. **Do not drop it** unless you have an alternative session check.
 
-## Step 3 — Submit handler
+## Step 3: Submit handler
 
 ```javascript
 $(function () {
@@ -139,7 +139,7 @@ $(function () {
     e.preventDefault();
     $alert.addClass('d-none').text('');
 
-    // Minimal client validation — server is authoritative
+    // Minimal client validation, server is authoritative
     var firstname     = $('#firstname').val().trim();
     var lastname      = $('#lastname').val().trim();
     var emailaddress1 = $('#emailaddress1').val().trim();
@@ -169,7 +169,7 @@ $(function () {
       contentType: 'application/json',
       data:        JSON.stringify(payload),
       success: function (data, textStatus, xhr) {
-        // Step 4 — read the new GUID and redirect
+        // Step 4, read the new GUID and redirect
         var newId = getEntityId(xhr);
         if (!newId) {
           // Defensive: fall back to the customers list if we can not parse the header
@@ -192,9 +192,9 @@ $(function () {
 });
 ```
 
-## Step 4 — Read the new GUID from the response header
+## Step 4: Read the new GUID from the response header
 
-Microsoft's canonical Power Pages samples read **`entityid`**. The OData v4 spec defines this header as **`OData-EntityId`**. Read both — the portal layer normalizes inconsistently across versions.
+Microsoft's canonical Power Pages samples read **`entityid`**. The OData v4 spec defines this header as **`OData-EntityId`**. Read both, the portal layer normalizes inconsistently across versions.
 
 ```javascript
 function getEntityId(xhr) {
@@ -208,9 +208,9 @@ function getEntityId(xhr) {
 }
 ```
 
-If you want the full record back rather than just the GUID, add `Prefer: return=representation` to the request headers — the response body becomes the created record (and `entityid` is still set).
+If you want the full record back rather than just the GUID, add `Prefer: return=representation` to the request headers, the response body becomes the created record (and `entityid` is still set).
 
-## Step 5 — Error handling
+## Step 5: Error handling
 
 OData errors come back as JSON when the request reaches Dataverse, and as HTML or plain text when the portal rejects it earlier:
 
@@ -243,7 +243,7 @@ function parseErrorMessage(xhr) {
 | 404 (HTML) | `Webapi/contact/enabled` is missing or `false` |
 | 400 (JSON) | Field name typo, polymorphic lookup missing suffix, field not in `Webapi/contact/fields` |
 | 412 | ETag mismatch (only on PATCH; not relevant on POST) |
-| 500 (JSON) | Plugin failure or business rule rejection — read `error.message` |
+| 500 (JSON) | Plugin failure or business rule rejection, read `error.message` |
 
 ## Common variations
 
@@ -267,7 +267,7 @@ if (qs.get('accountid')) {
 
 ### Polymorphic lookup setting
 
-`parentcustomerid` on Contact is polymorphic (Account or Contact). The polymorphic suffix on `@odata.bind` is **mandatory** — bare `parentcustomerid@odata.bind` returns 400.
+`parentcustomerid` on Contact is polymorphic (Account or Contact). The polymorphic suffix on `@odata.bind` is **mandatory**, bare `parentcustomerid@odata.bind` returns 400.
 
 ```javascript
 // When parent is an Account:
@@ -284,7 +284,7 @@ Add a `<input type="file">`, then after the contact POST succeeds, chain a secon
 
 | Gotcha | Symptom | Fix |
 |---|---|---|
-| Anti-forgery token expires after ~20 min | 403 on submit after long form fill | `safeAjax` re-fetches token via `shell.getTokenDeferred()` on each call — but only if the helper is used; never cache the token at page load |
+| Anti-forgery token expires after ~20 min | 403 on submit after long form fill | `safeAjax` re-fetches token via `shell.getTokenDeferred()` on each call, but only if the helper is used; never cache the token at page load |
 | Site-setting case wrong | 404 on POST | Lowercase after the prefix slash: `Webapi/contact/enabled` |
 | Field not in `Webapi/contact/fields` whitelist | 400 with "No field 'x' on entity 'contact'" | Add the field to the whitelist; never use `*` on a write-capable table |
 | Required-field state out of sync between Dataverse, Table Permission, and the form | 400 from Dataverse on a field the user did not fill | Server validates against Dataverse-level required-ness regardless of the form. Mirror those required fields in the form |
@@ -294,10 +294,10 @@ Add a `<input type="file">`, then after the contact POST succeeds, chain a secon
 
 ## See also
 
-- [../data/webapi-patterns.md](../data/webapi-patterns.md) — canonical `safeAjax` helper, POST/PATCH/DELETE, `@odata.bind`, error decoding
-- [../data/dataverse-naming.md](../data/dataverse-naming.md) — Logical vs Schema vs Navigation Property names; case-sensitivity table
-- [../data/permissions-and-roles.md](../data/permissions-and-roles.md) — Table Permission scopes, Web API access requirements
-- [../data/site-settings.md](../data/site-settings.md) — `Webapi/<entity>/enabled` and `Webapi/<entity>/fields` rules
-- [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md) — the broader hybrid pattern this recipe is the write half of
-- [../quality/accessibility.md](../quality/accessibility.md#async-ui-updates--aria-live-regions) — full `aria-live` pattern guide for announcing submit success and errors to screen readers
-- [file-upload-annotations.md](file-upload-annotations.md) — chaining a file upload after a record create
+- [../data/webapi-patterns.md](../data/webapi-patterns.md), canonical `safeAjax` helper, POST/PATCH/DELETE, `@odata.bind`, error decoding
+- [../data/dataverse-naming.md](../data/dataverse-naming.md), Logical vs Schema vs Navigation Property names; case-sensitivity table
+- [../data/permissions-and-roles.md](../data/permissions-and-roles.md), Table Permission scopes, Web API access requirements
+- [../data/site-settings.md](../data/site-settings.md), `Webapi/<entity>/enabled` and `Webapi/<entity>/fields` rules
+- [../pages/hybrid-page-idiom.md](../pages/hybrid-page-idiom.md), the broader hybrid pattern this recipe is the write half of
+- [../quality/accessibility.md](../quality/accessibility.md#async-ui-updates--aria-live-regions), full `aria-live` pattern guide for announcing submit success and errors to screen readers
+- [file-upload-annotations.md](file-upload-annotations.md), chaining a file upload after a record create

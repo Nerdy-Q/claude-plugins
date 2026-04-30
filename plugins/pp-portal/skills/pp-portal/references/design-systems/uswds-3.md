@@ -1,6 +1,6 @@
 # USWDS 3 for Power Pages
 
-The U.S. Web Design System version 3 — the de-facto baseline for U.S. federal sites and the strongest primary system when a Power Pages portal must feel **official, plain-language, trustworthy, and accessible by default**. Especially appropriate for grants portals, eligibility flows, public-facing service delivery, and compliance-heavy workflows.
+The U.S. Web Design System version 3, the de-facto baseline for U.S. federal sites and the strongest primary system when a Power Pages portal must feel **official, plain-language, trustworthy, and accessible by default**. Especially appropriate for grants portals, eligibility flows, public-facing service delivery, and compliance-heavy workflows.
 
 ## Canonical sources
 
@@ -14,12 +14,12 @@ Always link the user to these for the *current* spec; the catalog below is for t
 | Utilities (CSS reference) | https://designsystem.digital.gov/utilities/ |
 | GitHub | https://github.com/uswds/uswds |
 | npm package | `@uswds/uswds` |
-| License | Public domain (CC0) — no attribution required |
+| License | Public domain (CC0), no attribution required |
 | Figma kit | https://designsystem.digital.gov/documentation/figma-libraries/ |
 
 ## Component catalog
 
-USWDS 3 exposes a deliberately restrained set. **Components marked ✗ are not in this system on purpose** — borrow from another system per the [crossover recipes](crossover-recipes.md), keeping USWDS tokens and accessibility posture.
+USWDS 3 exposes a deliberately restrained set. **Components marked ✗ are not in this system on purpose**, borrow from another system per the [crossover recipes](crossover-recipes.md), keeping USWDS tokens and accessibility posture.
 
 | Component | In USWDS 3? | Notes |
 |---|---|---|
@@ -85,15 +85,15 @@ USWDS uses a **token-driven system** with three layers: theme tokens (project-cu
 USWDS colors are organized by **family + grade** (a numeric darkness scale). Grades 5-90 in steps of 10. Use grade-pair contrast rules: text grade ≥ 50 against background grade ≤ 20 generally clears AA.
 
 Theme color slots (project sets values per-site):
-- `primary` — primary brand action color
+- `primary`, primary brand action color
 - `primary-darker`, `primary-darkest`, `primary-lighter`, `primary-lightest`
-- `secondary` — destructive / alert
-- `accent-cool` — informational accent
-- `accent-warm` — emphasis accent
-- `base` — neutral grays
-- `error`, `warning`, `success`, `info`, `emergency` — status
+- `secondary`, destructive / alert
+- `accent-cool`, informational accent
+- `accent-warm`, emphasis accent
+- `base`, neutral grays
+- `error`, `warning`, `success`, `info`, `emergency`, status
 
-Built-in palettes: red, orange, gold, yellow, green, mint, cyan, blue, indigo, violet, magenta, gray, gray-cool, gray-warm — each with grades 5-90.
+Built-in palettes: red, orange, gold, yellow, green, mint, cyan, blue, indigo, violet, magenta, gray, gray-cool, gray-warm, each with grades 5-90.
 
 ### Type scale
 
@@ -107,8 +107,8 @@ Spacing units use a **base unit of 8px** (`1unit = 8px`), with named tokens `1px
 
 ### Other
 
-- **Radii**: `sm`, `md`, `lg`, `pill` — generally restrained
-- **Shadows**: `none`, `1`, `2`, `3`, `4`, `5` — minimal use; favor borders
+- **Radii**: `sm`, `md`, `lg`, `pill`, generally restrained
+- **Shadows**: `none`, `1`, `2`, `3`, `4`, `5`, minimal use; favor borders
 - **Motion**: deliberate and minimal; respects `prefers-reduced-motion`
 
 ## Power Pages implementation bias
@@ -120,17 +120,17 @@ Spacing units use a **base unit of 8px** (`1unit = 8px`), with named tokens `1px
 
 ## License + foot-guns
 
-- **Bundle is public-domain (CC0)** — safe to vendor and modify.
-- **Public Sans is OFL** — bundle the font files locally; CDN links can be CSP-blocked.
-- **USWDS Icons are public-domain Material Symbols derivatives** — safe to ship with the portal; do not need attribution.
-- **The full build expects Sass + npm** — Power Pages doesn't run a build pipeline at request time. Either pre-build Sass once and ship the compiled CSS, or rewrite the slice you need as plain CSS variables.
-- **No carousel exists** — if a stakeholder insists, do not invent a "USWDS carousel"; document the borrow in a code comment and follow [crossover-recipes.md](crossover-recipes.md).
-- **USWDS is web-only.** It defines no native-app navigation patterns — no bottom tab bar, no large-title scroll-collapse navigation, no FAB. When a portal needs a **mobile-app feel** (PWA, mobile-first service kiosk, "feels like an app" stakeholder request), USWDS cannot answer alone:
+- **Bundle is public-domain (CC0)**, safe to vendor and modify.
+- **Public Sans is OFL**, bundle the font files locally; CDN links can be CSP-blocked.
+- **USWDS Icons are public-domain Material Symbols derivatives**, safe to ship with the portal; do not need attribution.
+- **The full build expects Sass + npm**, Power Pages doesn't run a build pipeline at request time. Either pre-build Sass once and ship the compiled CSS, or rewrite the slice you need as plain CSS variables.
+- **No carousel exists**, if a stakeholder insists, do not invent a "USWDS carousel"; document the borrow in a code comment and follow [crossover-recipes.md](crossover-recipes.md).
+- **USWDS is web-only.** It defines no native-app navigation patterns, no bottom tab bar, no large-title scroll-collapse navigation, no FAB. When a portal needs a **mobile-app feel** (PWA, mobile-first service kiosk, "feels like an app" stakeholder request), USWDS cannot answer alone:
   - **Ask the user**: should the mobile experience feel **iOS-native** or **Android-native**?
   - **iOS-native** → borrow nav from [apple-hig.md](apple-hig.md) (bottom tab bar with translucent treatment, large title scroll-collapse, sheet presentations)
   - **Android-native** → borrow nav from [material-3.md](material-3.md) (M3 navigation bar, navigation drawer, FAB)
   - **Cross-platform / unsure** → default to Material 3 (it's the closest to USWDS's content-first posture and works for both audiences without feeling foreign on either)
-  - In all variants, **preserve USWDS color tokens, type, focus states, and content tone** — only the navigation chrome changes. See [crossover-recipes.md](crossover-recipes.md) → "USWDS web with mobile-app feel."
+  - In all variants, **preserve USWDS color tokens, type, focus states, and content tone**, only the navigation chrome changes. See [crossover-recipes.md](crossover-recipes.md) → "USWDS web with mobile-app feel."
 
 ## Component-level guidance
 
@@ -170,9 +170,9 @@ See [responsive-defaults.md](responsive-defaults.md) for the cross-system respon
 
 ## Pairing with other systems
 
-- **Material 3** — for carousel, stepper, bottom-sheet behavior; see [material-3.md](material-3.md)
-- **shadcn/ui** — for cards, modern filter drawers, dialogs; see [shadcn-ui.md](shadcn-ui.md)
-- **Fluent 2** — for denser business tables and enterprise filter behavior; see [fluent-2.md](fluent-2.md)
-- **Apple HIG** — generally not needed; USWDS is already calm and clear
+- **Material 3**, for carousel, stepper, bottom-sheet behavior; see [material-3.md](material-3.md)
+- **shadcn/ui**, for cards, modern filter drawers, dialogs; see [shadcn-ui.md](shadcn-ui.md)
+- **Fluent 2**, for denser business tables and enterprise filter behavior; see [fluent-2.md](fluent-2.md)
+- **Apple HIG**, generally not needed; USWDS is already calm and clear
 
 When borrowing, always preserve USWDS plain language, contrast, focus states, and restrained tone. See [system-selection.md](system-selection.md) for the full crossover rule.

@@ -1,27 +1,27 @@
-# Troubleshooting — Error → Cause → Fix
+# Troubleshooting: Error → Cause → Fix
 
 Common Power Pages error messages and runtime symptoms, mapped to root causes and concrete fixes. Organized by where the error appears.
 
-## Symptom index — start here
+## Symptom index: start here
 
 A debugger landing mid-task: scan the left column, jump to the section. Symptoms covered by another reference file link out instead of staying inside this file.
 
 | What you see | Likely cause | Jump to |
 |---|---|---|
-| Page returns 200 but body is empty | Mode A divergence — base file empty, localized populated | [Page renders blank → Cause #1](#cause-1-most-common-base-file-is-empty-localized-file-has-content) |
+| Page returns 200 but body is empty | Mode A divergence, base file empty, localized populated | [Page renders blank → Cause #1](#cause-1-most-common-base-file-is-empty-localized-file-has-content) |
 | Page renders for one user, blank for another | Page-level Authentication setting denies anonymous, or user lacks the required role | [Page renders blank → Cause #2](#cause-2-the-page-is-set-to-require-auth-and-the-user-is-anonymous) |
 | Page renders but JS doesn't work | Localized JS populated, base JS empty (same Mode A bug) | [Symptom: page renders but JS doesn't work](#symptom-page-renders-but-js-doesnt-work) |
-| Page renders but CSS missing | Same — base CSS empty | [Symptom: page renders but CSS missing](#symptom-page-renders-but-css-missing) |
-| Two users see different content on the same URL | Mode B divergence — base + localized both populated and drifted | [hybrid-page-idiom.md](../pages/hybrid-page-idiom.md) |
+| Page renders but CSS missing | Same, base CSS empty | [Symptom: page renders but CSS missing](#symptom-page-renders-but-css-missing) |
+| Two users see different content on the same URL | Mode B divergence, base + localized both populated and drifted | [hybrid-page-idiom.md](../pages/hybrid-page-idiom.md) |
 | `404 Not Found` from `/_api/<entity>` | Site Setting `Webapi/<entity>/Enabled` missing or `false` | [404 Not Found](#404-not-found-from-_apientity) |
 | `401 Unauthorized` from `/_api/` | User anonymous on a table that requires auth, or token helper failed | [401 Unauthorized](#401-unauthorized-from-_apientity) |
 | `403 Forbidden` from `/_api/` | Anti-forgery token missing/stale, OR Table Permission denies the scope, OR field not in `Fields` whitelist | [403 Forbidden](#403-forbidden-from-_apientity) |
 | `400` "is not a valid navigation property" | Wrong `@odata.bind` navigation name; common with polymorphic (customer-type) lookups | [Invalid navigation property](#-is-not-a-valid-navigation-property) |
 | `400` "Could not find a property named" | Field name typo, display vs logical name, wrong publisher prefix | [Could not find a property](#could-not-find-a-property-named-field) |
-| `400` "Cannot bind value of type Edm.X to type Edm.Y" | Type mismatch — string sent for decimal, etc. | [Cannot bind value of type](#cannot-bind-value-of-type-edmx-to-type-edmy) |
+| `400` "Cannot bind value of type Edm.X to type Edm.Y" | Type mismatch, string sent for decimal, etc. | [Cannot bind value of type](#cannot-bind-value-of-type-edmx-to-type-edmy) |
 | Dependent dropdown shows zero options | `_value` filter form used incorrectly OR navigation property casing wrong | [data/webapi-patterns.md](../data/webapi-patterns.md) and [data/dataverse-naming.md](../data/dataverse-naming.md) |
 | Uploaded file won't open / shows zeros | `data:<mime>;base64,` prefix not stripped from `documentbody` before POST | [recipes/file-upload-annotations.md](../recipes/file-upload-annotations.md) |
-| `Liquid error: Invalid filter '<name>'` | DotLiquid doesn't have that filter — it's a Shopify-only one | [language/filters.md](../language/filters.md) |
+| `Liquid error: Invalid filter '<name>'` | DotLiquid doesn't have that filter, it's a Shopify-only one | [language/filters.md](../language/filters.md) |
 | Liquid behaves differently from Shopify examples on the web | DotLiquid is not Shopify Liquid; many Shopify-isms are absent | [language/dotliquid-gotchas.md](../language/dotliquid-gotchas.md) |
 | `JSON.parse: unexpected character` in client-side code | DotLiquid double-escaping inline JSON | [JSON.parse error](#jsonparse-unexpected-character-in-client-side-code) |
 | `Liquid error: undefined method 'fetchxml'` | `{% fetchxml %}` used outside a Liquid-rendering context | [undefined method fetchxml](#liquid-error-undefined-method-fetchxml) |
@@ -31,7 +31,7 @@ A debugger landing mid-task: scan the left column, jump to the section. Symptoms
 | Studio preview blank / errors but live portal works | Studio preview is stricter than the live portal | [Studio preview](#studio-preview-fails-for-some-pages) |
 | `{{ user.something }}` returns nil for authenticated users | Contact field not exposed to the portal context | [user.something nil](#-usersomething--returns-nil-for-authenticated-users) |
 | `{% if user.roles contains 'X' %}` always false | Role not assigned, or casing differs | [user.roles always false](#-if-userroles-contains-x---always-false) |
-| Just-assigned role not honored on page reload | Session caches role membership at sign-in — user must sign out/in | [data/permissions-and-roles.md](../data/permissions-and-roles.md) |
+| Just-assigned role not honored on page reload | Session caches role membership at sign-in, user must sign out/in | [data/permissions-and-roles.md](../data/permissions-and-roles.md) |
 | `sitemarkers['Name']` returns nil | No Sitemarker record with that name | [sitemarkers nil](#-sitemarkersname--returns-nil) |
 | Browser stuck in `/SignIn` loop | Return URL malformed, or post-signin page is itself role-restricted | [SignIn loop](#browser-shows-signin-loop-after-login) |
 | `Anti-forgery token validation failed` in console | Token stale or for a different session | [Token validation](#anti-forgery-token-validation-failed-in-browser-console) |
@@ -112,11 +112,11 @@ Sync up; restart the portal cache via Admin Center if changes don't appear immed
 
 **Cause #1**: User is not authenticated. Anonymous users can't call this Web API endpoint.
 
-**Fix**: Either authenticate the user (redirect to /SignIn first), or grant the Anonymous Users role a Table Permission allowing the operation (carefully — see [../data/permissions-and-roles.md](../data/permissions-and-roles.md)).
+**Fix**: Either authenticate the user (redirect to /SignIn first), or grant the Anonymous Users role a Table Permission allowing the operation (carefully, see [../data/permissions-and-roles.md](../data/permissions-and-roles.md)).
 
 **Cause #2**: Anti-forgery token request failed (`window.shell.getTokenDeferred()` returned an error).
 
-**Fix**: Verify the token helper is loaded — Power Pages includes it on every page automatically, but custom JS in iframes or detached contexts may not see it. The token must be refreshed for each call (don't cache).
+**Fix**: Verify the token helper is loaded, Power Pages includes it on every page automatically, but custom JS in iframes or detached contexts may not see it. The token must be refreshed for each call (don't cache).
 
 <a id="403-forbidden-from-_apientity"></a>
 
@@ -124,7 +124,7 @@ Sync up; restart the portal cache via Admin Center if changes don't appear immed
 
 **Cause #1**: `__RequestVerificationToken` header missing or stale.
 
-**Fix**: Use the `safeAjax` pattern from [../data/webapi-patterns.md](../data/webapi-patterns.md) — never call `fetch('/_api/...')` directly without the token. Detect via `pp-permissions-audit` (WRN-004).
+**Fix**: Use the `safeAjax` pattern from [../data/webapi-patterns.md](../data/webapi-patterns.md), never call `fetch('/_api/...')` directly without the token. Detect via `pp-permissions-audit` (WRN-004).
 
 **Cause #2**: Table Permission denies the scope. The user has a Web Role, but no permission rule allows this operation on this entity at a scope reachable for them.
 
@@ -165,7 +165,7 @@ Sync up; restart the portal cache via Admin Center if changes don't appear immed
 
 Detect via `pp-permissions-audit` (WRN-001).
 
-Also check **case-sensitivity** — `contoso_Applicant_contact` is right; `contoso_applicant_contact` is wrong. Navigation property names are case-sensitive AND entity-specific.
+Also check **case-sensitivity**, `contoso_Applicant_contact` is right; `contoso_applicant_contact` is wrong. Navigation property names are case-sensitive AND entity-specific.
 
 <a id="could-not-find-a-property-named-field"></a>
 
@@ -182,7 +182,7 @@ Also check **case-sensitivity** — `contoso_Applicant_contact` is right; `conto
 
 ### `Cannot bind value of type Edm.X to type Edm.Y`
 
-**Cause**: Type mismatch — sending a string when a decimal is expected, etc.
+**Cause**: Type mismatch, sending a string when a decimal is expected, etc.
 
 **Fix**: Check the schema for the field's `Type`:
 
@@ -241,7 +241,7 @@ Detect via `pp-permissions-audit` (INFO-007).
 
 ### `pac paportal upload` fails with "PowerPageComponentDeletePlugin: not found"
 
-**Cause**: A record was deleted on the server but the local YAML still exists. Cosmetic — upload still succeeds for valid files.
+**Cause**: A record was deleted on the server but the local YAML still exists. Cosmetic, upload still succeeds for valid files.
 
 **Fix**: Delete the orphaned local YAML files and commit. Or run `./*-doctor.sh` to audit.
 
@@ -283,7 +283,7 @@ See [pp-sync sync workflow](../../../../../pp-sync/skills/pp-sync/references/saf
 
 ### `{{ user.something }}` returns nil for authenticated users
 
-**Cause**: The Contact field isn't exposed to the portal context — Power Pages portals only expose a subset of Contact fields by default.
+**Cause**: The Contact field isn't exposed to the portal context, Power Pages portals only expose a subset of Contact fields by default.
 
 **Fix**: Add the field to the portal's exposed fields via Power Pages Studio (Site Settings → Authentication → user fields), OR use a FetchXML query against the Contact directly (if the user's Web Role has Read on Contact).
 
@@ -332,12 +332,12 @@ See [pp-sync sync workflow](../../../../../pp-sync/skills/pp-sync/references/saf
 
 **Cause**: The token Page Pages issued is stale or for a different session.
 
-**Fix**: Refresh the page once. If it persists, the user's session may have expired — sign them out and back in.
+**Fix**: Refresh the page once. If it persists, the user's session may have expired, sign them out and back in.
 
 ## When you can't figure it out
 
 1. Run `pp-permissions-audit` to catch static-analysis findings
 2. Open the browser DevTools Network tab and look at the failing request's status + response body
 3. Check Power Platform Admin Center → site → Diagnostics → recent errors
-4. Read the **first** non-trivial line of the error stack — DotLiquid stacks often have noise above the real cause
+4. Read the **first** non-trivial line of the error stack, DotLiquid stacks often have noise above the real cause
 5. If totally stuck: temporarily set Site Setting `Webapi/error/innererror/enabled = true` to get richer error responses (disable in prod after debugging)

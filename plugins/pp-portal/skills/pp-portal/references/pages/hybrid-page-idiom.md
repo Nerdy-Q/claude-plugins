@@ -1,8 +1,8 @@
-# Hybrid Page Idiom — Liquid Render Scaffold + JS Mutate
+# Hybrid Page Idiom: Liquid Render Scaffold + JS Mutate
 
 The most common pattern in production Power Pages portals: the page template uses **Liquid + FetchXML for the initial render** (search-engine-friendly, fast first paint, no flash of empty content), then **client-side JavaScript using Web API for interactivity** (forms, dependent dropdowns, mutations).
 
-This is **not** an entityform/entitylist — those have generated chrome. Hybrid pages are custom UI that's still bound to Dataverse data.
+This is **not** an entityform/entitylist, those have generated chrome. Hybrid pages are custom UI that's still bound to Dataverse data.
 
 ## File anatomy
 
@@ -15,17 +15,17 @@ web-pages/customers/
 ├── Customers.webpage.custom_javascript.js         # ⚠ BASE JS (loaded by default)
 ├── Customers.webpage.custom_css.css               # BASE CSS
 └── content-pages/
-    └── Customers.en-US.webpage.copy.html          # localized — NOT loaded by default
-    └── Customers.en-US.webpage.custom_javascript.js  # localized JS — NOT loaded by default
+    └── Customers.en-US.webpage.copy.html          # localized, NOT loaded by default
+    └── Customers.en-US.webpage.custom_javascript.js  # localized JS, NOT loaded by default
 ```
 
 **Critical**: Power Pages serves the BASE files (`<Page>.webpage.copy.html`, etc.). The `content-pages/<lang>/...` files are localized variants that are **only used if** the user's locale matches AND the base file is empty. If the base file is populated, localized files are ignored. **The number-one reason a page renders blank is a populated localized file with an empty base file.**
 
-When you create a new page in Power Pages Studio, it puts your content in the base file by default. When you edit via `pac paportal upload` after editing locally, both must stay in sync — many production scripts copy base→localized as part of their commit workflow.
+When you create a new page in Power Pages Studio, it puts your content in the base file by default. When you edit via `pac paportal upload` after editing locally, both must stay in sync, many production scripts copy base→localized as part of their commit workflow.
 
 ## The render-scaffold-then-mutate pattern
 
-### Step 1 — Liquid renders the initial state
+### Step 1: Liquid renders the initial state
 
 ```liquid
 {# Customers.webpage.copy.html #}
@@ -94,18 +94,18 @@ When you create a new page in Power Pages Studio, it puts your content in the ba
 Notes:
 
 - The Liquid does the heavy lifting: counted, filtered, paginated, ordered. Page renders fully-formed.
-- Querystring drives state — bookmarkable, shareable, refresh-safe.
+- Querystring drives state, bookmarkable, shareable, refresh-safe.
 - `data-*` attributes carry state to JavaScript without re-querying.
 - `escape` is essential on all user-derived content.
 
-### Step 2 — JavaScript adds interactivity
+### Step 2: JavaScript adds interactivity
 
 ```javascript
 // Customers.webpage.custom_javascript.js
 (function () {
   'use strict';
 
-  // safeAjax helper — see references/webapi-patterns.md
+  // safeAjax helper, see references/webapi-patterns.md
   function safeAjax(options) { /* ... */ }
 
   document.addEventListener('click', function (e) {
@@ -135,9 +135,9 @@ Notes:
 
 Notes:
 
-- IIFE `(function(){...})()` to avoid leaking globals — Power Pages includes site-wide JS, no module isolation.
+- IIFE `(function(){...})()` to avoid leaking globals, Power Pages includes site-wide JS, no module isolation.
 - Event delegation on `document` instead of binding per-row, because rows can change.
-- No optimistic-UI shortcut — wait for the response then mutate the DOM. Power Pages doesn't expose a real-time event stream.
+- No optimistic-UI shortcut, wait for the response then mutate the DOM. Power Pages doesn't expose a real-time event stream.
 
 ## Bootstrap data into JS without DotLiquid escape hell
 
@@ -165,9 +165,9 @@ If your JS needs richer data than `data-*` attributes allow, emit JSON in a `<sc
 
 Why this works:
 
-- `<script type="application/json">` — the browser does not execute the content; a JSON syntax error doesn't crash other scripts.
-- `"` is the valid JSON Unicode escape for `"` — the standard `replace: '"', '\\"'` filter chain in DotLiquid produces three characters (backslash, backslash, quote) instead of two, which silently breaks JSON parsing. See [../language/dotliquid-gotchas.md](../language/dotliquid-gotchas.md).
-- **Do NOT use `| escape`** — it produces HTML entities (`&quot;`) that stay literal inside `<script>` tags.
+- `<script type="application/json">`, the browser does not execute the content; a JSON syntax error doesn't crash other scripts.
+- `"` is the valid JSON Unicode escape for `"`, the standard `replace: '"', '\\"'` filter chain in DotLiquid produces three characters (backslash, backslash, quote) instead of two, which silently breaks JSON parsing. See [../language/dotliquid-gotchas.md](../language/dotliquid-gotchas.md).
+- **Do NOT use `| escape`**, it produces HTML entities (`&quot;`) that stay literal inside `<script>` tags.
 
 ## Wizard pattern (multi-step, server-side state)
 
@@ -199,12 +199,12 @@ The hybrid pattern wins because the **initial state** is server-rendered (fast, 
 
 Tempting because entityform is free. Costs:
 
-- Limited UI customization — the chrome is generated.
+- Limited UI customization, the chrome is generated.
 - One form per page (can't combine).
 - Hard to add dependent dropdowns or conditional fields.
 - Hard to integrate with non-Dataverse APIs.
 
-When the form is genuinely a CRUD operation on a single entity with standard validation, `{% entityform %}` is the right tool. When the form has any of: dependent fields, custom validation, branching logic, multiple writes — go hybrid.
+When the form is genuinely a CRUD operation on a single entity with standard validation, `{% entityform %}` is the right tool. When the form has any of: dependent fields, custom validation, branching logic, multiple writes, go hybrid.
 
 ### Forgetting to sync base + localized files
 
@@ -214,7 +214,7 @@ Power Pages stores **two physical copies** of every page asset: a base file (`<P
 
 | Mode | What it looks like | How it happens |
 |---|---|---|
-| **Empty base** | Page renders blank | Studio sometimes saves edits only to the localized file — when another developer pulls, their base is empty. |
+| **Empty base** | Page renders blank | Studio sometimes saves edits only to the localized file, when another developer pulls, their base is empty. |
 | **Diverged pair** | Some users see different content than others | Both files were edited at different times; they've drifted. The base still wins for non-localized requests, but localized users see the older / newer version unintentionally. |
 
 **Files affected** (each has both a base and a `content-pages/<lang>/` form):
@@ -235,8 +235,8 @@ Whichever you pick, **document it in the project's CLAUDE.md** so the team is co
 
 **Fix divergence**: `pp sync-pages <project>` copies one direction in bulk (you choose base→localized or localized→base based on which has the latest content).
 
-**Don't let `git status` lie to you.** After a `pac paportal download`, look for paired `.webpage.copy.html` files where one side has a substantive change and the other doesn't. PAC will happily fetch both files in their current state — divergence on the server stays divergent on disk.
+**Don't let `git status` lie to you.** After a `pac paportal download`, look for paired `.webpage.copy.html` files where one side has a substantive change and the other doesn't. PAC will happily fetch both files in their current state, divergence on the server stays divergent on disk.
 
 ### Loading too much CSS/JS
 
-Power Pages serves all custom CSS/JS for a page on every request — there's no bundler. Site-wide JS lives in `web-files/`; page-specific JS lives in `<Page>.webpage.custom_javascript.js`. Keep page-specific files small; push shared logic to `web-files/<bundle>.js` and add a `<script src="/<bundle>.js">` reference.
+Power Pages serves all custom CSS/JS for a page on every request, there's no bundler. Site-wide JS lives in `web-files/`; page-specific JS lives in `<Page>.webpage.custom_javascript.js`. Keep page-specific files small; push shared logic to `web-files/<bundle>.js` and add a `<script src="/<bundle>.js">` reference.

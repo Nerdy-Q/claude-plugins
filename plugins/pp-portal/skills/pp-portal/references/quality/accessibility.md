@@ -1,6 +1,6 @@
 # Accessibility in Power Pages
 
-Power Pages portals carry the bulk of Microsoft's accessibility liability through the **platform-rendered chrome** (basic forms, multistep forms, lists, subgrids, login, themes). Every byte of HTML *you* add — Liquid templates, content snippets, custom CSS, custom JS, FetchXML-rendered tables — is **your** liability. Microsoft is explicit:
+Power Pages portals carry the bulk of Microsoft's accessibility liability through the **platform-rendered chrome** (basic forms, multistep forms, lists, subgrids, login, themes). Every byte of HTML *you* add, Liquid templates, content snippets, custom CSS, custom JS, FetchXML-rendered tables, is **your** liability. Microsoft is explicit:
 
 > "When you customize your Power Pages site, you're responsible for meeting accessibility standards."
 
@@ -16,7 +16,7 @@ Power Pages publicly conforms to **three** standards (per the [official accessib
 | US Section 508 (GSA) | Conforms |
 | EN 301 549 (ETSI, EU) | Conforms |
 
-**Conformance level is not stated as A / AA / AAA on the page**, but the testing guidance points specifically at *Accessibility Insights Assessment*, which "measures compliance with WCAG 2.2 Level AA success criteria" — that is the operative bar. Treat **WCAG 2.2 Level AA** as the target for any custom work. Note: Microsoft's own page includes a slightly stale sentence saying customizations must adhere to "WCAG 2.1, US Section 508, or ETSI EN 301 549" in the Liquid-templates section. The conformance commitment elsewhere on the same page is 2.2; build to 2.2.
+**Conformance level is not stated as A / AA / AAA on the page**, but the testing guidance points specifically at *Accessibility Insights Assessment*, which "measures compliance with WCAG 2.2 Level AA success criteria", that is the operative bar. Treat **WCAG 2.2 Level AA** as the target for any custom work. Note: Microsoft's own page includes a slightly stale sentence saying customizations must adhere to "WCAG 2.1, US Section 508, or ETSI EN 301 549" in the Liquid-templates section. The conformance commitment elsewhere on the same page is 2.2; build to 2.2.
 
 For US federal / state / municipal contracts, Section 508 conformance is the contracting hook. EN 301 549 is the equivalent for EU public-sector procurement.
 
@@ -43,22 +43,22 @@ Two basic-form / multistep-form options are explicitly documented as accessibili
 
 | Option | Default | What it does |
 |---|---|---|
-| **ToolTips Enabled** | `false` | Adds the Dataverse attribute description as the `title=` attribute on each input. Screen readers read this on focus. **Turn on** if your Dataverse columns have description text — it's free a11y. |
-| **Enable Validation Summary Links** | `true` | Renders anchor links in the validation summary that scroll to the failing field on click. **Leave on** — turning it off makes long forms unusable for keyboard users. |
+| **ToolTips Enabled** | `false` | Adds the Dataverse attribute description as the `title=` attribute on each input. Screen readers read this on focus. **Turn on** if your Dataverse columns have description text, it's free a11y. |
+| **Enable Validation Summary Links** | `true` | Renders anchor links in the validation summary that scroll to the failing field on click. **Leave on**, turning it off makes long forms unusable for keyboard users. |
 
 Subgrid dialog fields with explicit a11y semantics:
 
 | Field | Purpose |
 |---|---|
-| **Dismiss Button Sr Text** | Screen-reader-only text on the modal close button (overrides default "Close"). Set this if the modal context is non-obvious — e.g., "Close edit project dialog". |
+| **Dismiss Button Sr Text** | Screen-reader-only text on the modal close button (overrides default "Close"). Set this if the modal context is non-obvious, e.g., "Close edit project dialog". |
 | **Title** | Title bar text. Read by screen readers as the dialog name. Always set explicitly; don't rely on the default. |
 | **Loading Message** | What screen readers announce while the modal loads. |
 
 Adjacent form options that *aren't* labeled accessibility but affect it:
 
-- **Validation Summary Header Text** — set this; the default is empty and gives screen-reader users no context for the error list
-- **Instructions** — rendered above the form. Use this for instructions that apply globally; instructions inside individual fields are buried for AT users
-- **Set Recommended Fields as Required** / **Make All Fields Required** — these change which fields render with `aria-required`. Wrong setting = lying to assistive tech
+- **Validation Summary Header Text**, set this; the default is empty and gives screen-reader users no context for the error list
+- **Instructions**, rendered above the form. Use this for instructions that apply globally; instructions inside individual fields are buried for AT users
+- **Set Recommended Fields as Required** / **Make All Fields Required**, these change which fields render with `aria-required`. Wrong setting = lying to assistive tech
 
 ## There is no Power Pages accessibility checker
 
@@ -66,17 +66,17 @@ Canvas Apps has an Accessibility Checker built into the Studio. **Power Pages do
 
 | Tool | Use | Where |
 |---|---|---|
-| **Accessibility Insights — FastPass** | Quick automated scan of dozens of WCAG checks | Browser extension on a published site |
-| **Accessibility Insights — Assessment** | Full WCAG 2.2 Level AA workflow with manual checks | Browser extension; documents results |
+| **Accessibility Insights, FastPass** | Quick automated scan of dozens of WCAG checks | Browser extension on a published site |
+| **Accessibility Insights, Assessment** | Full WCAG 2.2 Level AA workflow with manual checks | Browser extension; documents results |
 | **Lighthouse** (Edge / Chrome DevTools) | Quick automated a11y score | DevTools → Lighthouse tab → Accessibility category |
 | **Windows Narrator** / **NVDA** / **VoiceOver** | Manual screen-reader testing | OS-level |
 | **Edge Immersive Reader** | Sanity check that text content is readable | Edge browser |
 
-Site Checker (in Power Platform admin center) is **not** an accessibility tool — it's a configuration diagnostic (footer cache, broken pages, etc.). Security Scan is also unrelated — it scans for XSS / vulnerable libraries, not WCAG.
+Site Checker (in Power Platform admin center) is **not** an accessibility tool, it's a configuration diagnostic (footer cache, broken pages, etc.). Security Scan is also unrelated, it scans for XSS / vulnerable libraries, not WCAG.
 
 **Practical loop**: deploy to a non-prod portal → run Accessibility Insights FastPass (catches ~25–30 of the auto-detectable WCAG failures) → manually walk the page with NVDA or Narrator → fix → repeat. For a production sign-off, run Accessibility Insights *Assessment* on every distinct page template.
 
-## WCAG 2.2 Level AA — the customization checklist
+## WCAG 2.2 Level AA: the customization checklist
 
 What you must verify on every custom page or web template.
 
@@ -84,36 +84,36 @@ What you must verify on every custom page or web template.
 
 | Requirement | Power Pages-specific note |
 |---|---|
-| **1.1.1 Non-text content** — alt on every `<img>` | Decorative images: `alt=""`. Snippet `Logo alt text` is configurable — always set it, never leave default. Liquid: `<img src="{{ snippets['Logo URL'] }}" alt="{{ snippets['Logo alt text'] }}">` |
-| **1.3.1 Info and relationships** — semantic HTML | Don't use `<div onclick>` for buttons; use `<button>`. FetchXML tables: emit real `<table><caption><th scope="col">` |
-| **1.4.1 Use of color** — color is not the only signal | Status indicators must include text or icon, not just a colored dot. The Styling workspace gives you a small color palette — keep semantic-color text labels in your Liquid |
-| **1.4.3 Contrast (minimum)** — 4.5:1 normal, 3:1 large | Power Pages preset themes (post-Sept 2022) meet this. Sites created before Sept 2022 may need re-theming — see [Adjusting the background color](https://learn.microsoft.com/power-pages/known-issues#adjusting-the-background-color-for-your-power-pages-site) |
-| **1.4.10 Reflow** — works at 400% zoom | Test by zooming Edge to 400% on a 1280px viewport. No horizontal scroll except for tables/maps. Bootstrap-grid pages from the templates pass; custom CSS with fixed `width: 1200px` fails |
-| **1.4.11 Non-text contrast** — 3:1 for UI components | Custom button borders, focus rings, form-field outlines must hit 3:1 against background |
+| **1.1.1 Non-text content**, alt on every `<img>` | Decorative images: `alt=""`. Snippet `Logo alt text` is configurable, always set it, never leave default. Liquid: `<img src="{{ snippets['Logo URL'] }}" alt="{{ snippets['Logo alt text'] }}">` |
+| **1.3.1 Info and relationships**, semantic HTML | Don't use `<div onclick>` for buttons; use `<button>`. FetchXML tables: emit real `<table><caption><th scope="col">` |
+| **1.4.1 Use of color**, color is not the only signal | Status indicators must include text or icon, not just a colored dot. The Styling workspace gives you a small color palette, keep semantic-color text labels in your Liquid |
+| **1.4.3 Contrast (minimum)**, 4.5:1 normal, 3:1 large | Power Pages preset themes (post-Sept 2022) meet this. Sites created before Sept 2022 may need re-theming, see [Adjusting the background color](https://learn.microsoft.com/power-pages/known-issues#adjusting-the-background-color-for-your-power-pages-site) |
+| **1.4.10 Reflow**, works at 400% zoom | Test by zooming Edge to 400% on a 1280px viewport. No horizontal scroll except for tables/maps. Bootstrap-grid pages from the templates pass; custom CSS with fixed `width: 1200px` fails |
+| **1.4.11 Non-text contrast**, 3:1 for UI components | Custom button borders, focus rings, form-field outlines must hit 3:1 against background |
 
 ### Operable
 
 | Requirement | Power Pages-specific note |
 |---|---|
-| **2.1.1 Keyboard** — all functionality keyboardable | Custom JS with `mousedown` / `mouseup` only is broken. Dependent dropdowns, AJAX search — all must work with Tab + Enter |
+| **2.1.1 Keyboard**, all functionality keyboardable | Custom JS with `mousedown` / `mouseup` only is broken. Dependent dropdowns, AJAX search, all must work with Tab + Enter |
 | **2.1.2 No keyboard trap** | Modal dialogs must return focus to the trigger on close. Subgrid dialogs do this for you; hand-rolled overlays often don't |
-| **2.4.1 Bypass blocks** — skip link or landmarks | Power Pages templates do not include a skip link by default. Add one (see pattern below) |
-| **2.4.3 Focus order** | DOM order = focus order. CSS `order:` and `flex-direction: row-reverse` defeat this — verify with Tab |
-| **2.4.6 Headings and labels** | Every page needs an `<h1>`. Page Header web template renders the page title — `{% include 'page_header' %}` |
+| **2.4.1 Bypass blocks**, skip link or landmarks | Power Pages templates do not include a skip link by default. Add one (see pattern below) |
+| **2.4.3 Focus order** | DOM order = focus order. CSS `order:` and `flex-direction: row-reverse` defeat this, verify with Tab |
+| **2.4.6 Headings and labels** | Every page needs an `<h1>`. Page Header web template renders the page title, `{% include 'page_header' %}` |
 | **2.4.7 Focus visible** | Don't `outline: none` without a replacement `:focus` style. Many corporate-branded portals do this; it's an instant Section 508 fail |
-| **2.5.8 Target size (minimum, 2.2)** — 24×24 CSS px | New in 2.2. Audit any icon-only buttons, sort arrows, subgrid action icons |
+| **2.5.8 Target size (minimum, 2.2)**, 24×24 CSS px | New in 2.2. Audit any icon-only buttons, sort arrows, subgrid action icons |
 
 ### Understandable
 
 | Requirement | Power Pages-specific note |
 |---|---|
 | **3.1.1 Language of page** | `<html lang="{{ website.selected_language.code }}">` in your page-template root web template |
-| **3.2.2 On input** — change of context only on submit | Auto-submitting `<select>` `onchange` is a fail unless announced. Use a Submit button, or add an `aria-live` notice |
+| **3.2.2 On input**, change of context only on submit | Auto-submitting `<select>` `onchange` is a fail unless announced. Use a Submit button, or add an `aria-live` notice |
 | **3.3.1 Error identification** | Basic-form validation summary covers this. Custom forms must announce errors via `role="alert"` or `aria-live="assertive"` |
-| **3.3.2 Labels or instructions** | Every form input has a `<label for>`. Don't use placeholder-only labels — they vanish on type |
-| **3.3.3 Error suggestion** | Validation messages from Dataverse may be terse — override via Localized Form Field error messages or client-side validation text |
+| **3.3.2 Labels or instructions** | Every form input has a `<label for>`. Don't use placeholder-only labels, they vanish on type |
+| **3.3.3 Error suggestion** | Validation messages from Dataverse may be terse, override via Localized Form Field error messages or client-side validation text |
 | **3.3.7 Redundant entry (2.2)** | New in 2.2. Multistep forms must not re-ask for data already provided. `{% webform %}` preserves step data automatically; verify in custom step logic |
-| **3.3.8 Accessible authentication (2.2)** | New in 2.2. CAPTCHA on basic forms is a 3.3.8 risk if it requires cognitive function with no alternative — provide an alternative path or use Microsoft's reCAPTCHA invisible mode |
+| **3.3.8 Accessible authentication (2.2)** | New in 2.2. CAPTCHA on basic forms is a 3.3.8 risk if it requires cognitive function with no alternative, provide an alternative path or use Microsoft's reCAPTCHA invisible mode |
 
 ### Robust
 
@@ -138,7 +138,7 @@ Most-frequent findings on real portal audits.
 | **Themes from before Sept 2022** | Older preset themes had below-AA contrast | Re-theme via Styling workspace; see Microsoft's [known-issues remediation](https://learn.microsoft.com/power-pages/known-issues#adjusting-the-background-color-for-your-power-pages-site) |
 | **`title=` tooltip as the only label** | Tooltip-as-label is unreliable on touch devices and not always read by AT | Use `<label>` for inputs; reserve `title=` for supplementary description |
 
-## Async UI updates — aria-live regions
+## Async UI updates: aria-live regions
 
 The single biggest accessibility gap on Power Pages portals after a custom JS layer is added: screen readers do **not** auto-announce DOM changes that come from XHR. Without an `aria-live` region, a user with NVDA / JAWS / VoiceOver gets no indication that loading finished, the table refreshed, the form was saved, or an error appeared. The page silently changes around them.
 
@@ -157,26 +157,26 @@ Power Pages-specific surfaces that hit this:
 | **Status messages** (transient, low-priority) | `aria-live="polite"` | When the screen reader is idle (after the current utterance finishes) | "Loading 5 results", "Saved", "Page 3 of 8" |
 | **Alerts** (errors, validation failures) | `aria-live="assertive"` or `role="alert"` | Interrupts whatever the screen reader was reading | Form validation failure, save error, session expired |
 
-**Default to polite.** `assertive` and `role="alert"` are disruptive — using them for "Loading..." spam will train users to ignore your announcements. Reserve them for genuine errors or anything the user must hear before they continue.
+**Default to polite.** `assertive` and `role="alert"` are disruptive, using them for "Loading..." spam will train users to ignore your announcements. Reserve them for genuine errors or anything the user must hear before they continue.
 
 ### The empty-then-populate pattern
 
-The most reliable way to announce an async update: put the live region in the page **before** anything happens, leave it empty, then write to it from JS once the change occurs. Live regions added to the DOM and immediately written to are unreliable across browsers and AT combos — Edge + NVDA in particular often misses them.
+The most reliable way to announce an async update: put the live region in the page **before** anything happens, leave it empty, then write to it from JS once the change occurs. Live regions added to the DOM and immediately written to are unreliable across browsers and AT combos, Edge + NVDA in particular often misses them.
 
 ```html
 <div id="status" aria-live="polite" aria-atomic="true" class="sr-only"></div>
 
 <script>
-  // Update text from JS — screen reader announces automatically
+  // Update text from JS, screen reader announces automatically
   document.getElementById('status').textContent = 'Loading 5 office branches';
 </script>
 ```
 
-The `.sr-only` class is the visually-hidden pattern from the [Visually hidden, screen-reader-accessible text](#visually-hidden-screen-reader-accessible-text) section below — keep the region present in the DOM but invisible.
+The `.sr-only` class is the visually-hidden pattern from the [Visually hidden, screen-reader-accessible text](#visually-hidden-screen-reader-accessible-text) section below, keep the region present in the DOM but invisible.
 
 ### Why `aria-atomic="true"`
 
-Without `aria-atomic`, partial DOM updates can be announced as their diff. If the live region currently reads "Loading 5..." and you append " results", some screen readers will announce only " results" — leaving the user with no context. With `aria-atomic="true"`, the entire region is re-read on every change. For status text that's a short complete sentence, you almost always want this.
+Without `aria-atomic`, partial DOM updates can be announced as their diff. If the live region currently reads "Loading 5..." and you append " results", some screen readers will announce only " results", leaving the user with no context. With `aria-atomic="true"`, the entire region is re-read on every change. For status text that's a short complete sentence, you almost always want this.
 
 ### Common mistakes
 
@@ -238,7 +238,7 @@ function renderPage(n, total) {
 
 ### When in doubt
 
-Test with NVDA + Edge (or VoiceOver + Safari) on the actual portal — not Studio preview, which strips some platform JS and lies about runtime behavior. If the screen reader says nothing when the UI changes, the live region is missing or wrong. If it interrupts the user every second, you've got `assertive` where you wanted `polite`.
+Test with NVDA + Edge (or VoiceOver + Safari) on the actual portal, not Studio preview, which strips some platform JS and lies about runtime behavior. If the screen reader says nothing when the UI changes, the live region is missing or wrong. If it interrupts the user every second, you've got `assertive` where you wanted `polite`.
 
 The [dependent-dropdown recipe](../recipes/dependent-dropdown.md) and the [hybrid form with safeAjax recipe](../recipes/hybrid-form-with-safeajax.md) both use these patterns inline.
 
@@ -270,7 +270,7 @@ CSS to make it visible only when focused:
 
 ### Focus management after AJAX update
 
-After a Web API GET that re-renders a results region, move focus to the region so AT users hear the change. Build the new DOM safely (avoid `innerHTML` with untrusted strings — Power Pages Web API responses are user-influenced data) and then move focus:
+After a Web API GET that re-renders a results region, move focus to the region so AT users hear the change. Build the new DOM safely (avoid `innerHTML` with untrusted strings, Power Pages Web API responses are user-influenced data) and then move focus:
 
 ```javascript
 function renderResults(items) {
@@ -396,8 +396,8 @@ A workable Power Pages testing flow that catches >90% of issues before launch.
 |---|---|---|---|
 | Build-time | axe-core (npm `@axe-core/cli`) on a published page | Color contrast, label associations, ARIA validity, image alt | 5–10s |
 | Build-time | Lighthouse a11y audit (Edge DevTools) | Same as axe + a few unique checks; gives a numeric score for stakeholders | 30s |
-| Manual | Accessibility Insights — FastPass | The full ~30 automated WCAG 2.2 checks, in browser | 1 min |
-| Manual | Accessibility Insights — Assessment | Manual-verification workflow for the rest of WCAG 2.2 AA | 30–60 min per template |
+| Manual | Accessibility Insights, FastPass | The full ~30 automated WCAG 2.2 checks, in browser | 1 min |
+| Manual | Accessibility Insights, Assessment | Manual-verification workflow for the rest of WCAG 2.2 AA | 30–60 min per template |
 | Manual | NVDA + Edge OR VoiceOver + Safari | Real screen-reader UX (label clarity, focus order, announcement timing) | 5–15 min per page |
 | Manual | Keyboard-only navigation | Focus traps, missing focus styles, custom-widget keyboard support | 5 min per page |
 | Manual | 400% zoom in Edge | Reflow failures | 2 min per page |

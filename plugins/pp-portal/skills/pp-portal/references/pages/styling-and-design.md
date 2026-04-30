@@ -35,7 +35,7 @@ Every Power Pages page loads three CSS files by default, in this order, plus any
 bootstrap.min.css  <  theme.css  <  custom CSS files (top of list)  <  portalbasictheme.css  <  custom CSS files (bottom of list)
 ```
 
-This ordering is the surprising part. Microsoft documents it as: "Any custom CSS file is at lower priority than the default `portalbasictheme.css` and higher than `theme.css`." The Manage CSS panel lists files top→bottom in **load order**, but the panel note says "files listed at bottom take higher precedence" — which means moving a file **down** the list makes it win cascade conflicts.
+This ordering is the surprising part. Microsoft documents it as: "Any custom CSS file is at lower priority than the default `portalbasictheme.css` and higher than `theme.css`." The Manage CSS panel lists files top→bottom in **load order**, but the panel note says "files listed at bottom take higher precedence", which means moving a file **down** the list makes it win cascade conflicts.
 
 ### Custom CSS lives where?
 
@@ -53,7 +53,7 @@ This ordering is the surprising part. Microsoft documents it as: "Any custom CSS
 | Constraint | Detail |
 |---|---|
 | Max size | 1 MB per file |
-| Applies to | All themes (custom CSS is theme-independent — uploading does not bind to one theme) |
+| Applies to | All themes (custom CSS is theme-independent, uploading does not bind to one theme) |
 | Storage | `adx_webfile` records, `mimetype` = `text/css` |
 | Delete | Delete the Web File record in Portal Management; then **Sync configuration** in Studio |
 | Edit | Manage CSS → ellipsis → Edit code (opens VS Code for the Web) |
@@ -62,14 +62,14 @@ This ordering is the surprising part. Microsoft documents it as: "Any custom CSS
 
 ### What the Styling workspace produces
 
-The Studio Styling workspace writes everything it controls into **`theme.css`**. There is no separate theme JSON, no documented CSS variable contract, and no `@font-size-base`-style Sass variable surface in the rendered output — Studio compiles your selections directly into static CSS rules in `theme.css`.
+The Studio Styling workspace writes everything it controls into **`theme.css`**. There is no separate theme JSON, no documented CSS variable contract, and no `@font-size-base`-style Sass variable surface in the rendered output, Studio compiles your selections directly into static CSS rules in `theme.css`.
 
 The workspace ships **13 preset themes**. Each theme defines:
 
 | Configurable | Range |
 |---|---|
 | Color palette | 9 mapped colors + 3 user-selected slots (12 total). Hex, RGB, or color picker. |
-| Background color | One per theme. Known issue affects sites created before Sept 23, 2022 — see [Adjusting the background color](https://learn.microsoft.com/en-us/power-pages/known-issues#adjusting-the-background-color-for-your-power-pages-site). |
+| Background color | One per theme. Known issue affects sites created before Sept 23, 2022, see [Adjusting the background color](https://learn.microsoft.com/en-us/power-pages/known-issues#adjusting-the-background-color-for-your-power-pages-site). |
 | Font styles | Heading 1–6 + body. Family, weight, size, color. **Basic fonts + 30+ Google Fonts** available. |
 | Button styles | Primary/secondary button colors, borders, radius. |
 | Section margins | Spacing between sections on a page. |
@@ -78,12 +78,12 @@ When you select a preset and tweak it, Studio shows a "modified" indicator next 
 
 ### Why this matters for the Liquid developer
 
-There is **no documented CSS variable surface** to target. If you write `var(--primary-color)` in custom CSS hoping to inherit Studio's primary color, it will not work — Studio's output is plain CSS rules against Bootstrap selectors and a few Power-Pages-specific class names, not custom properties.
+There is **no documented CSS variable surface** to target. If you write `var(--primary-color)` in custom CSS hoping to inherit Studio's primary color, it will not work, Studio's output is plain CSS rules against Bootstrap selectors and a few Power-Pages-specific class names, not custom properties.
 
 To make custom UI inherit theme colors, the practical patterns are:
 
 1. **Use Bootstrap classes the theme already styles** (`.btn-primary`, `.bg-primary`, `.text-primary`, `.alert-danger`, `.panel-default`, etc. for BS3; `.card`, `.btn-primary`, `.alert-danger` etc. for BS5). Studio's `theme.css` overrides these, so your custom UI picks up theme colors automatically.
-2. **Define your own CSS variables in custom CSS** and update them when themes change. There is no Studio hook to do this — you must manually mirror Studio's palette into your own `--my-primary: #0F5C63;` variables.
+2. **Define your own CSS variables in custom CSS** and update them when themes change. There is no Studio hook to do this, you must manually mirror Studio's palette into your own `--my-primary: #0F5C63;` variables.
 3. **Read computed styles in JS** if you need theme colors at runtime: `getComputedStyle(document.querySelector('.btn-primary')).backgroundColor`.
 
 ### Color palette mapping
@@ -121,13 +121,13 @@ URL  →  Web Page (matches partial URL)
 | `Type` | **Web Template** (modern, Liquid-driven) or **Rewrite** (legacy ASPX). New page templates should always be Web Template. |
 | `Web Template` | Reference to the `adx_webtemplate` record that renders this page. Required when Type = Web Template. |
 | `Rewrite URL` | ASPX path. Required when Type = Rewrite. Limited to default ASPX pages. |
-| `Use Website Header and Footer` | Default checked. When checked, the Web Template renders only the body — the website-level header/footer wrap it. When unchecked, the Web Template renders the entire response from `<!DOCTYPE>` onward. |
+| `Use Website Header and Footer` | Default checked. When checked, the Web Template renders only the body, the website-level header/footer wrap it. When unchecked, the Web Template renders the entire response from `<!DOCTYPE>` onward. |
 | `Is Default` | The default selected option in Studio's "create new page" dropdown. |
 | `Table Name` | Restricts which Power Pages content tables can use this template. Almost always `adx_webpage`. |
 
 ### Why entityform/webform require Web Template type
 
-`{% entityform %}` and `{% webform %}` only render when the hosting page uses a **Web-Template-based** Page Template. A Rewrite-based page template silently fails to render the form — no error, no warning, just an empty space. Diagnose by checking the Page Template's `adx_type` field. This is the single most common cause of "my form doesn't show up."
+`{% entityform %}` and `{% webform %}` only render when the hosting page uses a **Web-Template-based** Page Template. A Rewrite-based page template silently fails to render the form, no error, no warning, just an empty space. Diagnose by checking the Page Template's `adx_type` field. This is the single most common cause of "my form doesn't show up."
 
 ### Built-in Web Templates
 
@@ -152,7 +152,7 @@ Power Pages ships these as `{% include %}`-able partials. The "Layout" templates
 
 ### Header and footer
 
-By default, the website uses Power Pages' built-in header/footer Web Templates. To replace them, set the website record's **Header Template** and **Footer Template** lookups to your custom Web Templates. Custom headers must take over rendering primary nav, sign-in/out, search — none of those come back automatically.
+By default, the website uses Power Pages' built-in header/footer Web Templates. To replace them, set the website record's **Header Template** and **Footer Template** lookups to your custom Web Templates. Custom headers must take over rendering primary nav, sign-in/out, search, none of those come back automatically.
 
 The Pages workspace **cannot delete** the header or footer; they are structural. To customize them you edit the Web Templates directly via VS Code for the Web ("Edit site header" → "Edit code").
 
@@ -170,7 +170,7 @@ Power Pages ships two supported Bootstrap versions: **3.3.6** (default for legac
 | `{% chart %}` | `<div>` container; chart rendered by Power Pages' chart JS into `<canvas>` or SVG | `.chart-container` |
 | `{% powerbi %}` | `<iframe>` or `<div>` with embedded report | `.powerbi-container` |
 
-The **default validation summary class** is configurable via the basic form's `Validation Summary CSS Class` field, default value `validation-summary alert alert-error alert-block` (note: `alert-error` is the BS3 class — BS5 changed this to `alert-danger`).
+The **default validation summary class** is configurable via the basic form's `Validation Summary CSS Class` field, default value `validation-summary alert alert-error alert-block` (note: `alert-error` is the BS3 class, BS5 changed this to `alert-danger`).
 
 ### Custom-CSS targeting recipes
 
@@ -203,7 +203,7 @@ If you migrate a site (`pac pages bootstrap-migrate -p <folder>`), Microsoft's t
 |---|---|
 | `.panel`, `.panel-default`, `.panel-heading`, `.panel-body`, `.panel-footer` → `.card`, `.card-header`, `.card-body`, `.card-footer` | Any custom panel UI; the web-template-component sample in MS Learn uses `.panel-*` heavily |
 | `.btn-default` → `.btn-secondary` | Theme button styling; entity-tag default buttons |
-| `.alert-error` → `.alert-danger` | Validation summary class — set `Validation Summary CSS Class` on the form record |
+| `.alert-error` → `.alert-danger` | Validation summary class, set `Validation Summary CSS Class` on the form record |
 | `.well` → `.card` (or removed) | Snippet wrappers in older custom code |
 | Glyphicons → removed (use Bootstrap Icons or your own) | `<span class="glyphicon glyphicon-edit">` no longer renders |
 | `.col-xs-N` → `.col-N` (xs implicit) | Grid breakpoints |
@@ -214,7 +214,7 @@ If you migrate a site (`pac pages bootstrap-migrate -p <folder>`), Microsoft's t
 
 **Site setting that controls BS5:** `Site/BootstrapV5Enabled` (created automatically when you migrate or create a new site under enhanced data model). To revert to BS3, run the upload command to replace the V5 folder with a V3 folder, **then delete `Site/BootstrapV5Enabled`** from Site Settings, then clear server cache.
 
-**Hard constraint:** site developers should not replace Bootstrap with Tailwind, Bulma, or other frameworks. Several Power Pages internals (entity tags, Studio's design surface, validation rendering) depend on Bootstrap selectors being present. Your custom CSS layers on top — it does not replace the framework.
+**Hard constraint:** site developers should not replace Bootstrap with Tailwind, Bulma, or other frameworks. Several Power Pages internals (entity tags, Studio's design surface, validation rendering) depend on Bootstrap selectors being present. Your custom CSS layers on top, it does not replace the framework.
 
 ## Studio surface vs code-only surface
 
@@ -249,13 +249,13 @@ Snippets are editable content blocks decoupled from page Liquid. They are the de
 ### Three ways to render a snippet
 
 ```liquid
-{# 1. Raw value — use when the snippet is plain content, no edit affordance #}
+{# 1. Raw value, use when the snippet is plain content, no edit affordance #}
 {{ snippets["Footer Disclaimer"] }}
 
-{# 2. Inline editable — users with permission see an edit pencil on the page #}
+{# 2. Inline editable, users with permission see an edit pencil on the page #}
 {% editable snippets["Footer Disclaimer"] %}
 
-{# 3. Built-in include wrapper — equivalent to #2 but uses the canonical 'snippet' Web Template #}
+{# 3. Built-in include wrapper, equivalent to #2 but uses the canonical 'snippet' Web Template #}
 {% include 'snippet' snippet_name:'Footer Disclaimer' %}
 ```
 
@@ -269,7 +269,7 @@ Snippets are editable content blocks decoupled from page Liquid. They are the de
 
 Default sites ship snippets like (names vary by template): `Account/SignIn/PageTitle`, `Profile/SignInCallToAction`, `Footer/Disclaimer`, `Search/Title`, `Logo` (sometimes). The Studio Pages workspace surfaces some of these as inline-editable regions automatically; for the rest, the developer wires them up via `{% editable %}`.
 
-### Snippets vs site settings — when to use which
+### Snippets vs site settings: when to use which
 
 | Use a Content Snippet for | Use a Site Setting for |
 |---|---|
@@ -338,7 +338,7 @@ The recurring "render data with proper chrome" pattern: use `{% fetchxml %}` for
 </div>
 ```
 
-`.table`, `.table-striped`, `.table-hover`, `.alert`, `.alert-info`, `.page-header` are all Bootstrap classes that `theme.css` overrides for color — the rendered table picks up the active theme's primary/accent colors with no further work.
+`.table`, `.table-striped`, `.table-hover`, `.alert`, `.alert-info`, `.page-header` are all Bootstrap classes that `theme.css` overrides for color, the rendered table picks up the active theme's primary/accent colors with no further work.
 
 ### Themed card grid (BS3 panels / BS5 cards)
 
@@ -358,7 +358,7 @@ The recurring "render data with proper chrome" pattern: use `{% fetchxml %}` for
   {% endfor %}
 </div>
 
-{# BS5 — same data, migrated chrome #}
+{# BS5, same data, migrated chrome #}
 <div class="row g-3">
   {% for r in reviews.results.entities %}
     <div class="col-md-4">

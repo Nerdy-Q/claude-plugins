@@ -1,15 +1,15 @@
 ---
 name: pp-sync
-description: Run Power Pages classic portal sync + deployment workflows safely — pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards. Use when the user wants to sync a Power Pages portal, run acmedown/up, sync-down-dev, contosodoctor, deploy portal changes, ship a deployment to dev/UAT/prod, pull schema, or recover from a hung portal cache. NOT for code sites (React/Vue/Astro SPAs).
+description: Run Power Pages classic portal sync + deployment workflows safely: pac paportal download/upload, pac solution export/unpack, project-aware wrapper-script delegation, and bulk-upload safety guards. Use when the user wants to sync a Power Pages portal, run acmedown/up, sync-down-dev, contosodoctor, deploy portal changes, ship a deployment to dev/UAT/prod, pull schema, or recover from a hung portal cache. NOT for code sites (React/Vue/Astro SPAs).
 ---
 
-# Power Pages Sync — action skill
+# Power Pages Sync: action skill
 
-Execute portal sync flows safely. Each operation has a checklist that **must run in order**. Do not skip steps, even if a later step looks more relevant to the immediate request — earlier steps protect against the most common failure modes (working in the wrong directory, wrong auth profile, accidental destructive operations).
+Execute portal sync flows safely. Each operation has a checklist that **must run in order**. Do not skip steps, even if a later step looks more relevant to the immediate request, earlier steps protect against the most common failure modes (working in the wrong directory, wrong auth profile, accidental destructive operations).
 
 ## Preferred interface: `pp` CLI
 
-If the user has run `pp setup` and registered their projects, **use the `pp` CLI** — it bakes the safety checks below into a single command and reads project config from the registry, so you don't need to ask for site dir / profile / website ID each time.
+If the user has run `pp setup` and registered their projects, **use the `pp` CLI**, it bakes the safety checks below into a single command and reads project config from the registry, so you don't need to ask for site dir / profile / website ID each time.
 
 ```bash
 pp list                                    # show registered projects
@@ -55,7 +55,7 @@ User says any of:
 | **solution-up** | `pp solution-up` | `*-solution-up.sh` | `pac solution pack` then `pac solution import` |
 | **audit** | `pp audit` | (internal logic) | `python3 audit.py <site-dir>` |
 | **commit** | _no `pp` subcommand_ | `templates/commit.sh` | `git status` + `git add -p` + `git commit` |
-| **portal-restart** | _no `pp` subcommand_ | (none — admin center action) | Open Power Platform Admin Center → Restart |
+| **portal-restart** | _no `pp` subcommand_ | (none, admin center action) | Open Power Platform Admin Center → Restart |
 
 ## Mandatory checklist for ANY sync operation
 
@@ -67,8 +67,8 @@ Before running anything, identify which Power Pages project this is. See [projec
 
 1. `git rev-parse --show-toplevel` → repo root
 2. Look for project-specific markers: `acme-down.sh`, `sync-down-dev.sh`, `contosodoctor.sh`, `divisions/<name>/pages/...`, `dataverse-schema/<solution>/`, `*.webpage.copy.html`
-3. Read the project's CLAUDE.md if present — it defines the canonical script names, env URL, and any project-specific quirks
-4. Identify the **site folder** — the `<site>---<site>/` directory containing `web-pages/`, `web-templates/`, `website.yml`. This is the sync target.
+3. Read the project's CLAUDE.md if present, it defines the canonical script names, env URL, and any project-specific quirks
+4. Identify the **site folder**, the `<site>---<site>/` directory containing `web-pages/`, `web-templates/`, `website.yml`. This is the sync target.
 
 If you can't identify the project, **stop and ask the user**. Do not run sync against an unknown layout.
 
@@ -91,7 +91,7 @@ Ask for confirmation **before** running any state-changing command. Down operati
 cd $(git rev-parse --show-toplevel)
 ```
 
-**Never** `cd` into the site folder before downloading. Running `pac paportal download` inside `<site>---<site>/` creates a nested `<site>---<site>/<site>---<site>/` directory — the #1 PAC failure mode.
+**Never** `cd` into the site folder before downloading. Running `pac paportal download` inside `<site>---<site>/` creates a nested `<site>---<site>/<site>---<site>/` directory, the #1 PAC failure mode.
 
 If the cwd ends with `---<name>/`, abort and `cd` to the parent.
 
@@ -103,7 +103,7 @@ pac auth select --name <profile>                    # select if not active
 pac org who                                         # confirm env URL matches expectation
 ```
 
-**The active PAC profile must match the project's intended environment.** When you have multiple PAC profiles registered (one per client engagement), cross-tenant accidents — signing into Project A while the working tree is for Project B — cause `pac paportal upload` to push code to the wrong portal. Read the URL from `pac org who` and confirm it matches the project's expected env URL before any upload.
+**The active PAC profile must match the project's intended environment.** When you have multiple PAC profiles registered (one per client engagement), cross-tenant accidents, signing into Project A while the working tree is for Project B, cause `pac paportal upload` to push code to the wrong portal. Read the URL from `pac org who` and confirm it matches the project's expected env URL before any upload.
 
 If the profiles don't match, stop and ask the user which env they want.
 
@@ -154,19 +154,19 @@ Any of the following require explicit user confirmation, not implicit:
 - `git checkout -- <file>` (discards local changes)
 - `pac paportal upload` (changes server state)
 - `pac solution import` (changes Dataverse schema)
-- `pac admin delete` (deletes environment — never run from this skill)
-- Running operations against a profile whose env URL is `*prod*` or `*production*` — confirm twice
+- `pac admin delete` (deletes environment, never run from this skill)
+- Running operations against a profile whose env URL is `*prod*` or `*production*`, confirm twice
 
 ### Cross-tenant safety
 
-Power Pages developers often have multiple PAC profiles registered — one per client engagement, plus dev/test/prod variants per engagement. The active profile in `pac auth list` (asterisk) determines where `pac paportal upload` pushes code.
+Power Pages developers often have multiple PAC profiles registered, one per client engagement, plus dev/test/prod variants per engagement. The active profile in `pac auth list` (asterisk) determines where `pac paportal upload` pushes code.
 
 A common shape:
 
-- `<client-a>-dev` — your client A's dev env (commercial cloud)
-- `<client-a>-prod` — same client's production env (commercial cloud)
-- `<client-b>-client-dev` — client B's dev env (US government cloud — different sign-in, different admin URL)
-- `<your-org>-dev` — your own organization's dev env
+- `<client-a>-dev`, your client A's dev env (commercial cloud)
+- `<client-a>-prod`, same client's production env (commercial cloud)
+- `<client-b>-client-dev`, client B's dev env (US government cloud, different sign-in, different admin URL)
+- `<your-org>-dev`, your own organization's dev env
 
 **Always print the active profile's env URL before any state-changing operation** so the user can confirm they're not about to push client A's code into client B's tenant. The most common cross-tenant accident is having one profile active in PAC while the working tree is for a different project.
 
@@ -184,12 +184,12 @@ Detect GCC by env URL pattern (`crm9.dynamics.com` or `dynamics.us`). If GCC, us
 
 ## Reference files
 
-- [cli-reference.md](references/cli-reference.md) — full `pp` CLI reference (commands, project resolution, config file format, CI integration)
-- [project-detection.md](references/project-detection.md) — how to identify the active project and site folder when `pp` isn't set up
-- [wrapper-scripts.md](references/wrapper-scripts.md) — three common naming patterns (project-prefix, env-suffix, verb-only) and what each wrapper typically does
-- [direct-pac.md](references/direct-pac.md) — bare `pac paportal` and `pac solution` commands when no wrapper exists
-- [safety-checks.md](references/safety-checks.md) — pre-flight, post-flight, incremental upload, recovery from hung portal
-- [solution-sync.md](references/solution-sync.md) — `pac solution export/unpack/pack/import` workflow
+- [cli-reference.md](references/cli-reference.md), full `pp` CLI reference (commands, project resolution, config file format, CI integration)
+- [project-detection.md](references/project-detection.md), how to identify the active project and site folder when `pp` isn't set up
+- [wrapper-scripts.md](references/wrapper-scripts.md), three common naming patterns (project-prefix, env-suffix, verb-only) and what each wrapper typically does
+- [direct-pac.md](references/direct-pac.md), bare `pac paportal` and `pac solution` commands when no wrapper exists
+- [safety-checks.md](references/safety-checks.md), pre-flight, post-flight, incremental upload, recovery from hung portal
+- [solution-sync.md](references/solution-sync.md), `pac solution export/unpack/pack/import` workflow
 
 ## Templates (drop-in scripts for new projects)
 
@@ -212,8 +212,8 @@ chmod +x /path/to/repo/*.sh
 
 ## What this skill does NOT do
 
-- **Edit Liquid or JS files** — that's plain text editing, not a sync operation. Use the `pp-portal` skill for templating help.
-- **Audit permissions** — use the `pp-permissions-audit` skill.
-- **Configure Power Pages from scratch** — use Microsoft's `power-pages` plugin for site creation flows.
-- **Manage Dataverse schema directly** — use the `dataverse` plugin (`dv-metadata`, `dv-solution`).
-- **Run any operation without confirmation** — every state-changing command gets a confirmation prompt; that's not optional.
+- **Edit Liquid or JS files**, that's plain text editing, not a sync operation. Use the `pp-portal` skill for templating help.
+- **Audit permissions**, use the `pp-permissions-audit` skill.
+- **Configure Power Pages from scratch**, use Microsoft's `power-pages` plugin for site creation flows.
+- **Manage Dataverse schema directly**, use the `dataverse` plugin (`dv-metadata`, `dv-solution`).
+- **Run any operation without confirmation**, every state-changing command gets a confirmation prompt; that's not optional.

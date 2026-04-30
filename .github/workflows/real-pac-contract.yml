@@ -2,7 +2,7 @@
 #
 # Runs the contract test suite against the actual Microsoft Power Platform
 # CLI rather than the in-tree mock. Complements the mock-mode contract suite
-# in plugin-validate.yml — that one runs on every PR; this one runs:
+# in plugin-validate.yml: that one runs on every PR; this one runs:
 #
 #   - on demand (workflow_dispatch) for maintainer release-prep
 #   - on every release tag push (vX.Y.Z) as a release-gate signal
@@ -30,10 +30,10 @@
 #
 # Secrets (all optional; job degrades gracefully):
 #
-#   PP_PAC_TENANT_ID         — Microsoft Entra tenant for auth create
-#   PP_PAC_APP_ID            — service principal app ID
-#   PP_PAC_CLIENT_SECRET     — service principal secret
-#   PP_PAC_ENV_URL           — non-prod dev environment URL
+#   PP_PAC_TENANT_ID        : Microsoft Entra tenant for auth create
+#   PP_PAC_APP_ID           : service principal app ID
+#   PP_PAC_CLIENT_SECRET    : service principal secret
+#   PP_PAC_ENV_URL          : non-prod dev environment URL
 #
 # Maintainer note: configure secrets at the repo level
 # (Settings → Secrets and variables → Actions). Use a DEV/SANDBOX
@@ -47,7 +47,7 @@ on:
     tags:
       - 'v*'
   schedule:
-    # Weekly Monday 06:00 UTC — surfaces Microsoft distribution drift
+    # Weekly Monday 06:00 UTC: surfaces Microsoft distribution drift
     # without burning CI minutes on every PR.
     - cron: '0 6 * * 1'
 
@@ -103,7 +103,7 @@ jobs:
               >/dev/null
             echo "OK    real pac auth registered as 'ci-real'"
           else
-            echo "INFO  no PP_PAC_* secrets configured — running unauthenticated contract subset only"
+            echo "INFO  no PP_PAC_* secrets configured, running unauthenticated contract subset only"
           fi
 
       - name: Run pac contract suite (real-pac mode)

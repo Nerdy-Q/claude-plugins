@@ -1,6 +1,6 @@
-# Dataverse Naming and Casing — the Hidden Trap
+# Dataverse Naming and Casing: the Hidden Trap
 
-**The single most surprising class of Power Pages bugs comes from Dataverse's multi-name model.** Every entity, column, and relationship has 3+ different "names," and Power Pages uses different ones in different contexts. Mixing them up gives you cryptic errors that don't say "you have a casing problem" — they just say "name not found."
+**The single most surprising class of Power Pages bugs comes from Dataverse's multi-name model.** Every entity, column, and relationship has 3+ different "names," and Power Pages uses different ones in different contexts. Mixing them up gives you cryptic errors that don't say "you have a casing problem", they just say "name not found."
 
 This reference is the cheat sheet for which name to use where.
 
@@ -17,7 +17,7 @@ Every entity has these names:
 
 Every column also has Logical Name + Schema Name + Display Name (no entity set name, since columns aren't URL-addressable).
 
-Every relationship (lookup) has its **own** schema name that becomes the **Navigation Property Name** — and this is independent of the lookup column's logical name. This is where most of the pain is.
+Every relationship (lookup) has its **own** schema name that becomes the **Navigation Property Name**, and this is independent of the lookup column's logical name. This is where most of the pain is.
 
 ## The single rule that explains it all
 
@@ -40,7 +40,7 @@ Entity set name (lowercase plural):
 
 Get the entity set name from `Entity.xml` (the `<EntityInfo>` `EntitySetName` attribute) or `pac data list-tables`.
 
-### Web API `$select`, `$filter`, `$orderby` — attribute references
+### Web API `$select`, `$filter`, `$orderby`, attribute references
 
 Lowercase logical names. For lookup columns, use the `_<attr>_value` form:
 
@@ -57,7 +57,7 @@ Lowercase logical names. For lookup columns, use the `_<attr>_value` form:
 | Lookup column GUID | `_acme_account_value` (with leading underscore + `_value` suffix) |
 | Choice (option set) | `acme_customertype` (lowercase logical) |
 
-### Web API POST/PATCH payload — attribute keys
+### Web API POST/PATCH payload: attribute keys
 
 Lowercase logical names for direct attribute writes:
 
@@ -78,25 +78,25 @@ For lookups, use **navigation property + `@odata.bind`**, NOT `_<attr>_value`:
 }
 ```
 
-### Web API `@odata.bind` — navigation property names
+### Web API `@odata.bind`, navigation property names
 
 **Match the schema name's casing.** This is the single most common Power Pages bug.
 
 ```javascript
-// Correct — navigation property uses the schema name PascalCase:
+// Correct, navigation property uses the schema name PascalCase:
 'acme_Account@odata.bind': '/accounts(' + accountId + ')'
 
-// WRONG — using lowercase logical name as nav property:
+// WRONG, using lowercase logical name as nav property:
 'acme_account@odata.bind': '/accounts(' + accountId + ')'
 //        ^ this returns 400 "is not a valid navigation property"
 ```
 
 You cannot infer the navigation property casing from the logical name. You must look it up in:
-1. `dataverse-schema/<solution>/Entities/<entity>/Entity.xml` — search for `<Relationship>` and `<lookup>` elements
-2. `/_api/$metadata` — the OData EDMX schema (requires auth)
-3. The Maker Portal's **Relationships** view (NOT the Columns view — that shows attribute logical names, not nav prop names)
+1. `dataverse-schema/<solution>/Entities/<entity>/Entity.xml`, search for `<Relationship>` and `<lookup>` elements
+2. `/_api/$metadata`, the OData EDMX schema (requires auth)
+3. The Maker Portal's **Relationships** view (NOT the Columns view, that shows attribute logical names, not nav prop names)
 
-### Web API `$expand` — navigation property names
+### Web API `$expand`, navigation property names
 
 Same casing as `@odata.bind`:
 
@@ -106,7 +106,7 @@ Same casing as `@odata.bind`:
 
 ### FetchXML in Liquid `{% fetchxml %}`
 
-**All lowercase logical names**, everywhere — entity, attributes, link-entity, conditions:
+**All lowercase logical names**, everywhere, entity, attributes, link-entity, conditions:
 
 ```liquid
 {% fetchxml q %}
@@ -129,7 +129,7 @@ Same casing as `@odata.bind`:
 {% endfetchxml %}
 ```
 
-FetchXML doesn't use navigation property names at all — it uses attribute logical names plus `from`/`to` relationship pointers. So FetchXML is consistent: lowercase everywhere.
+FetchXML doesn't use navigation property names at all, it uses attribute logical names plus `from`/`to` relationship pointers. So FetchXML is consistent: lowercase everywhere.
 
 ## Why "I copied it from Studio" doesn't help
 
@@ -154,11 +154,11 @@ If you copy from "Columns" you get the lowercase logical name. If you copy from 
                               ┌─ FetchXML ────────┐  ┌─ Web API ──────────────────────────┐
                               │                   │  │ URL    │ $sel  │ payload │ @bind  │
 ─────────────────────────────┼───────────────────┤  ├────────┼───────┼─────────┼────────┤
-  Entity reference            │ logical lowercase │  │ entset │   —   │    —    │   —    │
-  Attribute (text/num/bool)   │ logical lowercase │  │   —    │ lower │ lower   │   —    │
-  Lookup attribute (set)      │ logical lowercase │  │   —    │   —   │   —     │ NavPP  │
-  Lookup attribute (read)     │ logical lowercase │  │   —    │ _lwr_value │ — │   —    │
-  Navigation property         │       —           │  │   —    │   —   │   —     │ NavPP  │
+  Entity reference            │ logical lowercase │  │ entset │  ,   │   ,    │  ,    │
+  Attribute (text/num/bool)   │ logical lowercase │  │  ,    │ lower │ lower   │  ,    │
+  Lookup attribute (set)      │ logical lowercase │  │  ,    │  ,   │  ,     │ NavPP  │
+  Lookup attribute (read)     │ logical lowercase │  │  ,    │ _lwr_value │, │  ,    │
+  Navigation property         │      ,           │  │  ,    │  ,   │  ,     │ NavPP  │
 ```
 
 Where:
@@ -174,7 +174,7 @@ Where:
 | `Could not find a property named '<name>'` | Used PascalCase / wrong casing for an attribute reference. Try lowercase logical name. |
 | `'<name>' is not a valid navigation property` | Used lowercase / wrong casing for a navigation property. Check schema name in Entity.xml or Studio Relationships view. |
 | `Resource not found for the segment '<name>'` | Wrong entity set name in URL. Check `Entity.xml` `EntitySetName` attribute. |
-| `Cannot bind value of type Edm.String to property '<name>'` | Sent the wrong field type — but if the property name is unrecognizable, it's also possibly a casing issue. |
+| `Cannot bind value of type Edm.String to property '<name>'` | Sent the wrong field type, but if the property name is unrecognizable, it's also possibly a casing issue. |
 | `400 Bad Request` with no specific message | Often a casing mismatch in `@odata.bind`. Double-check nav property casing. |
 
 ## How to find the right name (programmatically)
@@ -205,10 +205,10 @@ pac data list-columns --entity <logical-name>     # column logical + display nam
 
 ```bash
 curl '$ENV_URL/_api/$metadata' -H "Authorization: ..."
-# Returns OData EDMX XML — search for <NavigationProperty> elements with their Name and ToRole attributes
+# Returns OData EDMX XML, search for <NavigationProperty> elements with their Name and ToRole attributes
 ```
 
-This is the most authoritative source — it's what the live Web API actually accepts.
+This is the most authoritative source, it's what the live Web API actually accepts.
 
 ### From the browser
 
@@ -216,11 +216,11 @@ In the Maker Portal:
 1. Open the entity's detail
 2. Tab: **Relationships** (NOT Columns)
 3. Click the lookup relationship
-4. Look at the **Schema Name** field — that's your navigation property
+4. Look at the **Schema Name** field, that's your navigation property
 
 Then in the Web API URL builder:
 1. Open the entity in any record list
-2. Look at the URL — `/main.aspx?...etn=<logical>` shows the logical name
+2. Look at the URL, `/main.aspx?...etn=<logical>` shows the logical name
 3. Or use `pac data list-tables` to get the entity set name
 
 ## Anti-pattern: `$expand` instead of separate fetches
@@ -236,7 +236,7 @@ var account = await safeAjax({ url: '/_api/accounts(' + contact._parentcustomeri
 This works but it's a round-trip wasted on a name-finding inconvenience. The `$expand` version is one call:
 
 ```javascript
-// Better — once you have the right nav property name:
+// Better, once you have the right nav property name:
 var contact = await safeAjax({
   url: '/_api/contacts(' + id + ')'
      + '?$select=fullname'
@@ -245,9 +245,9 @@ var contact = await safeAjax({
 // Note: parentcustomerid is polymorphic, so the nav prop is parentcustomerid_account or parentcustomerid_contact
 ```
 
-If you find yourself doing 2-call workarounds, take 5 minutes to find the correct `$expand` name — usually a permanent fix.
+If you find yourself doing 2-call workarounds, take 5 minutes to find the correct `$expand` name, usually a permanent fix.
 
-## Polymorphic lookups — the worst-case casing trap
+## Polymorphic lookups: the worst-case casing trap
 
 Customer-type lookups (target Account OR Contact) have **two** navigation properties on the source entity, one per target:
 
@@ -258,8 +258,8 @@ Customer-type lookups (target Account OR Contact) have **two** navigation proper
   // OR
   'acme_Applicant_account@odata.bind': '/accounts(' + accountId + ')',     // for Account
 
-  // WRONG — bare `acme_Applicant@odata.bind` is ambiguous, returns 400
-  // WRONG — `acme_applicant_contact` (lowercased) is also wrong
+  // WRONG, bare `acme_Applicant@odata.bind` is ambiguous, returns 400
+  // WRONG, `acme_applicant_contact` (lowercased) is also wrong
 }
 ```
 

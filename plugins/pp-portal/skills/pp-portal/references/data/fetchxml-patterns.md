@@ -1,6 +1,6 @@
-# FetchXML in Liquid — Production Patterns
+# FetchXML in Liquid: Production Patterns
 
-Power Pages' `{% fetchxml %}` block runs a Dataverse query at **page render time** and exposes the results to the rest of the Liquid template. Results are filtered by the **current user's Table Permissions** automatically — there's no separate auth.
+Power Pages' `{% fetchxml %}` block runs a Dataverse query at **page render time** and exposes the results to the rest of the Liquid template. Results are filtered by the **current user's Table Permissions** automatically, there's no separate auth.
 
 ## The block syntax
 
@@ -24,7 +24,7 @@ The variable name after `fetchxml` (`my_query` here) is what you reference downs
 
 ## Pattern: count + paginate + filter (the bread-and-butter list page)
 
-This is the canonical pattern for any "list of records with search and pagination" page. You do **two** queries — one aggregate for the total count, one paged for the visible rows.
+This is the canonical pattern for any "list of records with search and pagination" page. You do **two** queries, one aggregate for the total count, one paged for the visible rows.
 
 ```liquid
 {% assign search = request.params['search'] | default: '' | strip %}
@@ -82,12 +82,12 @@ This is the canonical pattern for any "list of records with search and paginatio
 
 Notes:
 
-- `mapping="logical"` is a Power Pages convention — technically optional per Microsoft's FetchXML schema, but recommended for clarity (and for consistency with every other portal `{% fetchxml %}` block in the wild)
+- `mapping="logical"` is a Power Pages convention, technically optional per Microsoft's FetchXML schema, but recommended for clarity (and for consistency with every other portal `{% fetchxml %}` block in the wild)
 - `aggregate="true"` on the count fetch; the inner `<attribute aggregate="count" />` is the standard counting pattern
 - `count` and `page` on the paged fetch (1-indexed)
 - `returntotalrecordcount="true"` is optional but populates `results.total_record_count`
 - `request.params['x']` reads querystring values; `| default: '' | strip` is the safe coercion
-- `| plus: 0` coerces strings to numbers — `request.params` values are always strings
+- `| plus: 0` coerces strings to numbers, `request.params` values are always strings
 - Search fallback uses SQL `LIKE` wildcards (`%`); for full-text use `Contains` (case-insensitive in CRM English collations)
 
 ## Pattern: link-entity for joining
@@ -109,7 +109,7 @@ Joining to a parent record, with a left join (outer):
 {% endfetchxml %}
 
 {% for row in results_query.results.entities %}
-  {{ row.fullname }} — {{ row.parent_account_name }} ({{ row.parent_account_city }})
+  {{ row.fullname }}, {{ row.parent_account_name }} ({{ row.parent_account_city }})
 {% endfor %}
 ```
 
@@ -133,7 +133,7 @@ Power Pages exposes the current user as `user` (a Contact record). Common filter
   <condition attribute="contoso_account" operator="eq" value="{{ parent_account_id }}" />
 </filter>
 
-{# Anonymous-safe — fall back to no-records when not logged in #}
+{# Anonymous-safe, fall back to no-records when not logged in #}
 {% if user %}
 <filter>
   <condition attribute="contoso_applicant_contact" operator="eq" value="{{ user.contactid }}" />
@@ -207,7 +207,7 @@ A lookup column on the result row exposes three flat properties:
 ## Performance gotchas
 
 - **`{% fetchxml %}` runs synchronously during render.** A page with 8 unrelated queries makes 8 sequential round-trips. If first-byte time matters, consolidate or move slow queries to client-side Web API.
-- **Default page size appears to be 50** if you don't specify `count` — observed platform behavior, not officially documented. Always set `count` explicitly for predictable behavior (200 is a common ceiling; 5000 is the hard server cap).
+- **Default page size appears to be 50** if you don't specify `count`, observed platform behavior, not officially documented. Always set `count` explicitly for predictable behavior (200 is a common ceiling; 5000 is the hard server cap).
 - **`fetchxml` results are NOT cached by the portal.** Every page render re-runs every query. Use Site Settings or content snippets for genuinely static lookups.
 - **Aggregation queries can fail with "AggregateQueryRecordLimit exceeded"** when the underlying dataset is over ~50000 rows. Increase `aggregate.recordlimit` site setting or filter the dataset first.
 
@@ -216,14 +216,14 @@ A lookup column on the result row exposes three flat properties:
 - Add `<all-attributes />` temporarily to confirm data shape
 - Use `{{ row | json }}` filter to dump a single row's JSON inline
 - Use `{{ query.results.total_record_count }}` to verify pagination math
-- `<filter type="or">` requires explicit `type` — bare `<filter>` is implicit AND
+- `<filter type="or">` requires explicit `type`, bare `<filter>` is implicit AND
 - A 0-row result with no error = silent permission filtering. Check Table Permissions for the calling Web Role.
 
 ## FetchXML attribute reference (per Microsoft)
 
-These are the attributes Microsoft documents on each FetchXML element. Power Pages' `{% fetchxml %}` block accepts the same schema — anything missing here is either ignored or rejected by the runtime. Required attributes are marked.
+These are the attributes Microsoft documents on each FetchXML element. Power Pages' `{% fetchxml %}` block accepts the same schema, anything missing here is either ignored or rejected by the runtime. Required attributes are marked.
 
-> **Critical gotcha — never self-close `<attribute />`.** Power Pages' Liquid parser sometimes mis-handles self-closing forms. **Always** write `<attribute name="..."></attribute>` with an explicit closing tag, even though the element has no children. The same applies to `<order>`, `<all-attributes>`, etc., when they appear inside Liquid `{% fetchxml %}` blocks. A self-closed `<attribute />` can silently produce empty results or cryptic parse errors that don't surface until render.
+> **Critical gotcha, never self-close `<attribute />`.** Power Pages' Liquid parser sometimes mis-handles self-closing forms. **Always** write `<attribute name="..."></attribute>` with an explicit closing tag, even though the element has no children. The same applies to `<order>`, `<all-attributes>`, etc., when they appear inside Liquid `{% fetchxml %}` blocks. A self-closed `<attribute />` can silently produce empty results or cryptic parse errors that don't surface until render.
 
 ### `<fetch>` (root)
 
@@ -255,7 +255,7 @@ These are the attributes Microsoft documents on each FetchXML element. Power Pag
 | `name` | **Required.** Logical name of the column |
 | `alias` | Output column name; required when reading from Liquid in some scenarios |
 | `aggregate` | `avg` / `count` / `countcolumn` / `max` / `min` / `sum` |
-| `groupby` | `true` — required on every non-aggregated dimension when `aggregate="true"` |
+| `groupby` | `true`, required on every non-aggregated dimension when `aggregate="true"` |
 | `dategrouping` | `day` / `week` / `month` / `quarter` / `year` |
 | `distinct` | `true` for distinct values of this column |
 
@@ -314,7 +314,7 @@ All snippets assume the surrounding loop has already computed:
 {% assign base_url     = '/customers'                            %}
 ```
 
-Each example builds links with `url_escape` on user-supplied values — see [../language/objects.md](../language/objects.md#request) for why hand-concatenation is unsafe.
+Each example builds links with `url_escape` on user-supplied values, see [../language/objects.md](../language/objects.md#request) for why hand-concatenation is unsafe.
 
 ### 1. Full-range pagination (small datasets, < 20 pages)
 
@@ -406,7 +406,7 @@ Show 5-7 page numbers around the current page with ellipses for the gaps. Use th
 </nav>
 ```
 
-The two `if` guards on the ellipses prevent rendering `1 … 2` (no gap) — only show the ellipsis when there's at least one page hidden.
+The two `if` guards on the ellipses prevent rendering `1 … 2` (no gap), only show the ellipsis when there's at least one page hidden.
 
 ### 3. First / Last / Jump-to controls
 
@@ -506,12 +506,12 @@ The Bootstrap 5 versions of patterns 1, 2, and 4 above already use the v5 conven
 
 Every snippet above ships with the four checks pagination needs to clear WCAG 2.1 AA:
 
-- **Landmark** — `<nav aria-label="pagination">` so the pager appears in the page's regions list and assistive tech can jump straight to it
-- **Current page** — `aria-current="page"` on the active item, NOT just visual styling — color-blind and screen-reader users need the semantic
-- **Status announcement** — "Page X of Y" rendered as accessible text, not only as visual decoration; pair with `aria-live="polite"` on the compact form so updates announce without interrupting
-- **Hidden helper text** — `(current)` inside `<span class="visually-hidden">` (or `sr-only` on BS3) inside the active link so the screen reader output is "Page 3, current" rather than just "Page 3"
+- **Landmark**, `<nav aria-label="pagination">` so the pager appears in the page's regions list and assistive tech can jump straight to it
+- **Current page**, `aria-current="page"` on the active item, NOT just visual styling, color-blind and screen-reader users need the semantic
+- **Status announcement**, "Page X of Y" rendered as accessible text, not only as visual decoration; pair with `aria-live="polite"` on the compact form so updates announce without interrupting
+- **Hidden helper text**, `(current)` inside `<span class="visually-hidden">` (or `sr-only` on BS3) inside the active link so the screen reader output is "Page 3, current" rather than just "Page 3"
 
-Disabled previous/next controls render as `<span>` not `<a>` — a disabled link is still tab-focusable and announces as a link, both of which are confusing. The span avoids that footgun.
+Disabled previous/next controls render as `<span>` not `<a>`, a disabled link is still tab-focusable and announces as a link, both of which are confusing. The span avoids that footgun.
 
 For the full WCAG-AA pattern set including focus management, color contrast, and keyboard navigation, see [../quality/accessibility.md](../quality/accessibility.md).
 
