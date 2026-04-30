@@ -281,6 +281,57 @@ case "$(audit_lines "$env/audit.log")" in
         ;;
 esac
 
+# --- Section 5b: up.sh BULK_THRESHOLD warning surface ---------------------
+
+echo
+echo "Section 5b — up.sh bulk-upload warning"
+echo
+
+env=$(make_template_env testprof)
+mkdir -p "$env/repo/site---site/web-pages"
+# Stage 4 untracked files; with BULK_THRESHOLD=2 the bulk warning should
+# fire (4 > 2). Pipe 'n' to decline so we don't run upload, only verify
+# the warning surface — that's the cache-hang protection from up.sh
+# users care about.
+for n in 1 2 3 4; do
+    : > "$env/repo/site---site/web-pages/page-$n.webpage.yml"
+done
+out=$(printf 'n\n' | run_template "$env" up.sh \
+    SITE_DIR=site---site PROFILE=testprof MODEL_VERSION=2 \
+    BULK_THRESHOLD=2 -- 2>&1)
+
+case "$out" in
+    *"BULK UPLOAD WARNING"*) assert_pass "up.sh fires bulk warning when CHANGED > threshold" ;;
+    *) assert_fail "up.sh skipped bulk warning" "out: $(printf '%s' "$out" | tail -10)" ;;
+esac
+case "$out" in
+    *"Estimated changed files in site---site: 4"*) assert_pass "up.sh reports correct file count" ;;
+    *) assert_fail "up.sh wrong file count" "out: $(printf '%s' "$out" | grep -i estimated)" ;;
+esac
+case "$out" in
+    *"Aborted"*) assert_pass "up.sh aborts on bulk-warning N" ;;
+    *) assert_fail "up.sh didn't abort on bulk-warning N" ;;
+esac
+case "$(audit_lines "$env/audit.log")" in
+    *"paportal upload"*) assert_fail "up.sh ran upload despite bulk-warning N" ;;
+    *) assert_pass "up.sh skipped upload on bulk-warning N" ;;
+esac
+
+# Same fixture but --force-bulk should bypass the warning entirely.
+env=$(make_template_env testprof)
+mkdir -p "$env/repo/site---site/web-pages"
+for n in 1 2 3 4; do
+    : > "$env/repo/site---site/web-pages/page-$n.webpage.yml"
+done
+out=$(run_template "$env" up.sh \
+    SITE_DIR=site---site PROFILE=testprof MODEL_VERSION=2 \
+    BULK_THRESHOLD=2 -- --force-bulk 2>&1)
+case "$out" in
+    *"BULK UPLOAD WARNING"*) assert_fail "up.sh --force-bulk shouldn't show warning" ;;
+    *) assert_pass "up.sh --force-bulk bypasses warning" ;;
+esac
+assert_audit_match "$env" "paportal upload after --force-bulk" "paportal upload --path . --modelVersion 2 "
+
 # --- Section 6: up.sh prod gate (refuses without 'yes') --------------------
 
 echo

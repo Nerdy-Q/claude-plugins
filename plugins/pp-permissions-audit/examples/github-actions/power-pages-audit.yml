@@ -8,7 +8,7 @@
 # findings, and uploads the full report (incl. WARN / INFO) as a build artifact.
 #
 # Pin the audit script to a release tag for stability:
-#   AUDIT_REF:  'v2.11.2'   (recommended for production projects)
+#   AUDIT_REF:  'v2.11.3'   (recommended for production projects)
 #   AUDIT_REF: 'main'     (always latest — convenient for early adopters)
 #
 # Customize the SITE_DIR_PATTERN if your site folder doesn't match the canonical
@@ -42,7 +42,7 @@ on:
 env:
   # Pin to a released version of the audit script. Update when you upgrade.
   AUDIT_REPO: 'Nerdy-Q/claude-power-pages-plugins'
-  AUDIT_REF:  'v2.11.2'
+  AUDIT_REF:  'v2.11.3'
   AUDIT_PATH: 'plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py'
 
 jobs:

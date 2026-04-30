@@ -1,6 +1,6 @@
 # pp-sync test suites
 
-Bash regression tests for `pp` CLI behavior. Eight suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
+Bash regression tests for `pp` CLI behavior. Ten suites run in CI on every PR via `.github/workflows/plugin-validate.yml`.
 
 ## Suites
 
@@ -9,11 +9,13 @@ Bash regression tests for `pp` CLI behavior. Eight suites run in CI on every PR 
 | `test_load_project.sh` | 21 | Strict key=value parser correctness. Includes attack-vector fixtures (`$(...)`, backticks, control chars, allowlist bypass attempts), literal-metachar project-resolution checks, parser edge cases (leading whitespace, only-comments, no-trailing-newline), and the `$HOME` backward-compat expansion path. |
 | `test_register_atomic.sh` | 6 | `pp project add` atomicity. Asserts that rejected runs (invalid project name / PAC profile / solution / alias) leave zero files behind in `$PP_CONFIG_DIR/projects/`. |
 | `test_journal_url_validation.sh` | 16 | `validate_issue_url_for_current_repo()` URL-shape regex + same-repo enforcement. Mocks `gh repo view` to test cross-repo hijack rejection without a real git checkout. Covers subdomain spoof, port injection, http downgrade, prefix confusion, path traversal, non-issue URLs, and 9 other attack vectors. |
-| `test_command_flows.sh` | 78 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page` (incl. content correctness + JS/CSS placeholders), `sync-pages`, `setup` detection phase, and help output. |
+| `test_command_flows.sh` | 86 | Happy-path and error-path coverage for command dispatch: project resolution, `show`, `list`, alias operations, project removal, switch/status, journal init, `generate-page` (incl. content correctness + JS/CSS placeholders), `sync-pages`, `setup` detection phase + full piped-stdin registration, and help output. |
 | `test_subcommand_safety.sh` | 30 | Negative and edge-case coverage for subcommands beyond the parser: page-name traversal/injection rejection (incl. empty-slug rejection), solution-name CLI-arg validation, journal `Issue:` extraction invariants, solution-pick range validation, and doctor pipefail tolerance. |
 | `test_install_script.sh` | 13 | Installer UX and safety: fresh install, idempotent re-run, non-symlink backup behavior, PATH guidance, and installed `pp help` smoke check. |
 | `test_pac_mocked.sh` | 23 | Mocked `pac` CLI flows in CI: doctor, switch/status, download/upload, solution export/import, validate-only upload, diff, and failure-injection paths without requiring a real tenant. |
 | `test_journal_state.sh` | 10 | Journal active-issue state tracking and concurrency: state lifecycle, stale-state clearing, JOURNAL.md fallback, atomic concurrent opens, and project-remove cleanup. |
+| `test_pac_contract.sh` | 10 | Contract assertions for what `pp` depends on from each `pac` subcommand. Runs in mock mode in CI and can run against real `pac` locally via `PP_PAC_REAL=1`. |
+| `test_templates.sh` | 60 | End-to-end template coverage for `down.sh`, `up.sh`, `doctor.sh`, `solution-down.sh`, `solution-up.sh`, and `commit.sh` using mock `pac` plus audited invocation logs. Includes the BULK_THRESHOLD warning surface (cache-hang protection). |
 
 Run any suite locally:
 

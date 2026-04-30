@@ -133,6 +133,11 @@ jobs:
           sys.exit(0 if all_ok else 1)
           PY_EOF
 
+      - name: Validate doc cross-references
+        run: |
+          python3 scripts/validate_doc_links.py
+          echo "OK    relative markdown links across plugin docs all resolve"
+
       - name: Compile audit.py
         run: |
           python3 -c "import py_compile; py_compile.compile('plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py', doraise=True)"

@@ -26,6 +26,17 @@
 #
 # Even with that flag set, this suite still skips solution-up to prod
 # without explicit per-test confirmation.
+#
+# Solution-down read-only test: opt in by naming the solution to export
+# (export takes 60-120s, writes to repo's $SCHEMA_DIR, but is non-
+# destructive — pac solution export is read-only against the tenant):
+#
+#     PP_INTEGRATION_SOLUTION_NAME=MySolution bash test_pac_dependent.sh
+#
+# This is the one place we exercise the real pac solution export+unpack
+# pipeline end-to-end against a real Dataverse environment. Mocked
+# tests cover the shell-level orchestration; only this one verifies
+# the actual pac binary produces a usable solution zipfile.
 
 set -uo pipefail
 
@@ -232,6 +243,58 @@ case "$status_out" in
     *"$TARGET"*) assert_pass "status names the active project" ;;
     *) assert_fail "status doesn't mention active project '$TARGET'" ;;
 esac
+
+# --- Section 6: pp solution-down (opt-in via PP_INTEGRATION_SOLUTION_NAME)
+
+echo
+echo "Section 6 — pp solution-down (real export + unpack)"
+echo
+
+if [ -z "${PP_INTEGRATION_SOLUTION_NAME:-}" ]; then
+    skip "solution-down" "set PP_INTEGRATION_SOLUTION_NAME=<name> to exercise"
+else
+    sol="$PP_INTEGRATION_SOLUTION_NAME"
+    # solution-down writes to $REPO/dataverse-schema/$sol — record the
+    # baseline so we can verify the unpack landed.
+    repo_root=$("$PP_BIN" show "$TARGET" 2>/dev/null | awk -F'= ' '/^[[:space:]]*REPO/{print $2; exit}' | tr -d '"' || true)
+    if [ -z "$repo_root" ] || [ ! -d "$repo_root" ]; then
+        assert_fail "solution-down: cannot resolve REPO for project '$TARGET'"
+    else
+        unpack_target="$repo_root/dataverse-schema/$sol"
+        # Auto-confirm the env-prompt with 'y'. Real export + unpack
+        # takes 60-120s.
+        echo "  ... exporting '$sol' from real env (may take 60-120s) ..."
+        sd_out=$(printf 'y\n' | "$PP_BIN" solution-down "$TARGET" "$sol" 2>&1)
+        sd_exit=$?
+        [ "$sd_exit" = "0" ] && assert_pass "solution-down exits 0" \
+            || assert_fail "solution-down non-zero exit ($sd_exit)" \
+                "out: $(printf '%s' "$sd_out" | tail -10)"
+
+        case "$sd_out" in
+            *"Exported"*|*"export"*) assert_pass "solution-down: export step ran" ;;
+            *) assert_fail "solution-down: no export message" "out: $(printf '%s' "$sd_out" | tail -5)" ;;
+        esac
+        case "$sd_out" in
+            *"Unpacked"*|*"unpack"*) assert_pass "solution-down: unpack step ran" ;;
+            *) assert_fail "solution-down: no unpack message" "out: $(printf '%s' "$sd_out" | tail -5)" ;;
+        esac
+
+        # Real pac unpack always produces an Other/Solution.xml — that's
+        # the load-bearing fixture pp's audit and the mock both rely on.
+        if [ -f "$unpack_target/Other/Solution.xml" ]; then
+            assert_pass "solution-down produced Other/Solution.xml at expected path"
+        else
+            assert_fail "solution-down: Other/Solution.xml missing" \
+                "tree: $(find "$unpack_target" -maxdepth 2 2>/dev/null | head -10)"
+        fi
+        # Also: zipfile cleanup (script removes it after successful unpack)
+        if [ -f "$repo_root/dataverse-schema/${sol}.zip" ]; then
+            assert_fail "solution-down left zipfile behind"
+        else
+            assert_pass "solution-down cleaned up zipfile"
+        fi
+    fi
+fi
 
 # --- Destructive-only section (gated by env var) ------------------------
 

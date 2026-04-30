@@ -2,6 +2,62 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.11.3] — 2026-04-30
+
+Closes the three remaining items from the v2.10.0 gaps discussion that were marked "by design" in the v2.11.2 close-out: real-pac CI on a cadence, doc-link validation, and live-tenant solution-down coverage. With this release the testable surface is comprehensive — what remains is genuinely environmental (real production tenants, Microsoft API behavior we don't control).
+
+### Added — real-pac CI workflow
+
+- **`.github/workflows/real-pac-contract.yml`** — separate workflow that installs the real Microsoft Power Platform CLI on a Linux runner and runs `PP_PAC_REAL=1 bash test_pac_contract.sh`. Triggers on:
+  - `workflow_dispatch` for maintainer release-prep
+  - tag pushes (`v*`) as a release-gate signal
+  - weekly cron (Monday 06:00 UTC) so Microsoft pac distribution drift surfaces in days rather than at the next release
+- **Degrades gracefully without secrets** — without any `PP_PAC_*` secrets configured, the contract suite still exercises the unauthenticated subset (`pac --version`, `pac help`, empty `pac auth list`). With `PP_PAC_TENANT_ID` / `PP_PAC_APP_ID` / `PP_PAC_CLIENT_SECRET` / `PP_PAC_ENV_URL` set as repo secrets, the auth-gated assertions also run (real `auth list` row shape, real `org who` URL parseability).
+- **Security**: workflow uses NO `github.event.*` inputs in any `run:` block. All untrusted-input pathways are absent; secrets flow through `env:` blocks only, never inlined into `${{ }}` expansions inside scripts.
+
+### Added — doc cross-reference validator
+
+- **`scripts/validate_doc_links.py`** — checks every relative markdown link in `plugins/*/skills/*/` resolves to an existing file or directory. Catches dead `references/foo.md` and `../examples/bar.sh` links that would otherwise rot silently as the doc tree moves. Anchor fragments (`#section`) are stripped before existence checks; external URLs and same-file anchors are skipped (out of scope). Currently validates **144 relative links across 45 doc files**.
+- **CI wired** — new "Validate doc cross-references" step in `plugin-validate.yml`. Runs on every PR.
+
+### Added — live-tenant solution-down integration coverage (pp-sync v2.4.3)
+
+- **New section in `tests/integration/test_pac_dependent.sh`** — opt-in via `PP_INTEGRATION_SOLUTION_NAME=<solution>`, exercises the real `pac solution export` + `pac solution unpack` pipeline against a Dataverse tenant. Asserts:
+  - `pp solution-down` exits 0
+  - Real export step ran ("Exported" / "export" message)
+  - Real unpack step ran ("Unpacked" / "unpack" message)
+  - `Other/Solution.xml` lands at the expected path (the load-bearing fixture pp's audit + mock both depend on)
+  - Zipfile cleaned up after successful unpack
+  - This is the one test that verifies the *real* pac binary produces a usable zipfile shape — mocked tests cover shell orchestration but never validate Microsoft's actual export format.
+- **Why opt-in**: real export takes 60-120s and writes to `$REPO/dataverse-schema/`. Naming the solution explicitly is consent.
+
+### Added — bulk-upload warning surface coverage (test_templates.sh)
+
+- **`up.sh` BULK_THRESHOLD warning is now tested**. New section 5b in `test_templates.sh` stages 4 untracked files with `BULK_THRESHOLD=2` and asserts:
+  - The "BULK UPLOAD WARNING" banner appears
+  - File count line reports 4 (not 0 or arbitrary)
+  - Answering 'n' aborts before invoking `pac paportal upload`
+  - `--force-bulk` bypasses the warning and proceeds to upload
+- **Why this matters**: the bulk warning is the *only* protection against the cache-hang scenario the v2.10.0 changelog called out (>50 files at once → portal cache rebuild required from Power Platform Admin Center). Pure client-side bash logic, fully testable with mock pac, but no test had exercised it before.
+
+### Tests added (test count: 306, was 300)
+
+- 6 new assertions in `tests/test_templates.sh` Section 5b (bulk-warning surface). Total: **306 CI tests** (was 300) plus the new doc-link validator (137 links checked).
+- 6 new assertions in `tests/integration/test_pac_dependent.sh` Section 6 (live solution-down). These run locally only — the integration suite is unchanged in CI scope.
+
+### Why this closes the comprehensive-coverage gap
+
+The three items closed here were the genuinely-remaining test surfaces from the v2.10.0 review:
+
+| Item | Before | Now |
+|---|---|---|
+| Real pac drift detection | maintainer manual run | weekly cron + tag-push CI + workflow_dispatch |
+| Doc link rot | none | 137 links validated per PR |
+| Live solution export+unpack | mocked only | opt-in real-tenant section |
+| Bulk-upload warning surface | untested | 6 mock-pac assertions |
+
+What remains beyond this is environmental and not directly testable: real production-tenant upload behavior (only meaningful with a real cache-hung portal), DotLiquid filter behavior on Microsoft's runtime (no public test harness exists for the .NET reimplementation), and Microsoft API stability outside our control. Those are documented in the skill references; further coverage would require infrastructure we don't have.
+
 ## [2.11.2] — 2026-04-30
 
 Closes the v2.10.0 "Templates as full scripts running pac" gap from the remaining-gaps list. New end-to-end test suite drives each project-drop-in template (down/up/doctor/solution-down/solution-up/commit) with the mock pac on PATH and asserts on both stdout shape and an audit log of pac invocations. Surfaced and fixed two latent pipefail bugs that crashed templates on clean working trees.

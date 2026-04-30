@@ -22,7 +22,7 @@ claude-power-pages-plugins/
 | Change type | File to edit |
 |---|---|
 | New audit check | `plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/audit.py` (add a `check_*` function, register in `main()`, document in `references/checks.md`) |
-| New Liquid pattern, gotcha, or troubleshooting recipe | The relevant file under `plugins/pp-portal/skills/pp-portal/references/<category>/` (categories: `language/`, `data/`, `pages/`, `workflow/`, `quality/`) |
+| New Liquid pattern, gotcha, troubleshooting recipe, or portal design-system guidance | The relevant file under `plugins/pp-portal/skills/pp-portal/references/<category>/` (categories: `language/`, `data/`, `pages/`, `design-systems/`, `workflow/`, `quality/`) |
 | New `pp` subcommand | `plugins/pp-sync/bin/pp` (add a `cmd_*` function, register in `main()`, document in `references/cli-reference.md`) |
 | New wrapper script template | `plugins/pp-sync/templates/<name>.sh` plus an entry in `templates/README.md` |
 | New skill on top of existing plugins | New plugin under `plugins/<name>/`, register in `marketplace.json` |
@@ -140,6 +140,8 @@ bash plugins/pp-sync/tests/test_command_flows.sh          # happy-path + error-p
 bash plugins/pp-sync/tests/test_install_script.sh         # installer behavior
 bash plugins/pp-sync/tests/test_pac_mocked.sh            # mocked pac CLI flows
 bash plugins/pp-sync/tests/test_journal_state.sh         # journal state + concurrency
+bash plugins/pp-sync/tests/test_pac_contract.sh          # pac contract assertions
+bash plugins/pp-sync/tests/test_templates.sh             # project-drop-in templates
 ```
 
 The bash suites use fixture files under `plugins/pp-sync/tests/fixtures/` and a source-safe pattern that loads `bin/pp` without dispatching commands. See `plugins/pp-sync/tests/README.md` for fixture conventions and how to add a new test.

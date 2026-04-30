@@ -1,0 +1,118 @@
+# Real-pac contract tests
+#
+# Runs the contract test suite against the actual Microsoft Power Platform
+# CLI rather than the in-tree mock. Complements the mock-mode contract suite
+# in plugin-validate.yml — that one runs on every PR; this one runs:
+#
+#   - on demand (workflow_dispatch) for maintainer release-prep
+#   - on every release tag push (vX.Y.Z) as a release-gate signal
+#   - weekly on a cron, so Microsoft's pac distribution drift surfaces
+#     in days rather than at the next release
+#
+# Security: this workflow uses NO github.event.* inputs in any run: block
+# (no untrusted attacker-controlled data flows into shell commands). The
+# only secrets used are owner-configured PP_PAC_* values, accessed via
+# `env:` blocks (never inlined into ${{ }} expansions inside run: scripts).
+# All shell expansion is over env vars set by the runner, not template
+# expressions.
+#
+# What this catches:
+#
+#   - Without auth secrets: pac CLI is still installable, `pac --version`
+#     and `pac help` work, `pac auth list` returns the expected
+#     empty-profile header shape. If Microsoft breaks the dotnet tool
+#     distribution or output format, this fails before users see it.
+#
+#   - With PP_PAC_* secrets: real auth list rows have the
+#     `UNIVERSAL <name>` shape pp greps for, real `org who` produces a
+#     parseable Environment Url line. test_pac_contract.sh skips these
+#     cleanly when no profile is registered.
+#
+# Secrets (all optional; job degrades gracefully):
+#
+#   PP_PAC_TENANT_ID         — Microsoft Entra tenant for auth create
+#   PP_PAC_APP_ID            — service principal app ID
+#   PP_PAC_CLIENT_SECRET     — service principal secret
+#   PP_PAC_ENV_URL           — non-prod dev environment URL
+#
+# Maintainer note: configure secrets at the repo level
+# (Settings → Secrets and variables → Actions). Use a DEV/SANDBOX
+# environment URL only.
+
+name: Real-pac contract
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+  schedule:
+    # Weekly Monday 06:00 UTC — surfaces Microsoft distribution drift
+    # without burning CI minutes on every PR.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  real-pac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET (required for pac CLI)
+        uses: actions/setup-dotnet@v4
+        with:
+          # pac is distributed as a .NET global tool. .NET 8 LTS is the
+          # safe target; pac officially supports .NET 6/8.
+          dotnet-version: '8.0.x'
+
+      - name: Install pac CLI
+        run: |
+          dotnet tool install --global Microsoft.PowerApps.CLI.Tool
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - name: Verify pac is callable
+        run: |
+          which pac
+          pac --version || pac help
+
+      - name: Optional auth (if secrets present)
+        env:
+          PP_PAC_TENANT_ID: ${{ secrets.PP_PAC_TENANT_ID }}
+          PP_PAC_APP_ID: ${{ secrets.PP_PAC_APP_ID }}
+          PP_PAC_CLIENT_SECRET: ${{ secrets.PP_PAC_CLIENT_SECRET }}
+          PP_PAC_ENV_URL: ${{ secrets.PP_PAC_ENV_URL }}
+        run: |
+          if [ -n "${PP_PAC_TENANT_ID}" ] \
+             && [ -n "${PP_PAC_APP_ID}" ] \
+             && [ -n "${PP_PAC_CLIENT_SECRET}" ] \
+             && [ -n "${PP_PAC_ENV_URL}" ]; then
+            echo "Configuring real pac auth via service principal..."
+            # No `set -x`, no echoing secrets. pac receives values via
+            # already-exported env vars (read from the env: block above),
+            # so they don't appear in the workflow log argv echo.
+            pac auth create \
+              --name ci-real \
+              --tenant "${PP_PAC_TENANT_ID}" \
+              --applicationId "${PP_PAC_APP_ID}" \
+              --clientSecret "${PP_PAC_CLIENT_SECRET}" \
+              --environment "${PP_PAC_ENV_URL}" \
+              >/dev/null
+            echo "OK    real pac auth registered as 'ci-real'"
+          else
+            echo "INFO  no PP_PAC_* secrets configured — running unauthenticated contract subset only"
+          fi
+
+      - name: Run pac contract suite (real-pac mode)
+        run: |
+          PP_PAC_REAL=1 bash plugins/pp-sync/tests/test_pac_contract.sh
+
+      - name: Cleanup pac auth (always)
+        if: always()
+        run: |
+          # Best-effort: ephemeral runner anyway, but ensures no auth
+          # profile lingers if a future change reuses the runner.
+          pac auth delete --name ci-real >/dev/null 2>&1 || true

@@ -4,8 +4,8 @@
 
 | Version | Status |
 |---|---|
-| 2.10.x | Active — security fixes shipped within days of disclosure |
-| 2.9.x and earlier | **Unsupported** — upgrade to 2.10.x |
+| 2.11.x | Active — security fixes shipped within days of disclosure |
+| Earlier than 2.11.x | **Unsupported** — upgrade to 2.11.x |
 
 The 2.7.0 release (2026-04-29) closed a CVE-class arbitrary-code-execution sink in the `pp-sync` conf loader (`source` → strict parser). All earlier versions of `pp-sync` are vulnerable when run against a hand-edited or attacker-tampered project conf file. **Upgrade required.**
 
@@ -48,12 +48,12 @@ We will:
 
 ## Security-relevant test surfaces
 
-The marketplace ships **228 regression tests** across Python, bash, pac-mocked, and journal-state coverage, including:
+The marketplace ships **306 regression tests** across Python, bash, pac-mocked, journal-state, pac-contract, and template-integration coverage, including:
 - conf-parser attack-vector fixtures for `pp-sync` (`$(...)`, backticks, env-var poisoning, control characters, literal-metachar resolution)
 - URL-shape and same-repo enforcement tests for `pp journal note|close` (subdomain spoof, port injection, scheme downgrade, prefix confusion, path traversal)
 - page-name validation tests for `pp generate-page` (path traversal, injection, shell metacharacters)
 - atomic-registration tests for `pp project add` / `pp setup` (no partial conf writes on rejection)
-- command-flow, install-script, pac-mocked, and journal-state tests that exercise real CLI behavior beyond isolated parser rules
+- command-flow, install-script, pac-mocked, journal-state, pac-contract, and template-integration tests that exercise real CLI behavior beyond isolated parser rules
 
 If you find a path through the parser, the URL validator, the page-name validator, or the registration flow that the existing tests don't cover, that's the highest-value report we can receive.
 
