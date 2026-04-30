@@ -218,7 +218,7 @@ main
 # Spawn 5 parallel project-add invocations against the SAME name
 # Capture each PID's exit code.
 pids=()
-for i in 1 2 3 4 5; do
+for _ in 1 2 3 4 5; do
     ( printf '%s' "$race_input" | "$PP_BIN" project add >/dev/null 2>&1 ) &
     pids+=( "$!" )
 done

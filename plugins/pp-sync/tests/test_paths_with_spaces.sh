@@ -150,7 +150,7 @@ case "$doctor_out" in
         ;;
 esac
 case "$doctor_out" in
-    *"site---site"*"exists"*|*"Site folder site---site exists"*)
+    *"Site folder site---site exists"*)
         assert_pass "doctor finds site folder under spaced REPO"
         ;;
     *)
