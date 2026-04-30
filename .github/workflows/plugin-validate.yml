@@ -178,6 +178,11 @@ jobs:
           bash plugins/pp-sync/tests/test_pac_mocked.sh
           echo "OK    pp pac-mocked tests pass"
 
+      - name: Run pp journal-state tests
+        run: |
+          bash plugins/pp-sync/tests/test_journal_state.sh
+          echo "OK    pp journal-state tests pass"
+
       - name: Bash syntax check
         run: |
           fail=0
