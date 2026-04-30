@@ -279,6 +279,17 @@ run_test "tab-in-value" "ok" '
     esac
 '
 
+# 19. Backward-compat: confs created before v2.0.0 stored REPO as
+#     "$HOME/path" expecting the shell to expand it. v2.0.0+ stores it
+#     as a literal string by default. The loader expands a leading
+#     literal `$HOME` (and `~`) so existing user confs keep working.
+#     The expansion is pure string substitution — no shell evaluation.
+run_test "legacy-home-prefix" "ok" '
+    expected="$HOME/Projects/some/path"
+    [ "$REPO" = "$expected" ] || { echo "REPO=$REPO expected=$expected"; exit 1; }
+    exit 0
+'
+
 # --- Summary ---------------------------------------------------------------
 
 echo

@@ -304,8 +304,15 @@ load_project() {
     [ -n "$BOARD_SYSTEM" ] || BOARD_SYSTEM="auto"
     [ -n "$AI_ATTR" ] || AI_ATTR="yes"
 
-    # Expand ~ in REPO via bash parameter expansion (no shell evaluation)
+    # Expand `~` and a leading literal `$HOME` in REPO via bash parameter
+    # expansion. The `$HOME` form is a backward-compat affordance for
+    # confs created before v2.0.0 (when `pp` source-evaluated the conf
+    # and `$HOME` was expanded by the shell). Both expansions are pure
+    # string substitution — only the matching prefix is replaced; no
+    # other `$VAR` references are processed and no shell evaluation
+    # occurs.
     REPO="${REPO/#~/$HOME}"
+    REPO="${REPO/#\$HOME/$HOME}"
 
     # Session safety for journaling only. Do not block non-interactive pp flows.
     local board_verify_key=""

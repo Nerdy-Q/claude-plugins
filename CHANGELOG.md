@@ -2,6 +2,28 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.8.0] — 2026-04-29
+
+Integration test framework + a real-world backward-compat fix surfaced by running tests against a real portal.
+
+### Added (pp-sync v2.1.0)
+
+- **NEW `tests/integration/test_pac_dependent.sh`** — local-only integration tests that exercise pp subcommands against a real `pac` install + a registered project. Covers `pp doctor` (full pac auth path), `pp diff` (git diff against site dir), `pp up --validate-only` (pac validation without push), `pp audit` (Python audit dispatch + JSON parse), `pp status` (active project + live env). **Auto-skips** if `pac` isn't installed or no projects are registered, so it's safe to run anywhere. NOT wired into CI (the GitHub Actions runner has neither `pac` nor user projects). Documented as a smoke gate before each release.
+- **`PP_INTEGRATION_PROJECT=<name>`** env var to target a specific project; defaults to the first registered.
+- **`PP_INTEGRATION_DESTRUCTIVE=1`** opt-in for testing `pp down` (and the abort path of confirmation prompts). Even with the flag set, `pp solution-up` is permanently disabled by the suite — too risky to run unsupervised.
+
+### Fixed (pp-sync v2.1.0) — backward-compat for confs created pre-v2.0.0
+
+- **`load_project` now expands a leading literal `$HOME` in `REPO`** as a backward-compat affordance for confs created before v2.0.0 (when `pp` source-evaluated the conf and `$HOME` was expanded by the shell). The expansion is pure string substitution — only the prefix `$HOME` is replaced; no other `$VAR` references are processed and no shell evaluation occurs. Same security property as the existing `~` expansion.
+  - **Why this matters**: real-world testing (the new integration suite!) revealed that the user's existing 4 conf files all had `REPO="$HOME/Projects/..."` — written when the v1.x source-evaluated loader expanded `$HOME` automatically. v2.0.0+ stored these as literal strings, breaking every `pp` operation against those projects (`pp doctor`, `pp diff`, `pp up`, `pp audit` all failed with "Project repo not found: $HOME/...").
+  - **What's still safe**: only the literal prefix `$HOME` is special-cased. Confs with `$(...)`, backticks, or other `$VAR` references still store as literal strings. The parser security property is unchanged.
+  - Regression test added: `tests/fixtures/legacy-home-prefix.conf` + new assertion in `test_load_project.sh` (test count → 21).
+
+### Documentation
+
+- **CONTRIBUTING.md "Integration tests" section** — documents the local-only suite + how to run it before each release.
+- **tests/README.md** — expanded with full coverage of the integration suite, fixture conventions, opt-in flags.
+
 ## [2.7.7] — 2026-04-29
 
 Final coverage round + security disclosure docs. Adds tests for the last 9 untested audit rules, a `SECURITY.md` for vulnerability reporting, and a CONTRIBUTING section on adding audit rules.
@@ -430,6 +452,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.8.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.8.0
 [2.7.7]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.7
 [2.7.6]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.6
 [2.7.5]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.7.5

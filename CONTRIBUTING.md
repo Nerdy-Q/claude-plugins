@@ -141,6 +141,16 @@ The bash suites use fixture files under `plugins/pp-sync/tests/fixtures/` and a 
 
 When adding a new `pp` subcommand or registration path, add fixtures + assertions to the matching suite. The suites are wired into `.github/workflows/plugin-validate.yml` automatically.
 
+## Integration tests (local-only)
+
+Beyond the four bash suites that run in CI, `plugins/pp-sync/tests/integration/test_pac_dependent.sh` exercises pp subcommands against a real `pac` install + a registered project. **Run this before each release** as a smoke gate:
+
+```bash
+bash plugins/pp-sync/tests/integration/test_pac_dependent.sh
+```
+
+The suite auto-skips if `pac` isn't installed or no projects are registered, so it's safe to run anywhere. It's NOT wired into CI because the GitHub Actions runner has neither `pac` nor user-registered projects. See `plugins/pp-sync/tests/README.md` for full details + opt-in destructive-test flags.
+
 ## Static analysis
 
 CI runs ShellCheck at `--severity=warning` against every shell script. Install locally:
