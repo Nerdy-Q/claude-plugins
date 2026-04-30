@@ -2,6 +2,33 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.10.0] — 2026-04-30
+
+Closes the two known journal-tracking gaps that v2.9.4 acknowledged but didn't fix.
+
+### Added (pp-sync v2.3.0)
+
+- **Journal active-issue state file at `$PP_CONFIG_DIR/state/<project>/active-issue`.** `pp journal open` writes the URL there; `pp journal note|close` reads from there (preferring it over the JOURNAL.md grep). `pp journal close` clears the state. Closes the bug where `open A → close A → open B` (without a board) caused subsequent `pp journal note` to post to closed issue A — `tail -1` of `^Issue:` lines in JOURNAL.md picked the most-recently-WRITTEN issue regardless of close status.
+- **Backward compat for pre-v2.9.5 journals** — when the state file doesn't exist, `journal_active_issue_for` falls back to the JOURNAL.md grep. Existing users keep working without migration.
+- **`pp project remove` cleans up the state directory** (`rm -rf $PP_CONFIG_DIR/state/<project>/`). Closes the orphaned-state-dir gap.
+
+### Fixed (pp-sync v2.3.0)
+
+- **Atomic JOURNAL.md writes via single-syscall `printf`.** The previous `{ echo; echo; echo; } >> JOURNAL.md` block was NOT atomic — each `echo` was a separate `write()`. Concurrent `pp journal open` invocations (parallel CI jobs, multiple maintainers, automated tooling) could interleave their lines, causing later `note|close` to associate text with the wrong issue. New helper `journal_append_atomic` builds the entry in a string and writes it with one `printf >>`. Per the kernel guarantee for `write()` calls under PIPE_BUF (~4KB on Linux, 512B on macOS — ample for one entry), no interleaving is possible. Tested: 5 concurrent `pp journal open` invocations now produce 5 distinct task headers, none on the same line as another, none corrupted.
+
+### Tests added
+
+**New suite `tests/test_journal_state.sh` — 10 cases:**
+
+- State file lifecycle: set → read → clear (3 cases)
+- `open` without remote board doesn't create stale state (2 cases — verifies the new clear-on-open-without-board behavior + that JOURNAL.md still gets exactly one task header)
+- Stale state from prior `open` is cleared by new `open` without board
+- JOURNAL.md fallback works for pre-v2.9.5 journals (Issue: line grep)
+- Concurrent `open` is atomic (5 parallel invocations, no interleaving, no missing or duplicated headers — 2 assertions)
+- `project remove` cleans up state directory
+
+**CI wired** — new "Run pp journal-state tests" step. Total CI test count: **228** (was 218).
+
 ## [2.9.4] — 2026-04-30
 
 Fifteenth review pass. 5 real bugs surfaced + fixed. Test count: **218** (was 211).
@@ -580,6 +607,7 @@ Static analysis of Power Pages portal permissions and Web API configuration. Std
 - Per-plugin manifests + READMEs
 - `pp` installer (`./plugins/pp-sync/install.sh`) symlinks the CLI into `~/.local/bin/`
 
+[2.10.0]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.10.0
 [2.9.4]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.4
 [2.9.3]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.3
 [2.9.2]: https://github.com/Nerdy-Q/claude-power-pages-plugins/releases/tag/v2.9.2

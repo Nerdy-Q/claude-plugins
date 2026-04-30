@@ -1425,6 +1425,73 @@ EOF
 # Subcommand: journal (automated work tracking)
 # ===========================================================================
 
+## --- Journal state helpers (v2.9.5+) ----------------------------------
+##
+## Track the active journal issue per-project in a side-channel state
+## file at $PP_CONFIG_DIR/state/<project>/active-issue. Previously,
+## `pp journal note|close` recovered the issue URL by grepping
+## JOURNAL.md for the most recent `^Issue:` line — but `tail -1` picks
+## the LAST `open` regardless of whether it was already closed. After
+## `open A → close A → open B (no board)`, a subsequent `note` would
+## post to closed issue A instead of in-progress task B.
+##
+## The state file is single-source-of-truth for "the currently active
+## issue for `pp journal note|close`". `open` writes it, `close` clears
+## it. JOURNAL.md grep remains as the fallback path for journals
+## created before this scheme existed.
+
+journal_state_file() {
+    printf '%s/state/%s/active-issue\n' "$PP_CONFIG_DIR" "$1"
+}
+
+journal_active_issue_for() {
+    # Echo the active issue URL for project $1. Empty if none.
+    # Prefers the state file; falls back to JOURNAL.md grep for
+    # backward compat with pre-v2.9.5 journals.
+    local project="$1" state_file
+    state_file=$(journal_state_file "$project")
+    if [ -f "$state_file" ]; then
+        cat "$state_file"
+        return 0
+    fi
+    [ -f "$REPO/JOURNAL.md" ] || return 0
+    grep -E '^Issue: https://(github|gitlab)\.com/' "$REPO/JOURNAL.md" \
+        | tail -1 | sed 's/^Issue: //' || true
+}
+
+journal_set_active_issue() {
+    local project="$1" url="$2" state_file
+    state_file=$(journal_state_file "$project")
+    mkdir -p "$(dirname "$state_file")"
+    printf '%s\n' "$url" > "$state_file"
+}
+
+journal_clear_active_issue() {
+    local project="$1" state_file
+    state_file=$(journal_state_file "$project")
+    rm -f "$state_file"
+}
+
+# Atomic append: build the entire payload as one string, then write it
+# with a single printf+>> redirect. For payloads under PIPE_BUF (≈4KB
+# on Linux, 512B on macOS — both more than enough for one journal entry),
+# the kernel guarantees the write is not interleaved with concurrent
+# writes from other processes appending to the same file. This closes
+# the race where two parallel `pp journal open` invocations would mix
+# their lines, causing later `note|close` to associate text with the
+# wrong issue.
+journal_append_atomic() {
+    local journal="$1"
+    shift
+    # Concatenate args with newlines, append a trailing newline.
+    local payload=""
+    local line
+    for line in "$@"; do
+        payload+="$line"$'\n'
+    done
+    printf '%s' "$payload" >> "$journal"
+}
+
 cmd_journal() {
     local input="${1:-}"
     local action="${2:-}"
@@ -1492,15 +1559,26 @@ EOF
             # silently seed a cross-repo URL into the journal.
             if [ -n "$issue_url" ]; then
                 validate_issue_url_for_current_repo "$issue_url"
+                journal_set_active_issue "$name" "$issue_url"
+            else
+                # No remote issue → ensure stale state from a prior
+                # `open` doesn't shadow the new (local-only) entry.
+                journal_clear_active_issue "$name"
             fi
 
-            {
-                echo ""
-                echo "## [$(date +'%Y-%m-%d %H:%M')] TASK: $title"
-                [ -n "$issue_url" ] && echo "Issue: $issue_url"
-                echo "---"
-            } >> "$REPO/JOURNAL.md"
-            
+            # Atomic append — single write() syscall via printf, not
+            # multiple echo calls in a `{ } >>` group (which would
+            # interleave under concurrent invocation).
+            local entry_header
+            entry_header="## [$(date +'%Y-%m-%d %H:%M')] TASK: $title"
+            if [ -n "$issue_url" ]; then
+                journal_append_atomic "$REPO/JOURNAL.md" \
+                    "" "$entry_header" "Issue: $issue_url" "---"
+            else
+                journal_append_atomic "$REPO/JOURNAL.md" \
+                    "" "$entry_header" "---"
+            fi
+
             [ -n "$issue_url" ] && ok "Opened issue: $issue_url" || ok "Started local journal entry."
             ;;
 
@@ -1510,24 +1588,18 @@ EOF
             local attr=""
             [ "${AI_ATTR:-yes}" = "yes" ] && attr=" [AI-Assisted]"
 
-            # Find the URL written by the most recent `pp journal open`.
-            # Specifically match `^Issue: https://...` lines that the open
-            # subcommand writes — NOT arbitrary URLs that may appear in
-            # user notes (e.g. "see also https://other/repo/issues/5").
-            # This prevents lockout: a single inline cross-repo reference
-            # in a note used to make subsequent `note`/`close` permanently
-            # refuse to operate.
-            local last_issue=""
-            if [ -f "$REPO/JOURNAL.md" ]; then
-                last_issue=$(grep -E '^Issue: https://(github|gitlab)\.com/' "$REPO/JOURNAL.md" \
-                    | tail -1 | sed 's/^Issue: //' || true)
-            fi
+            # Read the active issue from the state file (or fall back
+            # to JOURNAL.md grep for pre-v2.9.5 journals). The state
+            # file path tracks "currently open" specifically, so a
+            # closed-then-reopened sequence doesn't pick the closed one.
+            local last_issue
+            last_issue=$(journal_active_issue_for "$name" || true)
             if [ -n "$last_issue" ]; then
                 validate_issue_url_for_current_repo "$last_issue"
             fi
 
             info "Adding note..."
-            echo "- **Note$attr**: $msg" >> "$REPO/JOURNAL.md"
+            journal_append_atomic "$REPO/JOURNAL.md" "- **Note$attr**: $msg"
 
             if [ -n "$last_issue" ]; then
                 if [[ "$last_issue" == *"github.com"* ]] && [ "$has_gh" = "1" ]; then
@@ -1543,20 +1615,14 @@ EOF
         close)
             local summary="${1:-}"
 
-            # Same as `note`: only consider URLs written by `pp journal
-            # open` (lines beginning with `Issue: `), not arbitrary URLs
-            # in user-authored notes.
-            local last_issue=""
-            if [ -f "$REPO/JOURNAL.md" ]; then
-                last_issue=$(grep -E '^Issue: https://(github|gitlab)\.com/' "$REPO/JOURNAL.md" \
-                    | tail -1 | sed 's/^Issue: //' || true)
-            fi
+            local last_issue
+            last_issue=$(journal_active_issue_for "$name" || true)
             if [ -n "$last_issue" ]; then
                 validate_issue_url_for_current_repo "$last_issue"
             fi
 
             info "Closing task..."
-            echo "- **CLOSED**: $summary" >> "$REPO/JOURNAL.md"
+            journal_append_atomic "$REPO/JOURNAL.md" "- **CLOSED**: $summary"
 
             if [ -n "$last_issue" ]; then
                 if [[ "$last_issue" == *"github.com"* ]] && [ "$has_gh" = "1" ]; then
@@ -1572,6 +1638,10 @@ EOF
                 fi
                 ok "Closed issue $last_issue"
             fi
+            # Clear active-issue state so subsequent `pp journal note`
+            # without an intervening `pp journal open` doesn't post to
+            # the just-closed issue.
+            journal_clear_active_issue "$name"
             ;;
         *)
             die "Usage: pp journal {init|open|note|close}"
@@ -1651,6 +1721,8 @@ cmd_project_remove() {
         rm -f "${PP_ALIASES_FILE}.bak"
     fi
     [ -f "$PP_ACTIVE_FILE" ] && [ "$(cat "$PP_ACTIVE_FILE")" = "$name" ] && rm -f "$PP_ACTIVE_FILE"
+    # Clean up journal state (active-issue tracking, v2.9.5+).
+    rm -rf "$PP_CONFIG_DIR/state/$name"
     ok "Removed $name"
 }
 
