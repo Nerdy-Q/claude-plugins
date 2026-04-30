@@ -56,3 +56,30 @@ When the file is sourced, `return` succeeds (we're inside a sourced script), so 
 The system under test is `bin/pp`, a 1500-line bash script. Sourcing it from bash gives direct access to its functions and variables. Re-implementing the same harness in Python would need a subprocess shim that hides the very behavior we want to verify (function-table state, IFS handling, dynamic scoping) — exactly the things that surface real bugs in shell code.
 
 The Python suite (`audit.py`) tests Python code; the bash suites test bash code.
+
+## Integration tests (`tests/integration/`)
+
+A separate `integration/` subdirectory holds tests that exercise pp subcommands against a **real `pac` install + a registered project**. They are NOT wired into CI (the GitHub Actions runner has neither `pac` nor user projects).
+
+Run locally:
+
+```bash
+bash plugins/pp-sync/tests/integration/test_pac_dependent.sh
+```
+
+What it checks (against the first registered project):
+- `pp doctor` — full pac auth path; asserts every section runs to completion
+- `pp diff` — git diff against site dir
+- `pp up --validate-only` — pac validation without push
+- `pp audit` — Python audit dispatch + JSON output parses
+- `pp status` — active project + live env
+
+The suite **auto-skips** if `pac` isn't installed or no projects are registered. To target a specific project:
+
+```bash
+PP_INTEGRATION_PROJECT=anchor bash tests/integration/test_pac_dependent.sh
+```
+
+Destructive operations (`pp down`, `pp up`, `pp solution-up`) are gated behind `PP_INTEGRATION_DESTRUCTIVE=1`. Even with that flag set, `pp solution-up` is permanently disabled by the suite — run it manually if you need to.
+
+These integration tests are a smoke gate before each release. They prove the bash → pac → portal hand-off still works in practice; the in-CI unit tests prove the bash code is correct in isolation.
