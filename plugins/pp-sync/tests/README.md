@@ -80,12 +80,26 @@ What it checks (against the first registered project):
 - `pp up --validate-only` — pac validation without push
 - `pp audit` — Python audit dispatch + JSON output parses
 - `pp status` — active project + live env
+- `pp solution-down` — real pac solution export + unpack against a Dataverse tenant (opt-in, see below)
 
 The suite **auto-skips** if `pac` isn't installed or no projects are registered. To target a specific project:
 
 ```bash
 PP_INTEGRATION_PROJECT=anchor bash tests/integration/test_pac_dependent.sh
 ```
+
+### Live-tenant solution-down (opt-in)
+
+`pp solution-down` is the one read-only-against-the-tenant operation that's worth exercising end-to-end before a release — it verifies real pac produces a usable zipfile shape (mocked tests cover shell orchestration but not Microsoft's actual export format). Opt in by naming the solution:
+
+```bash
+PP_INTEGRATION_PROJECT=anchor PP_INTEGRATION_SOLUTION_NAME=AnchorCore \
+    bash tests/integration/test_pac_dependent.sh
+```
+
+Real export takes 60-120s and writes to the project's `$REPO/dataverse-schema/`. The test verifies `Other/Solution.xml` lands at the expected path and the zipfile is cleaned up after unpack.
+
+### Destructive ops
 
 Destructive operations (`pp down`, `pp up`, `pp solution-up`) are gated behind `PP_INTEGRATION_DESTRUCTIVE=1`. Even with that flag set, `pp solution-up` is permanently disabled by the suite — run it manually if you need to.
 

@@ -190,6 +190,35 @@ jq '.findings[] | select(.severity == "ERROR") | {code, title, location}' audit.
 jq -r '"*\(.findings | map(select(.severity == "ERROR")) | length)* errors, *\(.findings | map(select(.severity == "WARN")) | length)* warnings on `\(.site)`"' audit.json
 ```
 
+### JSON output schema (stable contract)
+
+External CI consumers depend on this shape. It is pinned in CI by `test_audit_json_contract.py` so any rename / restructure surfaces in code review:
+
+```json
+{
+  "site": "<absolute or relative path>",
+  "counts": {
+    "site_settings":     0,
+    "table_permissions": 0,
+    "web_roles":         0,
+    "web_pages":         0,
+    "custom_js":         0,
+    "schema_entities":   0
+  },
+  "findings": [
+    {
+      "severity": "ERROR",
+      "code":     "ERR-001",
+      "title":    "Web API enabled for `contact` but no Table Permission grants Read",
+      "detail":   "Site Setting `Webapi/contact/Enabled = true` is set, but no Table Permission ...",
+      "location": "site-settings/.../Webapi/contact/Enabled"
+    }
+  ]
+}
+```
+
+`severity` is always one of `ERROR | WARN | INFO`. `code` always matches the regex `^(ERR|WRN|INFO)-\d{3}$`. The `--severity` filter is **inclusive** (showing the chosen tier and higher); `--exit-code` returns 1 only if findings exist at the chosen severity threshold.
+
 ## Schema-aware checks in CI
 
 WRN-006 / WRN-007 / WRN-008 (the schema-aware checks) only run when `dataverse-schema/` is present in the repo. If your CI checks out the portal source but the schema lives in a separate repo or solution-export pipeline, you have two options:

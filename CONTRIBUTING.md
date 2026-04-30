@@ -125,23 +125,34 @@ Every audit rule shipped today has both positive coverage (rule fires on a fixtu
 
 ## Test suites
 
-The marketplace runs multiple test suites in CI. Run the core ones locally:
+The marketplace runs **404 regression tests** across 16 suites in CI. Run them locally:
 
 ```bash
-# pp-permissions-audit — Python unit tests (audit.py rule logic)
-python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py
+# pp-permissions-audit — Python tests
+python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit.py                  # 31 — audit.py rule logic
+python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit_json_contract.py    # 13 — --json schema contract for external CI consumers
+python3 -m unittest plugins/pp-permissions-audit/skills/pp-permissions-audit/scripts/test_audit_performance.py      #  2 — 1000-file portal in <15s
+
+# pp-portal — Python tests
+python3 -m unittest plugins/pp-portal/tests/test_design_systems.py         # 24 — design-system regression (license traps, CSP, required facts)
 
 # pp-sync — bash regression tests
-bash plugins/pp-sync/tests/test_load_project.sh           # strict conf parser
-bash plugins/pp-sync/tests/test_register_atomic.sh        # 6 cases — pp project add atomicity
+bash plugins/pp-sync/tests/test_load_project.sh           # 22 cases — strict conf parser (incl. v1 migration rejection)
+bash plugins/pp-sync/tests/test_register_atomic.sh        #  9 cases — pp project add atomicity + concurrent race
 bash plugins/pp-sync/tests/test_journal_url_validation.sh # 16 cases — journal URL hardening
-bash plugins/pp-sync/tests/test_subcommand_safety.sh      # subcommand edge cases
-bash plugins/pp-sync/tests/test_command_flows.sh          # happy-path + error-path flows
-bash plugins/pp-sync/tests/test_install_script.sh         # installer behavior
-bash plugins/pp-sync/tests/test_pac_mocked.sh            # mocked pac CLI flows
-bash plugins/pp-sync/tests/test_journal_state.sh         # journal state + concurrency
-bash plugins/pp-sync/tests/test_pac_contract.sh          # pac contract assertions
-bash plugins/pp-sync/tests/test_templates.sh             # project-drop-in templates
+bash plugins/pp-sync/tests/test_subcommand_safety.sh      # 30 cases — subcommand edge cases
+bash plugins/pp-sync/tests/test_command_flows.sh          # 86 cases — happy-path + error-path flows
+bash plugins/pp-sync/tests/test_install_script.sh         # 17 cases — installer behavior + upgrade path
+bash plugins/pp-sync/tests/test_pac_mocked.sh             # 23 cases — mocked pac CLI flows
+bash plugins/pp-sync/tests/test_journal_state.sh          # 10 cases — journal state + concurrency
+bash plugins/pp-sync/tests/test_pac_contract.sh           # 10 cases — pac contract assertions
+bash plugins/pp-sync/tests/test_templates.sh              # 60 cases — project-drop-in templates
+bash plugins/pp-sync/tests/test_help_completeness.sh      # 44 cases — every cmd_* appears in pp help
+bash plugins/pp-sync/tests/test_paths_with_spaces.sh      #  7 cases — REPO/SITE_DIR with spaces in path
+
+# Marketplace metadata + doc-link validators (run as part of CI)
+python3 scripts/validate_doc_links.py                     # 222 relative links across 56 files
+python3 scripts/validate_metadata_consistency.py          # 28 keywords across 3 plugins
 ```
 
 The bash suites use fixture files under `plugins/pp-sync/tests/fixtures/` and a source-safe pattern that loads `bin/pp` without dispatching commands. See `plugins/pp-sync/tests/README.md` for fixture conventions and how to add a new test.
