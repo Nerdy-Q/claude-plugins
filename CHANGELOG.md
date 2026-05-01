@@ -2,6 +2,27 @@
 
 All notable changes to this marketplace are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), with version numbers tracking the marketplace as a whole. Per-plugin versions live in each `plugins/<name>/.claude-plugin/plugin.json` and are noted below where they advance.
 
+## [2.12.3] — 2026-05-01
+
+CI fix: the real-pac contract suite now skips Section 1 (`pac auth list`) cleanly when the workflow runs without `PP_PAC_*` secrets configured. This was a latent bug introduced in v2.11.0, only surfaced now because `real-pac-contract.yml` fires on tag pushes and v2.12.2 was the first tag push to actually exercise the no-profile code path against the real Microsoft pac CLI. No plugin changes, no behavior changes for end users.
+
+### Fixed
+
+- **`plugins/pp-sync/tests/test_pac_contract.sh`**: the no-profile skip gate in Section 1 only matched empty `pac auth list` output. Real pac emits a non-empty `"No profiles were found on this computer..."` sentinel in that case, so all three Section 1 sub-tests fell into FAIL instead of SKIP. The gate now recognizes both forms (empty output OR the documented sentinel) via a single `real_no_profiles` flag reused across the three sub-tests.
+
+### Why this matters
+
+The real-pac-contract workflow exists as a release-gate signal that catches drift between Microsoft's real pac CLI and the in-tree mock. With Section 1 always-failing on the unauthenticated path, the gate was unusable for any release tag pushed without `PP_PAC_*` secrets in the environment. The drift-detection semantics are preserved: any other unexpected non-empty output without a `UNIVERSAL` marker still FAILs, so this change relaxes only the documented "no profiles registered" branch.
+
+### Tests
+
+Locally reproduced the v2.12.2 failure with a stub pac matching the real CLI's no-profile output, confirmed the fix flips three FAILs to three SKIPs (exit 0), and confirmed an unexpected-output stub still triggers three FAILs (drift detection intact). Mock-pac mode unchanged: 10/10 pass. Re-dispatched real-pac-contract on main against the real Microsoft pac CLI: 1/1 passed, 7 skipped (run 25223660742).
+
+### Versions
+
+- marketplace: 2.12.2 → **2.12.3** (patch, CI-only fix, no behavior change)
+- All plugin versions unchanged
+
 ## [2.12.2] — 2026-04-30
 
 Voice consistency sweep: removed em-dashes from all authored marketplace content per the maintainer's writing rules. No behavior change, no plugin version bumps. The CHANGELOG itself is preserved as-is per Keep a Changelog convention (historical record).
