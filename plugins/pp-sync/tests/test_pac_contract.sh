@@ -124,13 +124,24 @@ fi
 
 out=$(run_pac "$state" auth list 2>/dev/null || true)
 
+# In real-pac mode without any registered profile, pac emits a
+# non-empty "No profiles were found..." sentinel rather than empty
+# output. Treat both forms as "no profiles registered" so contract
+# checks that require a profile SKIP cleanly instead of FAILing.
+real_no_profiles=0
+if [ "$REAL_MODE" = "1" ]; then
+    case "$out" in
+        ""|*"No profiles were found"*) real_no_profiles=1 ;;
+    esac
+fi
+
 # Contract: each profile row contains "UNIVERSAL" followed by name + URL
 case "$out" in
     *"UNIVERSAL"*)
         assert_pass "auth list output contains 'UNIVERSAL' (profile-row marker pp greps for)"
         ;;
     *)
-        if [ "$REAL_MODE" = "1" ] && [ -z "$out" ]; then
+        if [ "$real_no_profiles" = "1" ]; then
             skip "auth list 'UNIVERSAL' marker" "real pac with zero registered profiles"
         else
             assert_fail "auth list missing 'UNIVERSAL' marker" "got: $(printf '%s' "$out" | head -3)"
@@ -147,7 +158,7 @@ esac
 if printf '%s' "$out" | grep -qE 'UNIVERSAL[[:space:]]+\S+'; then
     assert_pass "auth list rows have 'UNIVERSAL <profile-name>' shape pp greps for"
 else
-    if [ "$REAL_MODE" = "1" ] && [ -z "$out" ]; then
+    if [ "$real_no_profiles" = "1" ]; then
         skip "auth list row shape" "real pac with zero registered profiles"
     else
         assert_fail "auth list row shape changed" "got: $(printf '%s' "$out" | head -5)"
@@ -160,7 +171,7 @@ fi
 if printf '%s' "$out" | grep -qE 'https?://'; then
     assert_pass "auth list rows include an https:// URL somewhere"
 else
-    if [ "$REAL_MODE" = "1" ] && [ -z "$out" ]; then
+    if [ "$real_no_profiles" = "1" ]; then
         skip "auth list URL presence" "no profiles registered"
     else
         assert_fail "auth list rows missing URL"
